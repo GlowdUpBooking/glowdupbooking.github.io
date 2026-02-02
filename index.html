@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b0b0f" />
+  <title>Glow’d Up Booking — Coming Soon</title>
+  <meta name="description" content="Glow’d Up Booking helps beauty pros book more clients with effortless scheduling, automated reminders, and deposits—so no-shows drop." />
+
+  <style>
+    :root{
+      --bg:#07070a;
+      --bg2:#0b0b10;
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.66);
+      --gold:#d8b86a;
+      --gold2:#f1d28a;
+      --shadow: 0 25px 80px rgba(0,0,0,.65);
+      --shadow2: 0 15px 45px rgba(0,0,0,.55);
+      --radius: 22px;
+      --max: 1120px;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(216,184,106,.20), transparent 60%),
+        radial-gradient(900px 500px at 80% 0%, rgba(241,210,138,.10), transparent 55%),
+        radial-gradient(900px 500px at 50% 110%, rgba(216,184,106,.10), transparent 60%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+      overflow-x:hidden;
+    }
+    .wrap{
+      width:min(var(--max), calc(100% - 40px));
+      margin: 0 auto;
+      padding: 34px 0 46px;
+    }
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding: 10px 0 22px;
+    }
+    .brand{ display:flex; align-items:center; gap:12px; min-width:0; }
+    .mark{
+      width:44px;height:44px;border-radius:14px;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(241,210,138,.85), rgba(216,184,106,.25) 45%, rgba(255,255,255,.05) 70%),
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border: 1px solid rgba(216,184,106,.30);
+      box-shadow: 0 12px 30px rgba(0,0,0,.45);
+      display:flex; align-items:center; justify-content:center;
+      position:relative; overflow:hidden;
+    }
+    .mark:before{
+      content:""; position:absolute; inset:-40%;
+      background: conic-gradient(from 180deg, transparent, rgba(241,210,138,.35), transparent);
+      animation: spin 10s linear infinite; opacity:.6;
+    }
+    .mark span{ position:relative; font-weight:800; color: rgba(12,12,16,.9); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .brand h1{ font-size: 15px; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .brand p{ margin:0; font-size: 12px; color: var(--muted); }
+
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .chip{
+      display:inline-flex; align-items:center; padding: 10px 12px; border-radius: 999px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.10);
+      color: var(--muted);
+      font-size: 12px;
+      text-decoration:none;
+      transition: .2s ease;
+    }
+    .chip:hover{ transform: translateY(-1px); border-color: rgba(216,184,106,.32); color: rgba(255,255,255,.85); }
+
+    .hero{
+      display:grid;
+      grid-template-columns: 1.08fr .92fr;
+      gap: 18px;
+      align-items:stretch;
+      margin-top: 6px;
+    }
+    @media (max-width: 940px){ .hero{ grid-template-columns: 1fr; } }
+
+    .panel{
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: var(--shadow2);
+      position:relative;
+      overflow:hidden;
+    }
+    .panel:before{
+      content:""; position:absolute; inset:-2px;
+      background:
+        radial-gradient(650px 250px at 20% 0%, rgba(241,210,138,.25), transparent 60%),
+        radial-gradient(500px 250px at 90% 30%, rgba(216,184,106,.18), transparent 65%);
+      pointer-events:none;
+      opacity:.9;
+    }
+
+    .left{ padding: 26px 26px 22px; }
+    .tag{
+      display:inline-flex; align-items:center;
+      padding: 8px 12px; border-radius: 999px;
+      border: 1px solid rgba(216,184,106,.35);
+      background: rgba(216,184,106,.08);
+      color: rgba(241,210,138,.92);
+      font-size: 12px;
+      position:relative; z-index:1;
+    }
+    .headline{
+      margin: 14px 0 10px;
+      font-size: clamp(30px, 4.4vw, 46px);
+      line-height: 1.05;
+      letter-spacing: -.6px;
+      position:relative; z-index:1;
+    }
+    .sub{
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 15.5px;
+      line-height: 1.5;
+      position:relative; z-index:1;
+      max-width: 54ch;
+    }
+    .bullets{ display:grid; gap:10px; margin: 16px 0 22px; position:relative; z-index:1; }
+    .bullet{
+      display:flex; gap:12px; align-items:flex-start;
+      padding: 12px; border-radius: 16px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .dot{
+      width:10px;height:10px;border-radius:999px;margin-top:5px;
+      background: radial-gradient(circle at 30% 30%, var(--gold2), var(--gold));
+      box-shadow: 0 0 0 4px rgba(216,184,106,.12);
+      flex:0 0 auto;
+    }
+    .bullet strong{ display:block; font-size: 13px; margin-bottom: 2px; }
+    .bullet span{ color: var(--muted); font-size: 12.5px; line-height: 1.35; }
+
+    .ctaRow{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; position:relative; z-index:1; }
+    .btn{
+      border:none; cursor:pointer; text-decoration:none;
+      display:inline-flex; align-items:center; justify-content:center;
+      padding: 12px 16px; border-radius: 14px;
+      font-weight: 650; letter-spacing:.15px;
+      transition: .2s ease;
+    }
+    .btn-primary{
+      background: linear-gradient(135deg, rgba(241,210,138,.95), rgba(216,184,106,.92));
+      color: rgba(12,12,16,.94);
+      border: 1px solid rgba(241,210,138,.55);
+      box-shadow: 0 14px 40px rgba(0,0,0,.45);
+    }
+    .btn-primary:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+    .btn-ghost{
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.88);
+      border: 1px solid rgba(255,255,255,.14);
+    }
+    .btn-ghost:hover{ transform: translateY(-1px); border-color: rgba(216,184,106,.30); }
+
+    .fine{ margin: 12px 0 0; font-size: 12px; color: rgba(255,255,255,.55); position:relative; z-index:1; }
+
+    .right{ display:flex; align-items:center; justify-content:center; padding: 18px; min-height: 420px; }
+    .frame{
+      width: 100%; max-width: 560px;
+      border-radius: 20px; overflow:hidden;
+      border: 1px solid rgba(216,184,106,.24);
+      background: rgba(0,0,0,.22);
+      box-shadow: var(--shadow);
+      position:relative; z-index:1;
+    }
+    .frame img{ width:100%; height:auto; display:block; }
+    .frame:after{
+      content:""; position:absolute; inset:0; pointer-events:none;
+      background:
+        radial-gradient(900px 180px at 50% 0%, rgba(241,210,138,.18), transparent 55%),
+        linear-gradient(180deg, rgba(0,0,0,.12), transparent 35%, rgba(0,0,0,.25));
+    }
+
+    .footer{
+      display:flex; flex-wrap:wrap; gap:14px;
+      align-items:center; justify-content:space-between;
+      margin-top: 18px; padding: 16px 4px 0;
+      color: rgba(255,255,255,.55); font-size: 12px;
+    }
+    .links{ display:flex; gap:12px; flex-wrap:wrap; }
+    .links a{
+      color: rgba(255,255,255,.65);
+      text-decoration:none;
+      border-bottom: 1px solid transparent;
+      padding-bottom: 2px;
+      transition: .2s ease;
+    }
+    .links a:hover{ color: rgba(241,210,138,.92); border-bottom-color: rgba(241,210,138,.45); }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="mark"><span>G</span></div>
+        <div>
+          <h1>Glow’d Up Booking</h1>
+          <p>Scheduling + reminders + deposits for beauty pros</p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <a class="chip" href="https://www.instagram.com/glowdupbooking/" target="_blank" rel="noreferrer">Instagram</a>
+        <a class="chip" href="https://www.tiktok.com/@glowdupbooking" target="_blank" rel="noreferrer">TikTok</a>
+        <a class="chip" href="https://x.com/GlowdUpBooking" target="_blank" rel="noreferrer">X</a>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="panel left">
+        <div class="tag">✨ Launching soon • Early access</div>
+
+        <h2 class="headline">
+          Book more clients.<br/>
+          Reduce no-shows.<br/>
+          Look premium doing it.
+        </h2>
+
+        <p class="sub">
+          Glow’d Up Booking is built for stylists & beauty pros who want a smooth client experience —
+          from booking to reminders to deposits.
+        </p>
+
+        <div class="bullets">
+          <div class="bullet">
+            <div class="dot"></div>
+            <div>
+              <strong>Effortless scheduling</strong>
+              <span>Simple bookings that feel professional and branded.</span>
+            </div>
+          </div>
+          <div class="bullet">
+            <div class="dot"></div>
+            <div>
+              <strong>Automated reminders</strong>
+              <span>Less chasing, fewer missed appointments.</span>
+            </div>
+          </div>
+          <div class="bullet">
+            <div class="dot"></div>
+            <div>
+              <strong>Deposits made easy</strong>
+              <span>Get commitment up front and protect your time.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ctaRow">
+          <a class="btn btn-primary"
+             href="mailto:glowdupbooking@gmail.com?subject=Glow%E2%80%99d%20Up%20Booking%20%E2%80%94%20Early%20Access&body=Hi%2C%20I%27d%20like%20early%20access%20updates%20for%20Glow%E2%80%99d%20Up%20Booking.%0A%0AName%3A%0ACity%2FState%3A%0AService%3A%0A"
+             target="_blank" rel="noreferrer">
+            Get early access
+          </a>
+          <a class="btn btn-ghost" href="https://x.com/GlowdUpBooking" target="_blank" rel="noreferrer">
+            Follow updates on X
+          </a>
+        </div>
+
+        <p class="fine">Business inquiries: <strong>glowdupbooking@gmail.com</strong></p>
+      </div>
+
+      <div class="panel right">
+        <div class="frame">
+          <img src="cover.png" alt="Glow'd Up Booking cover" />
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>© <span id="y"></span> Glow’d Up Booking</div>
+      <div class="links">
+        <a href="https://www.instagram.com/glowdupbooking/" target="_blank" rel="noreferrer">Instagram</a>
+        <a href="https://www.tiktok.com/@glowdupbooking" target="_blank" rel="noreferrer">TikTok</a>
+        <a href="https://x.com/GlowdUpBooking" target="_blank" rel="noreferrer">X</a>
+      </div>
+    </div>
+  </div>
+
+  <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+</body>
+</html>
