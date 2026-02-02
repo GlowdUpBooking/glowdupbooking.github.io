@@ -220,7 +220,7 @@
         flex-direction:column;
         gap:12px;
         margin-top:10px;
-        margin-bottom:18px;
+        margin-bottom:16px;
       }
       .feature{
         border-radius: 16px;
@@ -251,11 +251,90 @@
         line-height:1.35;
       }
 
+      /* WAITLIST FORM */
+      .waitlist{
+        margin-top:8px;
+        border-radius:18px;
+        background: rgba(0,0,0,.20);
+        box-shadow: var(--ring);
+        padding:14px;
+      }
+      .waitlistTop{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        margin-bottom:10px;
+      }
+      .waitlistTop b{
+        font-size:13px;
+        letter-spacing:.2px;
+      }
+      .waitlistTop span{
+        font-size:12px;
+        color:var(--muted2);
+      }
+      .waitlistRow{
+        display:flex;
+        gap:12px;
+        flex-wrap:wrap;
+        align-items:center;
+      }
+      .field{
+        flex: 1 1 260px;
+        min-width:220px;
+        height:44px;
+        padding:0 14px;
+        border-radius:14px;
+        background: rgba(255,255,255,.06);
+        box-shadow: var(--ring);
+        border: 1px solid rgba(255,255,255,.08);
+        color: rgba(255,255,255,.92);
+        outline:none;
+        transition: box-shadow .12s ease, border-color .12s ease, background .12s ease;
+      }
+      .field::placeholder{ color: rgba(255,255,255,.45); }
+      .field:focus{
+        background: rgba(255,255,255,.08);
+        border-color: rgba(255,214,123,.24);
+        box-shadow: 0 0 0 4px rgba(255,214,123,.10), var(--ringGold);
+      }
+      .helper{
+        margin-top:10px;
+        font-size:12px;
+        color: rgba(255,255,255,.55);
+        display:flex;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
+      }
+      .status{
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        padding:8px 10px;
+        border-radius:12px;
+        background: rgba(255,255,255,.05);
+        box-shadow: var(--ring);
+        color: rgba(255,255,255,.72);
+      }
+      .status.ok{
+        background: rgba(255,214,123,.10);
+        box-shadow: var(--ringGold);
+        color: rgba(255,235,194,.92);
+      }
+      .status.bad{
+        background: rgba(255,90,90,.10);
+        box-shadow: 0 0 0 1px rgba(255,90,90,.22), inset 0 1px 0 rgba(255,255,255,.10);
+        color: rgba(255,190,190,.92);
+      }
+
       .ctaRow{
         display:flex;
         gap:12px;
         margin-top:auto;
         flex-wrap:wrap;
+        align-items:center;
       }
       .btn{
         display:inline-flex;
@@ -270,6 +349,8 @@
         letter-spacing:.2px;
         transition: transform .12s ease, filter .12s ease, box-shadow .12s ease, background .12s ease;
         user-select:none;
+        border:0;
+        cursor:pointer;
       }
       .btnPrimary{
         color:#1b1406;
@@ -277,6 +358,12 @@
         box-shadow: 0 12px 30px rgba(255,214,123,.16), 0 0 0 1px rgba(255,214,123,.18), inset 0 1px 0 rgba(255,255,255,.45);
       }
       .btnPrimary:hover{ transform: translateY(-1px); filter:brightness(1.03); }
+      .btnPrimary:disabled{
+        opacity:.72;
+        cursor:not-allowed;
+        transform:none;
+        filter:none;
+      }
       .btnGhost{
         color:rgba(255,255,255,.9);
         background: rgba(255,255,255,.06);
@@ -352,6 +439,16 @@
         width:36px;
         padding:0;
       }
+
+      /* honeypot (spam trap) */
+      .hp{
+        position:absolute !important;
+        left:-9999px !important;
+        top:auto !important;
+        width:1px !important;
+        height:1px !important;
+        overflow:hidden !important;
+      }
     </style>
   </head>
 
@@ -364,7 +461,6 @@
       <!-- TOP BAR -->
       <div class="topbar">
         <div class="brand">
-          <!-- Uses your uploaded image. Put cover.png in the repo root (you already did). -->
           <div class="brandMark" aria-hidden="true">
             <img src="cover.png" alt="" />
           </div>
@@ -393,7 +489,7 @@
             <span>TikTok</span>
           </a>
 
-          <!-- UPDATED: Official-style X icon -->
+          <!-- Official-style X icon -->
           <a class="pill iconOnly" href="https://x.com/glowdupbooking" target="_blank" rel="noopener" aria-label="X">
             <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
@@ -452,16 +548,41 @@
               </div>
             </div>
 
-            <div class="ctaRow">
-              <!-- Change this to your real early-access form link later -->
-              <a class="btn btnPrimary" href="mailto:glowdupbooking@gmail.com?subject=Early%20Access%20Request">
-                Get early access
-              </a>
+            <!-- WAITLIST FORM (Formspree) -->
+            <div class="waitlist" id="waitlist">
+              <div class="waitlistTop">
+                <b>Join the waitlist</b>
+                <span>Get early access when we launch.</span>
+              </div>
 
-              <!-- Change to your real X link (already set above) -->
-              <a class="btn btnGhost" href="https://x.com/glowdupbooking" target="_blank" rel="noopener">
-                Follow updates on X
-              </a>
+              <form id="waitlistForm" action="https://formspree.io/f/mbdkarvq" method="POST" novalidate>
+                <!-- spam honeypot -->
+                <label class="hp">Do not fill this out <input name="website" /></label>
+
+                <div class="waitlistRow">
+                  <input
+                    id="email"
+                    class="field"
+                    type="email"
+                    name="email"
+                    placeholder="Enter your email"
+                    autocomplete="email"
+                    required
+                  />
+
+                  <button id="submitBtn" class="btn btnPrimary" type="submit">
+                    Get early access
+                  </button>
+
+                  <a class="btn btnGhost" href="https://x.com/glowdupbooking" target="_blank" rel="noopener">
+                    Follow updates on X
+                  </a>
+                </div>
+
+                <div class="helper">
+                  <span id="status" class="status" aria-live="polite">No spam. Unsubscribe anytime.</span>
+                </div>
+              </form>
             </div>
 
             <div class="fine">
@@ -476,7 +597,6 @@
           <div class="cardInner" style="justify-content:center;">
             <div class="heroFrame">
               <div class="heroImgWrap">
-                <!-- Put your hero/logo image in the repo root as cover.png (you already uploaded it). -->
                 <img src="cover.png" alt="Glow’d Up Booking" />
               </div>
             </div>
@@ -497,6 +617,55 @@
 
     <script>
       document.getElementById("y").textContent = new Date().getFullYear();
+
+      // Formspree AJAX submit (so you stay on the page)
+      const form = document.getElementById("waitlistForm");
+      const statusEl = document.getElementById("status");
+      const btn = document.getElementById("submitBtn");
+      const email = document.getElementById("email");
+
+      function setStatus(type, msg){
+        statusEl.classList.remove("ok","bad");
+        if(type) statusEl.classList.add(type);
+        statusEl.textContent = msg;
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        // simple check
+        if(!email.value || !email.checkValidity()){
+          setStatus("bad", "Please enter a valid email address.");
+          email.focus();
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "Submitting…";
+        setStatus("", "Sending…");
+
+        try{
+          const formData = new FormData(form);
+
+          const res = await fetch(form.action, {
+            method: "POST",
+            body: formData,
+            headers: { "Accept": "application/json" }
+          });
+
+          if(res.ok){
+            setStatus("ok", "✅ You're on the list! Check your email soon.");
+            form.reset();
+          } else {
+            setStatus("bad", "Something went wrong. Please try again.");
+          }
+        } catch(err){
+          setStatus("bad", "Network error. Please try again.");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Get early access";
+        }
+      });
     </script>
   </body>
 </html>
