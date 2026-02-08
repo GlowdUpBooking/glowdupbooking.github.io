@@ -1,0 +1,32 @@
+[
+  {
+    "id": "pro-1",
+    "business_name": "Glow’d Up Test Pro",
+    "full_name": "Glow’d Up Test Pro",
+    "category": "Barber",
+    "city": "Dallas",
+    "zip": "10453",
+    "badge": "New",
+    "image": "./assets/pro-1.jpg"
+  },
+  {
+    "id": "pro-2",
+    "business_name": "Luxury Nails Studio",
+    "full_name": "Nail Tech",
+    "category": "Nails",
+    "city": "Houston",
+    "zip": "77002",
+    "badge": "Available",
+    "image": "./assets/pro-2.jpg"
+  },
+  {
+    "id": "pro-3",
+    "business_name": "Skin Care Lounge",
+    "full_name": "Esthetician",
+    "category": "Skincare",
+    "city": "Austin",
+    "zip": "78701",
+    "badge": "Top rated",
+    "image": "./assets/pro-3.jpg"
+  }
+]
