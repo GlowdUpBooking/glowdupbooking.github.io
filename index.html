@@ -2,582 +2,185 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Glow’d Up Booking — Premium Booking for Pros</title>
-  <meta name="description" content="Glow’d Up Booking helps clients discover and book professionals fast. Pros can set services, availability, and accept bookings." />
-  <meta name="theme-color" content="#07060a" />
-
-  <!-- Social preview -->
-  <meta property="og:title" content="Glow’d Up Booking" />
-  <meta property="og:description" content="Premium booking for pros & clients. Discover. Book. Glow." />
-  <meta property="og:type" content="website" />
-  <!-- Optional: set after you add /assets/og.png -->
-  <!-- <meta property="og:image" content="/assets/og.png" /> -->
-
-  <style>
-    :root{
-      --bg0:#07060a;
-      --bg1:#0b0a10;
-      --card:rgba(255,255,255,.06);
-      --card2:rgba(255,255,255,.09);
-      --stroke:rgba(255,255,255,.12);
-      --text:#f6f2ff;
-      --muted:rgba(246,242,255,.72);
-      --muted2:rgba(246,242,255,.55);
-      --gold1:#ffd98a;
-      --gold2:#d4a64c;
-      --gold3:#8a6a2b;
-      --shadow: 0 20px 80px rgba(0,0,0,.55);
-      --shadow2: 0 10px 30px rgba(0,0,0,.45);
-      --r: 22px;
-      --r2: 28px;
-      --max: 1120px;
-    }
-
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      color:var(--text);
-      background: radial-gradient(1200px 800px at 18% 20%, rgba(255,216,138,.10), transparent 55%),
-                  radial-gradient(900px 600px at 85% 45%, rgba(212,166,76,.10), transparent 55%),
-                  radial-gradient(700px 700px at 50% 100%, rgba(120,90,30,.10), transparent 55%),
-                  linear-gradient(180deg, var(--bg0), var(--bg1));
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      overflow-x:hidden;
-    }
-
-    a{color:inherit; text-decoration:none}
-    .wrap{max-width:var(--max); margin:0 auto; padding:0 22px}
-    .topbar{
-      position:sticky; top:0; z-index:30;
-      backdrop-filter:saturate(140%) blur(14px);
-      background: linear-gradient(180deg, rgba(7,6,10,.88), rgba(7,6,10,.55));
-      border-bottom: 1px solid rgba(255,255,255,.08);
-    }
-    .nav{
-      display:flex; align-items:center; justify-content:space-between;
-      padding:14px 0;
-      gap:14px;
-    }
-    .brand{
-      display:flex; align-items:center; gap:12px;
-      font-weight:700;
-      letter-spacing:.2px;
-    }
-    .logo{
-      width:38px; height:38px; border-radius:12px;
-      background:
-        radial-gradient(12px 12px at 30% 30%, rgba(255,255,255,.40), transparent 55%),
-        radial-gradient(18px 18px at 60% 40%, rgba(255,216,138,.35), transparent 60%),
-        linear-gradient(145deg, rgba(255,216,138,.28), rgba(255,255,255,.06));
-      border:1px solid rgba(255,255,255,.14);
-      box-shadow: 0 12px 34px rgba(0,0,0,.4);
-      position:relative;
-      overflow:hidden;
-    }
-    .logo:after{
-      content:"";
-      position:absolute; inset:-30%;
-      background: conic-gradient(from 210deg, transparent 0 30%, rgba(255,216,138,.35) 45%, transparent 60% 100%);
-      transform: rotate(12deg);
-      animation: sheen 7.5s linear infinite;
-      opacity:.7;
-    }
-    @keyframes sheen{
-      0%{transform:translateX(-18%) rotate(12deg)}
-      50%{transform:translateX(18%) rotate(12deg)}
-      100%{transform:translateX(-18%) rotate(12deg)}
-    }
-
-    .brand small{display:block; font-weight:600; color:var(--muted2); margin-top:2px}
-    .links{display:flex; gap:18px; align-items:center}
-    .links a{
-      font-size:14px; color:var(--muted);
-      padding:8px 10px; border-radius:12px;
-      transition: all .2s ease;
-    }
-    .links a:hover{
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-    }
-
-    .ctaRow{display:flex; gap:10px; align-items:center}
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      gap:10px;
-      padding:10px 14px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color:var(--text);
-      font-weight:650;
-      font-size:14px;
-      box-shadow: var(--shadow2);
-      transition: transform .15s ease, background .2s ease, border-color .2s ease;
-      cursor:pointer;
-      user-select:none;
-    }
-    .btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.20)}
-    .btn:active{transform:translateY(0px)}
-    .btnGold{
-      border-color: rgba(255,216,138,.35);
-      background: linear-gradient(145deg, rgba(255,216,138,.24), rgba(212,166,76,.10));
-      box-shadow: 0 18px 46px rgba(212,166,76,.10), var(--shadow2);
-    }
-    .pill{
-      display:inline-flex; align-items:center; gap:10px;
-      padding:8px 12px;
-      border-radius:999px;
-      border:1px solid rgba(255,216,138,.25);
-      background: rgba(255,216,138,.08);
-      color: rgba(255,216,138,.92);
-      font-size:13px;
-      font-weight:650;
-      letter-spacing:.2px;
-    }
-
-    /* Hero */
-    .hero{
-      padding:62px 0 26px;
-      position:relative;
-    }
-    .grid{
-      display:grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap:26px;
-      align-items:stretch;
-    }
-    .headline{
-      font-size:54px;
-      line-height:1.02;
-      margin:16px 0 14px;
-      letter-spacing:-.8px;
-    }
-    .sub{
-      color:var(--muted);
-      font-size:18px;
-      line-height:1.55;
-      max-width:56ch;
-      margin:0 0 22px;
-    }
-    .heroCard{
-      border-radius: var(--r2);
-      border:1px solid rgba(255,255,255,.12);
-      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      position:relative;
-    }
-    .heroCard:before{
-      content:"";
-      position:absolute; inset:-2px;
-      background: radial-gradient(520px 280px at 20% 10%, rgba(255,216,138,.22), transparent 60%),
-                  radial-gradient(520px 280px at 80% 40%, rgba(212,166,76,.18), transparent 60%),
-                  radial-gradient(420px 340px at 50% 110%, rgba(255,255,255,.10), transparent 55%);
-      opacity:.8;
-      pointer-events:none;
-    }
-    .heroCardInner{
-      position:relative;
-      padding:18px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-
-    .mock{
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: radial-gradient(900px 600px at 30% 15%, rgba(255,216,138,.12), transparent 60%),
-                  linear-gradient(180deg, rgba(10,9,14,.85), rgba(10,9,14,.55));
-      box-shadow: 0 30px 80px rgba(0,0,0,.55);
-      overflow:hidden;
-    }
-    .mockTop{
-      padding:14px 14px 12px;
-      display:flex; align-items:center; justify-content:space-between;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-    }
-    .mockTop b{font-size:13px; letter-spacing:.35px; color:rgba(255,255,255,.85)}
-    .dots{display:flex; gap:6px}
-    .dot{width:8px; height:8px; border-radius:999px; background:rgba(255,255,255,.18)}
-    .dot.g{background:rgba(255,216,138,.35)}
-    .mockBody{padding:14px}
-    .row{
-      display:flex; gap:10px; align-items:center;
-      padding:12px 12px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.05);
-      margin-bottom:10px;
-    }
-    .avatar{
-      width:38px; height:38px; border-radius:14px;
-      border:1px solid rgba(255,216,138,.22);
-      background: linear-gradient(145deg, rgba(255,216,138,.20), rgba(255,255,255,.06));
-      display:flex; align-items:center; justify-content:center;
-      color:rgba(255,216,138,.92);
-      font-weight:800;
-    }
-    .row .txt{flex:1}
-    .row .txt .t{font-weight:750}
-    .row .txt .m{font-size:13px; color:var(--muted2); margin-top:3px}
-    .tag{
-      font-size:12px; font-weight:700;
-      padding:7px 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,216,138,.22);
-      background: rgba(255,216,138,.09);
-      color: rgba(255,216,138,.92);
-      white-space:nowrap;
-    }
-
-    .heroActions{
-      display:flex; flex-wrap:wrap; gap:10px;
-      align-items:center;
-      margin-top:6px;
-    }
-
-    /* Sections */
-    section{padding:44px 0}
-    .sectionTitle{
-      font-size:28px;
-      margin:0 0 10px;
-      letter-spacing:-.3px;
-    }
-    .sectionSub{
-      margin:0 0 18px;
-      color:var(--muted);
-      line-height:1.6;
-      max-width:70ch;
-    }
-    .cards{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap:14px;
-    }
-    .card{
-      border-radius: var(--r);
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.05);
-      padding:16px;
-      box-shadow: var(--shadow2);
-      position:relative;
-      overflow:hidden;
-    }
-    .card:before{
-      content:"";
-      position:absolute; inset:-2px;
-      background: radial-gradient(400px 220px at 15% 0%, rgba(255,216,138,.16), transparent 55%);
-      opacity:.65;
-      pointer-events:none;
-    }
-    .card > *{position:relative}
-    .card h3{margin:0 0 6px; font-size:16px}
-    .card p{margin:0; color:var(--muted); line-height:1.55; font-size:14px}
-
-    .split{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:14px;
-    }
-
-    /* Waitlist */
-    .wait{
-      border-radius: var(--r2);
-      border:1px solid rgba(255,216,138,.20);
-      background: linear-gradient(145deg, rgba(255,216,138,.12), rgba(255,255,255,.03));
-      padding:18px;
-      box-shadow: var(--shadow);
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .formRow{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-    input{
-      flex:1;
-      min-width:220px;
-      padding:12px 14px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.25);
-      color:var(--text);
-      outline:none;
-    }
-    input::placeholder{color:rgba(246,242,255,.45)}
-    input:focus{
-      border-color: rgba(255,216,138,.35);
-      box-shadow: 0 0 0 4px rgba(255,216,138,.10);
-    }
-    .fine{color:var(--muted2); font-size:12.5px; line-height:1.5}
-
-    /* Footer */
-    footer{
-      padding:22px 0 38px;
-      border-top: 1px solid rgba(255,255,255,.08);
-      color:var(--muted2);
-      font-size:13px;
-    }
-    .foot{
-      display:flex; gap:14px; justify-content:space-between; align-items:center;
-      flex-wrap:wrap;
-    }
-    .foot a{color:var(--muted); padding:6px 10px; border-radius:12px}
-    .foot a:hover{background:rgba(255,255,255,.06); color:var(--text)}
-
-    /* Responsive */
-    @media (max-width: 980px){
-      .grid{grid-template-columns:1fr}
-      .headline{font-size:44px}
-      .cards{grid-template-columns:1fr}
-      .split{grid-template-columns:1fr}
-    }
-
-    /* Tiny gold shimmer line */
-    .divider{
-      height:1px; width:100%;
-      background: linear-gradient(90deg, transparent, rgba(255,216,138,.28), transparent);
-      margin:22px 0;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Glow’d Up Booking</title>
+  <meta name="description" content="Book trusted pros for hair, nails, tattoo, skincare, and more." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css" />
 </head>
 
 <body>
-  <div class="topbar">
-    <div class="wrap">
-      <div class="nav">
-        <div class="brand">
-          <div class="logo" aria-hidden="true"></div>
-          <div>
-            Glow’d Up Booking
-            <small>Premium booking for pros & clients</small>
-          </div>
-        </div>
+  <header class="topbar">
+    <div class="wrap topbar__inner">
+      <a class="brand" href="#">
+        <span class="brand__mark">G</span>
+        <span class="brand__text">
+          <strong>Glow’d Up Booking</strong>
+          <small>Premium booking for pros & clients</small>
+        </span>
+      </a>
 
-        <div class="links" role="navigation" aria-label="Primary">
-          <a href="#features">Features</a>
-          <a href="#how">How it works</a>
-          <a href="#waitlist">Waitlist</a>
-        </div>
+      <nav class="nav">
+        <a href="#how">How it works</a>
+        <a href="#pros">Professionals</a>
+        <a href="#clients">Clients</a>
+      </nav>
 
-        <div class="ctaRow">
-          <a class="btn" href="#waitlist">Join Waitlist</a>
-          <a class="btn btnGold" href="#waitlist">Get Early Access</a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <header class="hero">
-    <div class="wrap">
-      <span class="pill">✨ Now in TestFlight • Launching soon</span>
-      <h1 class="headline">Discover. Book. <span style="color:var(--gold1)">Glow.</span></h1>
-      <p class="sub">
-        Glow’d Up Booking connects clients with top professionals—barbers, stylists, tattoo artists, nails, braiding, and more.
-        Pros set services, availability, and booking requirements. Clients book in minutes.
-      </p>
-
-      <div class="grid">
-        <div>
-          <div class="heroActions">
-            <a class="btn btnGold" href="#waitlist">Join the waitlist</a>
-            <a class="btn" href="#features">See features</a>
-            <a class="btn" href="#how">How it works</a>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="split">
-            <div class="card">
-              <h3>For Professionals</h3>
-              <p>Create a premium profile, list services, set availability, and decide if bookings require deposits or not.</p>
-            </div>
-            <div class="card">
-              <h3>For Clients</h3>
-              <p>Browse pros near you, view styles/work, choose a time, and book instantly—no back-and-forth.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="heroCard">
-          <div class="heroCardInner">
-            <div class="mock" aria-label="App preview">
-              <div class="mockTop">
-                <div class="dots" aria-hidden="true">
-                  <span class="dot"></span><span class="dot"></span><span class="dot g"></span>
-                </div>
-                <b>GLOW’D UP • BOOKING</b>
-                <span style="opacity:.6; font-size:12px">Preview</span>
-              </div>
-              <div class="mockBody">
-                <div class="row">
-                  <div class="avatar">G</div>
-                  <div class="txt">
-                    <div class="t">Glow’d Up Test Pro</div>
-                    <div class="m">Barber • 10453</div>
-                  </div>
-                  <div class="tag">Available</div>
-                </div>
-                <div class="row">
-                  <div class="avatar">S</div>
-                  <div class="txt">
-                    <div class="t">Signature Style Set</div>
-                    <div class="m">$10 • 30 min • Book now</div>
-                  </div>
-                  <div class="tag">Quick</div>
-                </div>
-                <div class="row" style="margin-bottom:0">
-                  <div class="avatar">✨</div>
-                  <div class="txt">
-                    <div class="t">Upload Work & Styles</div>
-                    <div class="m">Photos for portfolios & inspiration</div>
-                  </div>
-                  <div class="tag">Pro</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="card" style="margin-top:2px">
-              <h3>Luxury experience, simple flow</h3>
-              <p>Built for premium service businesses—fast booking, clean profiles, and a polished, modern vibe.</p>
-            </div>
-          </div>
-        </div>
+      <div class="actions">
+        <button class="btn btn--ghost" id="openWaitlist">Join waitlist</button>
+        <button class="btn btn--gold" id="openBook">Book now</button>
       </div>
     </div>
   </header>
 
-  <section id="features">
-    <div class="wrap">
-      <h2 class="sectionTitle">Premium features that sell the service</h2>
-      <p class="sectionSub">
-        The goal: help pros look elite, and help clients book confidently.
-      </p>
-
-      <div class="cards">
-        <div class="card">
-          <h3>Pro Profiles</h3>
-          <p>Show your work, location, categories, and services with a clean premium look.</p>
-        </div>
-        <div class="card">
-          <h3>Flexible Booking Rules</h3>
-          <p>Pros can require deposits or allow no-payment bookings—your business, your terms.</p>
-        </div>
-        <div class="card">
-          <h3>Portfolio Photos</h3>
-          <p>Clients can upload inspiration. Pros can showcase styles and recent work.</p>
-        </div>
-        <div class="card">
-          <h3>Availability & Slots</h3>
-          <p>Set availability and let clients pick open times—no more endless DMs.</p>
-        </div>
-        <div class="card">
-          <h3>Appointments Hub</h3>
-          <p>Pros and clients can view upcoming appointments in one place.</p>
-        </div>
-        <div class="card">
-          <h3>Built to Scale</h3>
-          <p>Made for multiple industries: hair, nails, tattoo, braiding, fitness, and more.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="how">
-    <div class="wrap">
-      <h2 class="sectionTitle">How it works</h2>
-      <p class="sectionSub">Two experiences — one platform.</p>
-
-      <div class="split">
-        <div class="card">
-          <h3>Client flow</h3>
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="wrap hero__grid">
+        <div class="hero__copy">
+          <div class="pill">✨ Now in TestFlight • Launching soon</div>
+          <h1>Discover. Book. <span class="glow">Glow.</span></h1>
           <p>
-            1) Explore pros<br/>
-            2) Pick a service<br/>
-            3) Choose a time<br/>
-            4) Book instantly
+            Find trusted professionals near you—barbers, stylists, tattoo artists,
+            nails, braiding, skincare, and more. Pros manage services & availability.
+            Clients book in minutes.
           </p>
+
+          <div class="search">
+            <div class="search__field">
+              <span class="search__icon">⌕</span>
+              <input id="searchInput" type="text" placeholder="Search services or pros (e.g., barber, braids, tattoo…)" />
+            </div>
+            <button class="btn btn--gold" id="searchBtn">Search</button>
+          </div>
+
+          <div class="chips" id="categoryChips"></div>
+
+          <div class="hero__ctas">
+            <button class="btn btn--gold" id="ctaBook">Book now</button>
+            <button class="btn btn--ghost" id="ctaPros">I’m a professional</button>
+          </div>
+
+          <div class="trust">
+            <div class="trust__item">
+              <strong>Fast booking</strong><span>clean flow, modern UI</span>
+            </div>
+            <div class="trust__item">
+              <strong>Pros in control</strong><span>deposits optional</span>
+            </div>
+            <div class="trust__item">
+              <strong>Photo portfolios</strong><span>styles & work uploads</span>
+            </div>
+          </div>
         </div>
+
+        <!-- LIFESTYLE / PREVIEW -->
+        <div class="hero__media">
+          <div class="mediaCard">
+            <div class="mediaCard__top">
+              <span>GLOW’D UP • BOOKING</span>
+              <span class="dot"></span>
+            </div>
+
+            <!-- swap these images any time -->
+            <div class="mediaGrid">
+              <figure class="shot">
+                <img src="./assets/pro-1.jpg" alt="Client fresh cut" />
+                <figcaption>Fresh cuts & fades</figcaption>
+              </figure>
+              <figure class="shot">
+                <img src="./assets/pro-2.jpg" alt="Nail tech" />
+                <figcaption>Nails & sets</figcaption>
+              </figure>
+              <figure class="shot">
+                <img src="./assets/pro-3.jpg" alt="Skincare session" />
+                <figcaption>Skincare & glow</figcaption>
+              </figure>
+            </div>
+
+            <div class="mediaCard__bottom">
+              <div class="mini">
+                <strong>Book with confidence</strong>
+                <span>See portfolios • pick a time • confirm</span>
+              </div>
+              <button class="btn btn--ghost btn--sm" id="openBook2">Book now</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hero__bg"></div>
+    </section>
+
+    <!-- RECOMMENDED -->
+    <section class="section">
+      <div class="wrap section__head">
+        <h2>Recommended near you</h2>
+        <div class="section__sub">
+          A live preview of pros on the platform (pulled from your database feed).
+        </div>
+      </div>
+
+      <div class="wrap">
+        <div class="grid" id="prosGrid"></div>
+      </div>
+    </section>
+
+    <!-- SPLIT: Pros / Clients -->
+    <section class="section" id="how">
+      <div class="wrap split">
         <div class="card">
-          <h3>Professional flow</h3>
-          <p>
-            1) Create your profile<br/>
-            2) Add services + pricing<br/>
-            3) Set availability + booking rules<br/>
-            4) Accept bookings
-          </p>
+          <h3 id="clients">For clients</h3>
+          <p>Browse pros, view work, choose a time, book instantly—no back-and-forth.</p>
+          <ul>
+            <li>Search by service/category</li>
+            <li>See photos & styles</li>
+            <li>Book with or without deposit (pro decides)</li>
+          </ul>
+          <button class="btn btn--gold" id="clientsBook">Book now</button>
+        </div>
+
+        <div class="card">
+          <h3 id="pros">For professionals</h3>
+          <p>Create a premium profile, list services, set availability, accept bookings.</p>
+          <ul>
+            <li>Portfolio uploads</li>
+            <li>Flexible booking requirements</li>
+            <li>Grow with a clean, premium presence</li>
+          </ul>
+          <button class="btn btn--ghost" id="prosWaitlist">Join pro waitlist</button>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section id="waitlist">
-    <div class="wrap">
-      <h2 class="sectionTitle">Get early access</h2>
-      <p class="sectionSub">Join the waitlist to be first in line when we open the doors.</p>
-
-      <div class="wait">
-        <div class="formRow">
-          <input id="email" type="email" placeholder="Email address" autocomplete="email" />
-          <button class="btn btnGold" id="joinBtn" type="button">Join Waitlist</button>
-        </div>
-        <div class="fine">
-          By joining, you agree to receive launch updates. No spam — just important drops.
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <footer>
-    <div class="wrap">
-      <div class="foot">
-        <div>© <span id="y"></span> Kamara Labs • Glow’d Up Booking</div>
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="wrap footer__inner">
         <div>
-          <a href="#features">Features</a>
+          <strong>Glow’d Up Booking</strong>
+          <div class="muted">© <span id="year"></span> Kamara Labs</div>
+        </div>
+        <div class="footer__links">
+          <a href="mailto:glowdupbooking@gmail.com">Support</a>
           <a href="#how">How it works</a>
-          <a href="#waitlist">Waitlist</a>
         </div>
       </div>
+    </footer>
+  </main>
+
+  <!-- MODAL -->
+  <div class="modal" id="modal">
+    <div class="modal__backdrop" data-close="1"></div>
+    <div class="modal__panel" role="dialog" aria-modal="true">
+      <div class="modal__head">
+        <strong id="modalTitle">Book now</strong>
+        <button class="iconBtn" data-close="1">✕</button>
+      </div>
+      <div class="modal__body" id="modalBody"></div>
     </div>
-  </footer>
+  </div>
 
-  <script>
-    document.getElementById("y").textContent = new Date().getFullYear();
-
-    // Simple waitlist action (no backend): opens an email draft to your inbox.
-    // Later we can switch this to Formspree / Supabase / Mailchimp.
-    const join = () => {
-      const email = document.getElementById("email").value.trim();
-      const to = "glowdupbooking@gmail.com"; // change if needed
-      const subject = encodeURIComponent("Glow’d Up Booking — Waitlist");
-      const body = encodeURIComponent(
-        `Please add me to the Glow’d Up Booking waitlist.\n\nMy email: ${email || "(not provided)"}\n\nI am joining as: Client / Professional (optional)\n`
-      );
-      window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
-    };
-
-    document.getElementById("joinBtn").addEventListener("click", join);
-    document.getElementById("email").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") join();
-    });
-
-    // Smooth scroll
-    document.querySelectorAll('a[href^="#"]').forEach(a=>{
-      a.addEventListener("click",(e)=>{
-        const id = a.getAttribute("href");
-        if(!id || id === "#") return;
-        const el = document.querySelector(id);
-        if(!el) return;
-        e.preventDefault();
-        el.scrollIntoView({behavior:"smooth", block:"start"});
-      });
-    });
-  </script>
+  <script src="./js/app.js"></script>
 </body>
 </html>
