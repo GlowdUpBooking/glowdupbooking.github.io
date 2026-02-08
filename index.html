@@ -3,184 +3,156 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Glow’d Up Booking</title>
-  <meta name="description" content="Book trusted pros for hair, nails, tattoo, skincare, and more." />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/styles.css" />
+  <title>Glow’d Up Booking — Premium booking for pros & clients</title>
+  <meta name="description" content="Discover top beauty & grooming professionals. Book barbers, stylists, nail techs, tattoo artists, skincare experts, and more." />
+  <link rel="stylesheet" href="css/styles.css" />
 </head>
 
 <body>
-  <header class="topbar">
-    <div class="wrap topbar__inner">
-      <a class="brand" href="#">
+  <!-- Ambient background -->
+  <div class="bg" aria-hidden="true">
+    <div class="bg__texture"></div>
+    <div class="bg__glow bg__glow--top"></div>
+    <div class="bg__glow bg__glow--bottom"></div>
+    <canvas id="sparkles"></canvas>
+  </div>
+
+  <!-- NAV -->
+  <header class="nav">
+    <div class="nav__inner">
+      <a class="brand" href="#top" aria-label="Glow’d Up Booking">
         <span class="brand__mark">G</span>
         <span class="brand__text">
-          <strong>Glow’d Up Booking</strong>
-          <small>Premium booking for pros & clients</small>
+          <span class="brand__name">Glow’d Up Booking</span>
+          <span class="brand__tag">Premium booking for pros &amp; clients</span>
         </span>
       </a>
 
-      <nav class="nav">
+      <nav class="nav__links" aria-label="Primary">
         <a href="#how">How it works</a>
-        <a href="#pros">Professionals</a>
-        <a href="#clients">Clients</a>
+        <a href="#clients">For clients</a>
+        <a href="#pros">For pros</a>
       </nav>
 
-      <div class="actions">
-        <button class="btn btn--ghost" id="openWaitlist">Join waitlist</button>
-        <button class="btn btn--gold" id="openBook">Book now</button>
+      <div class="nav__cta">
+        <a class="btn btn--ghost" href="#waitlist">Join waitlist</a>
+        <a class="btn btn--gold" href="#search">Book now</a>
       </div>
     </div>
   </header>
 
-  <main>
-    <!-- HERO -->
-    <section class="hero">
-      <div class="wrap hero__grid">
-        <div class="hero__copy">
-          <div class="pill">✨ Now in TestFlight • Launching soon</div>
-          <h1>Discover. Book. <span class="glow">Glow.</span></h1>
-          <p>
-            Find trusted professionals near you—barbers, stylists, tattoo artists,
-            nails, braiding, skincare, and more. Pros manage services & availability.
-            Clients book in minutes.
-          </p>
+  <!-- HERO -->
+  <main class="hero" id="top">
+    <div class="hero__media" aria-hidden="true">
+      <div class="hero__img hero__img--left"></div>
+      <div class="hero__img hero__img--right"></div>
+      <div class="hero__overlay"></div>
+    </div>
 
-          <div class="search">
-            <div class="search__field">
-              <span class="search__icon">⌕</span>
-              <input id="searchInput" type="text" placeholder="Search services or pros (e.g., barber, braids, tattoo…)" />
-            </div>
-            <button class="btn btn--gold" id="searchBtn">Search</button>
-          </div>
-
-          <div class="chips" id="categoryChips"></div>
-
-          <div class="hero__ctas">
-            <button class="btn btn--gold" id="ctaBook">Book now</button>
-            <button class="btn btn--ghost" id="ctaPros">I’m a professional</button>
-          </div>
-
-          <div class="trust">
-            <div class="trust__item">
-              <strong>Fast booking</strong><span>clean flow, modern UI</span>
-            </div>
-            <div class="trust__item">
-              <strong>Pros in control</strong><span>deposits optional</span>
-            </div>
-            <div class="trust__item">
-              <strong>Photo portfolios</strong><span>styles & work uploads</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- LIFESTYLE / PREVIEW -->
-        <div class="hero__media">
-          <div class="mediaCard">
-            <div class="mediaCard__top">
-              <span>GLOW’D UP • BOOKING</span>
-              <span class="dot"></span>
-            </div>
-
-            <!-- swap these images any time -->
-            <div class="mediaGrid">
-              <figure class="shot">
-                <img src="./assets/pro-1.jpg" alt="Client fresh cut" />
-                <figcaption>Fresh cuts & fades</figcaption>
-              </figure>
-              <figure class="shot">
-                <img src="./assets/pro-2.jpg" alt="Nail tech" />
-                <figcaption>Nails & sets</figcaption>
-              </figure>
-              <figure class="shot">
-                <img src="./assets/pro-3.jpg" alt="Skincare session" />
-                <figcaption>Skincare & glow</figcaption>
-              </figure>
-            </div>
-
-            <div class="mediaCard__bottom">
-              <div class="mini">
-                <strong>Book with confidence</strong>
-                <span>See portfolios • pick a time • confirm</span>
-              </div>
-              <button class="btn btn--ghost btn--sm" id="openBook2">Book now</button>
-            </div>
-          </div>
-        </div>
+    <section class="hero__content">
+      <div class="pill">
+        <span class="pill__dot">✦</span>
+        <span>Now in TestFlight</span>
+        <span class="pill__sep">•</span>
+        <span class="pill__muted">Launching soon</span>
       </div>
-      <div class="hero__bg"></div>
+
+      <h1 class="hero__title">Discover top beauty &amp; grooming professionals.</h1>
+      <p class="hero__sub">
+        Book local barbers, stylists, nail techs, tattoo artists, skincare experts, and more.
+      </p>
+
+      <!-- SEARCH BAR -->
+      <div class="search" id="search" role="search" aria-label="Search pros">
+        <label class="search__field">
+          <span class="sr-only">What are you looking for?</span>
+          <span class="search__icon">⌕</span>
+          <input id="q" type="text" placeholder="What are you looking for?" autocomplete="off" />
+        </label>
+
+        <label class="search__field search__field--select">
+          <span class="sr-only">Location</span>
+          <span class="search__icon">⌖</span>
+          <select id="loc">
+            <option>Dallas, TX</option>
+            <option>Houston, TX</option>
+            <option>Austin, TX</option>
+            <option>San Antonio, TX</option>
+            <option>Fort Worth, TX</option>
+          </select>
+        </label>
+
+        <label class="search__field">
+          <span class="sr-only">When?</span>
+          <span class="search__icon">▦</span>
+          <input id="when" type="text" placeholder="When?" />
+        </label>
+
+        <button class="btn btn--gold btn--search" id="searchBtn" type="button">Search</button>
+      </div>
+
+      <!-- CATEGORY CHIPS -->
+      <div class="chips" aria-label="Categories">
+        <button class="chip is-active" data-chip="barber" type="button">🪒 Barber</button>
+        <button class="chip" data-chip="hair" type="button">💇 Hair</button>
+        <button class="chip" data-chip="nails" type="button">💅 Nails</button>
+        <button class="chip" data-chip="tattoo" type="button">🖋 Tattoo</button>
+        <button class="chip" data-chip="skincare" type="button">🧴 Skincare</button>
+        <button class="chip" data-chip="makeup" type="button">💄 Makeup</button>
+        <button class="chip" data-chip="lashes" type="button">👁 Lashes</button>
+      </div>
+
+      <!-- RECOMMENDED CAROUSEL -->
+      <section class="recs" aria-label="Recommended for you">
+        <h2 class="recs__title">Recommended for you</h2>
+
+        <div class="carousel">
+          <button class="carousel__nav carousel__nav--left" aria-label="Previous" id="prev" type="button">‹</button>
+          <div class="carousel__track" id="track"></div>
+          <button class="carousel__nav carousel__nav--right" aria-label="Next" id="next" type="button">›</button>
+        </div>
+
+        <div class="dots" id="dots" aria-label="Carousel dots"></div>
+      </section>
     </section>
-
-    <!-- RECOMMENDED -->
-    <section class="section">
-      <div class="wrap section__head">
-        <h2>Recommended near you</h2>
-        <div class="section__sub">
-          A live preview of pros on the platform (pulled from your database feed).
-        </div>
-      </div>
-
-      <div class="wrap">
-        <div class="grid" id="prosGrid"></div>
-      </div>
-    </section>
-
-    <!-- SPLIT: Pros / Clients -->
-    <section class="section" id="how">
-      <div class="wrap split">
-        <div class="card">
-          <h3 id="clients">For clients</h3>
-          <p>Browse pros, view work, choose a time, book instantly—no back-and-forth.</p>
-          <ul>
-            <li>Search by service/category</li>
-            <li>See photos & styles</li>
-            <li>Book with or without deposit (pro decides)</li>
-          </ul>
-          <button class="btn btn--gold" id="clientsBook">Book now</button>
-        </div>
-
-        <div class="card">
-          <h3 id="pros">For professionals</h3>
-          <p>Create a premium profile, list services, set availability, accept bookings.</p>
-          <ul>
-            <li>Portfolio uploads</li>
-            <li>Flexible booking requirements</li>
-            <li>Grow with a clean, premium presence</li>
-          </ul>
-          <button class="btn btn--ghost" id="prosWaitlist">Join pro waitlist</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- FOOTER -->
-    <footer class="footer">
-      <div class="wrap footer__inner">
-        <div>
-          <strong>Glow’d Up Booking</strong>
-          <div class="muted">© <span id="year"></span> Kamara Labs</div>
-        </div>
-        <div class="footer__links">
-          <a href="mailto:glowdupbooking@gmail.com">Support</a>
-          <a href="#how">How it works</a>
-        </div>
-      </div>
-    </footer>
   </main>
 
-  <!-- MODAL -->
-  <div class="modal" id="modal">
-    <div class="modal__backdrop" data-close="1"></div>
-    <div class="modal__panel" role="dialog" aria-modal="true">
-      <div class="modal__head">
-        <strong id="modalTitle">Book now</strong>
-        <button class="iconBtn" data-close="1">✕</button>
-      </div>
-      <div class="modal__body" id="modalBody"></div>
+  <!-- Sections (we’ll refine after landing is perfect) -->
+  <section class="section" id="how">
+    <div class="section__inner">
+      <h3>How it works</h3>
+      <p>Search → pick a pro → choose a time → book instantly.</p>
     </div>
-  </div>
+  </section>
 
-  <script src="./js/app.js"></script>
+  <section class="section" id="clients">
+    <div class="section__inner">
+      <h3>For clients</h3>
+      <p>Browse verified pros, real availability, and instant confirmation.</p>
+    </div>
+  </section>
+
+  <section class="section" id="pros">
+    <div class="section__inner">
+      <h3>For pros</h3>
+      <p>Get discovered, fill your calendar, manage bookings in one place.</p>
+    </div>
+  </section>
+
+  <footer class="footer" id="waitlist">
+    <div class="footer__inner">
+      <div>
+        <h3>Join the waitlist</h3>
+        <p>We’ll notify you when web booking goes live.</p>
+      </div>
+
+      <form class="waitlist" onsubmit="return false;">
+        <input type="email" placeholder="Email address" />
+        <button class="btn btn--gold" type="button">Join</button>
+      </form>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
 </body>
 </html>

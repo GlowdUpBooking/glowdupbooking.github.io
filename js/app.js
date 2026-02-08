@@ -1,163 +1,151 @@
-let ALL_PROS = [];
-let visibleCount = 6;
+// ------------------ Recommended carousel data (demo; next we’ll load from data/pros.json) ------------------
+const imagePool = [
+  "assets/pro-1.jpg",
+  "assets/pro-2.jpg",
+  "assets/pro-3.jpg",
+  "assets/model6.png"
+];
 
-const grid = document.getElementById("proGrid");
-const loadMoreBtn = document.getElementById("loadMoreBtn");
-const yearEl = document.getElementById("year");
-const toast = document.getElementById("toast");
+const recs = [
+  { name: "Sarah", city: "Dallas, TX", badge: "Highly rated", img: imagePool[0] },
+  { name: "Jelmes", city: "Dallas, TX", badge: "Barber • Fade", img: imagePool[1] },
+  { name: "James", city: "Dallas, TX", badge: "Barber • Beard", img: imagePool[2] },
+  { name: "Luxury Nails Studio", city: "Houston, TX", badge: "Nails • Gel", img: imagePool[3] },
+  { name: "Skincare", city: "Austin, TX", badge: "Facials • Glow", img: imagePool[0] },
+  { name: "Makeup Pro", city: "Dallas, TX", badge: "Makeup • Glam", img: imagePool[3] },
+];
 
-const serviceFilter = document.getElementById("serviceFilter");
-const cityFilter = document.getElementById("cityFilter");
-const searchBtn = document.getElementById("searchBtn");
-const chipRow = document.getElementById("chipRow");
+const track = document.getElementById("track");
+const dotsEl = document.getElementById("dots");
+const prev = document.getElementById("prev");
+const next = document.getElementById("next");
 
-const hamburger = document.getElementById("hamburger");
-const mobileMenu = document.getElementById("mobileMenu");
-
-function showToast(msg){
-  toast.textContent = msg;
-  toast.style.display = "block";
-  setTimeout(() => (toast.style.display = "none"), 2200);
-}
-
-function matchesFilters(p){
-  const svc = (serviceFilter?.value || "all").toLowerCase();
-  const city = (cityFilter?.value || "").trim().toLowerCase();
-
-  const svcOk = svc === "all" ? true : (p.category || "").toLowerCase() === svc;
-  const cityOk = !city ? true : (p.city || "").toLowerCase().includes(city);
-
-  return svcOk && cityOk;
-}
-
-function filteredPros(){
-  return ALL_PROS.filter(matchesFilters);
-}
-
-function cardHTML(p){
-  const badge = p.badge || "New";
-  const price = p.starting_price ? `$${p.starting_price}` : "$—";
-  const duration = p.duration ? `${p.duration} min` : "—";
-  const city = p.city || "—";
-  const category = p.category || "—";
-  const name = p.name || "Professional";
-  const image = p.image || "assets/pro-1.jpg";
-
+function cardTemplate(item){
   return `
     <article class="card">
-      <div class="card__img">
-        <img src="${image}" alt="${name} ${category} in ${city}" loading="lazy" />
-        <div class="card__badge">${badge}</div>
-      </div>
+      <div class="card__img" style="background-image:url('${item.img}')"></div>
       <div class="card__body">
-        <div class="card__title">${name}</div>
-        <div class="card__meta">
-          <span>${category}</span>
-          <span>•</span>
-          <span>${city}</span>
-          <span>•</span>
-          <span>${duration}</span>
-        </div>
+        <div class="card__name">${item.name}</div>
+        <div class="card__meta">${item.city}</div>
         <div class="card__row">
-          <div class="price">${price}</div>
-          <button class="card__btn" data-pro="${encodeURIComponent(name)}">Book</button>
+          <span class="badge">${item.badge}</span>
+          <button class="card__book" type="button">Book</button>
         </div>
       </div>
     </article>
   `;
 }
 
-function render(){
-  const list = filteredPros();
-  const slice = list.slice(0, visibleCount);
+track.innerHTML = recs.map(cardTemplate).join("");
 
-  grid.innerHTML = slice.map(cardHTML).join("");
+let index = 0;
 
-  // Load more visibility
-  loadMoreBtn.style.display = list.length > visibleCount ? "inline-flex" : "none";
+const visible = () => {
+  const w = window.innerWidth;
+  if (w < 600) return 1;
+  if (w < 900) return 2;
+  if (w < 1200) return 3;
+  return 4;
+};
 
-  // Demo booking button
-  grid.querySelectorAll(".card__btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const pro = decodeURIComponent(btn.getAttribute("data-pro") || "");
-      showToast(`Booking preview coming soon — selected: ${pro}`);
-    });
-  });
+function pages(){
+  return Math.max(1, Math.ceil(recs.length / visible()));
 }
 
-function setChipActive(value){
-  document.querySelectorAll(".chip").forEach(c => c.classList.remove("is-active"));
-  const target = document.querySelector(`.chip[data-chip="${value}"]`);
-  if (target) target.classList.add("is-active");
-}
-
-function initChips(){
-  if (!chipRow) return;
-  chipRow.addEventListener("click", (e) => {
-    const btn = e.target.closest(".chip");
-    if (!btn) return;
-    const v = btn.getAttribute("data-chip");
-    setChipActive(v);
-    serviceFilter.value = v === "all" ? "all" : v;
-    visibleCount = 6;
-    render();
-  });
-}
-
-async function loadPros(){
-  try{
-    const res = await fetch("data/pros.json", { cache: "no-store" });
-    ALL_PROS = await res.json();
-  }catch(err){
-    ALL_PROS = [];
-    console.error(err);
+function renderDots(){
+  dotsEl.innerHTML = "";
+  for (let i = 0; i < pages(); i++){
+    const b = document.createElement("button");
+    b.className = "dot" + (i === index ? " is-active" : "");
+    b.addEventListener("click", () => { index = i; snap(); });
+    dotsEl.appendChild(b);
   }
-  render();
 }
 
-function init(){
-  if (yearEl) yearEl.textContent = new Date().getFullYear();
+function snap(){
+  const card = track.querySelector(".card");
+  if (!card) return;
+  const gap = 14;
+  const cardW = card.getBoundingClientRect().width;
+  const shift = index * (visible() * (cardW + gap));
+  track.scrollTo({ left: shift, behavior: "smooth" });
 
-  initChips();
+  [...dotsEl.children].forEach((d,i)=> d.classList.toggle("is-active", i === index));
+}
 
-  loadMoreBtn?.addEventListener("click", () => {
-    visibleCount += 6;
-    render();
+prev.addEventListener("click", () => { index = Math.max(0, index - 1); snap(); });
+next.addEventListener("click", () => { index = Math.min(pages() - 1, index + 1); snap(); });
+
+window.addEventListener("resize", () => {
+  index = Math.min(index, pages() - 1);
+  renderDots();
+  snap();
+});
+
+renderDots();
+snap();
+
+// ------------------ Category chip state (visual only for now) ------------------
+document.querySelectorAll(".chip").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".chip").forEach(b => b.classList.remove("is-active"));
+    btn.classList.add("is-active");
   });
+});
 
-  searchBtn?.addEventListener("click", () => {
-    visibleCount = 6;
-    render();
-  });
+// ------------------ Search button (visual only for now) ------------------
+document.getElementById("searchBtn").addEventListener("click", () => {
+  const q = document.getElementById("q").value.trim();
+  const loc = document.getElementById("loc").value;
+  const when = document.getElementById("when").value.trim();
+  console.log("Search:", { q, loc, when });
+});
 
-  serviceFilter?.addEventListener("change", () => {
-    const v = serviceFilter.value;
-    setChipActive(v === "all" ? "all" : serviceFilter.options[serviceFilter.selectedIndex].text);
-    visibleCount = 6;
-    render();
-  });
+// ------------------ Sparkles / luxury dust ---------- */
+(function sparkles(){
+  const canvas = document.getElementById("sparkles");
+  const ctx = canvas.getContext("2d");
 
-  cityFilter?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter"){
-      visibleCount = 6;
-      render();
+  const resize = () => {
+    canvas.width = Math.floor(window.innerWidth * devicePixelRatio);
+    canvas.height = Math.floor(window.innerHeight * devicePixelRatio);
+  };
+  resize();
+  window.addEventListener("resize", resize);
+
+  const rand = (a,b) => a + Math.random()*(b-a);
+
+  const dots = Array.from({length: 110}).map(() => ({
+    x: rand(0, canvas.width),
+    y: rand(0, canvas.height),
+    r: rand(0.9, 2.3) * devicePixelRatio,
+    vx: rand(-0.09, 0.09) * devicePixelRatio,
+    vy: rand(-0.06, 0.11) * devicePixelRatio,
+    a: rand(0.05, 0.22),
+    gold: Math.random() < 0.7
+  }));
+
+  function tick(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    for (const p of dots){
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if (p.x < -60) p.x = canvas.width + 60;
+      if (p.x > canvas.width + 60) p.x = -60;
+      if (p.y < -60) p.y = canvas.height + 60;
+      if (p.y > canvas.height + 60) p.y = -60;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.gold
+        ? `rgba(216, 180, 106, ${p.a})`
+        : `rgba(200, 190, 255, ${p.a * 0.9})`;
+      ctx.fill();
     }
-  });
 
-  const joinBtn = document.getElementById("joinBtn");
-  const emailInput = document.getElementById("emailInput");
-  joinBtn?.addEventListener("click", () => {
-    const email = (emailInput?.value || "").trim();
-    if (!email) return showToast("Enter your email to join the waitlist.");
-    showToast("✅ Added to waitlist (demo).");
-    if (emailInput) emailInput.value = "";
-  });
-
-  hamburger?.addEventListener("click", () => {
-    mobileMenu.classList.toggle("is-open");
-  });
-
-  loadPros();
-}
-
-init();
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
