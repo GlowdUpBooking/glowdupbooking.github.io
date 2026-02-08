@@ -1,32 +1,74 @@
 [
   {
-    "id": "pro-1",
-    "business_name": "Glow’d Up Test Pro",
-    "full_name": "Glow’d Up Test Pro",
+    "name": "Glow’d Up Test Pro",
     "category": "Barber",
     "city": "Dallas",
-    "zip": "10453",
-    "badge": "New",
-    "image": "./assets/pro-1.jpg"
+    "starting_price": 10,
+    "duration": 30,
+    "badge": "Available",
+    "image": "assets/pro-1.jpg"
   },
   {
-    "id": "pro-2",
-    "business_name": "Luxury Nails Studio",
-    "full_name": "Nail Tech",
+    "name": "Fresh Fade Studio",
+    "category": "Barber",
+    "city": "New York",
+    "starting_price": 25,
+    "duration": 45,
+    "badge": "Top Rated",
+    "image": "assets/pro-1.jpg"
+  },
+  {
+    "name": "Luxe Nails by Dee",
     "category": "Nails",
     "city": "Houston",
-    "zip": "77002",
-    "badge": "Available",
-    "image": "./assets/pro-2.jpg"
+    "starting_price": 45,
+    "duration": 60,
+    "badge": "New",
+    "image": "assets/pro-2.jpg"
   },
   {
-    "id": "pro-3",
-    "business_name": "Skin Care Lounge",
-    "full_name": "Esthetician",
+    "name": "Glow Skin Aesthetics",
     "category": "Skincare",
-    "city": "Austin",
-    "zip": "78701",
-    "badge": "Top rated",
-    "image": "./assets/pro-3.jpg"
+    "city": "Los Angeles",
+    "starting_price": 80,
+    "duration": 60,
+    "badge": "Popular",
+    "image": "assets/pro-3.jpg"
+  },
+  {
+    "name": "Ink & Aura Tattoo",
+    "category": "Tattoo",
+    "city": "Miami",
+    "starting_price": 120,
+    "duration": 90,
+    "badge": "Trending",
+    "image": "assets/pro-3.jpg"
+  },
+  {
+    "name": "Silk Press Lounge",
+    "category": "Hair",
+    "city": "Atlanta",
+    "starting_price": 70,
+    "duration": 75,
+    "badge": "Premium",
+    "image": "assets/pro-2.jpg"
+  },
+  {
+    "name": "Brow Bar Studio",
+    "category": "Brows",
+    "city": "Chicago",
+    "starting_price": 35,
+    "duration": 30,
+    "badge": "New",
+    "image": "assets/pro-2.jpg"
+  },
+  {
+    "name": "Recovery Massage Co.",
+    "category": "Massage",
+    "city": "Phoenix",
+    "starting_price": 90,
+    "duration": 60,
+    "badge": "Available",
+    "image": "assets/pro-1.jpg"
   }
 ]
