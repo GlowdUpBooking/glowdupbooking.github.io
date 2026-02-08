@@ -1,194 +1,151 @@
-const state = {
-  pros: [],
-  filtered: [],
-  activeCategory: "All",
-};
+// ------------------ Recommended carousel data (demo; next we’ll load from data/pros.json) ------------------
+const imagePool = [
+  "assets/pro-1.jpg",
+  "assets/pro-2.jpg",
+  "assets/pro-3.jpg",
+  "assets/model6.png"
+];
 
-const categories = ["All","Hair","Barber","Braiding","Nails","Tattoo","Skincare","Makeup","Lashes","Massage"];
+const recs = [
+  { name: "Sarah", city: "Dallas, TX", badge: "Highly rated", img: imagePool[0] },
+  { name: "Jelmes", city: "Dallas, TX", badge: "Barber • Fade", img: imagePool[1] },
+  { name: "James", city: "Dallas, TX", badge: "Barber • Beard", img: imagePool[2] },
+  { name: "Luxury Nails Studio", city: "Houston, TX", badge: "Nails • Gel", img: imagePool[3] },
+  { name: "Skincare", city: "Austin, TX", badge: "Facials • Glow", img: imagePool[0] },
+  { name: "Makeup Pro", city: "Dallas, TX", badge: "Makeup • Glam", img: imagePool[3] },
+];
 
-const els = {
-  grid: document.getElementById("prosGrid"),
-  chips: document.getElementById("categoryChips"),
-  search: document.getElementById("searchInput"),
-  year: document.getElementById("year"),
-  modal: document.getElementById("modal"),
-  modalTitle: document.getElementById("modalTitle"),
-  modalBody: document.getElementById("modalBody"),
-};
+const track = document.getElementById("track");
+const dotsEl = document.getElementById("dots");
+const prev = document.getElementById("prev");
+const next = document.getElementById("next");
 
-function escapeHtml(str=""){
-  return str.replace(/[&<>"']/g, (m) => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[m]));
-}
-
-function openModal(title, html){
-  els.modalTitle.textContent = title;
-  els.modalBody.innerHTML = html;
-  els.modal.classList.add("show");
-}
-function closeModal(){
-  els.modal.classList.remove("show");
-}
-document.addEventListener("click", (e) => {
-  if (e.target?.dataset?.close) closeModal();
-});
-
-function renderChips(){
-  els.chips.innerHTML = categories.map(c => {
-    const active = c === state.activeCategory ? "active" : "";
-    return `<button class="chip ${active}" data-chip="${c}">${c}</button>`;
-  }).join("");
-}
-
-function applyFilters(){
-  const q = (els.search.value || "").trim().toLowerCase();
-  state.filtered = state.pros.filter(p => {
-    const catOk = state.activeCategory === "All" || (p.category || "").toLowerCase() === state.activeCategory.toLowerCase();
-    const qOk = !q || `${p.business_name} ${p.full_name} ${p.category} ${p.city} ${p.zip}`.toLowerCase().includes(q);
-    return catOk && qOk;
-  });
-  renderPros();
-}
-
-function proCard(p){
-  const img = p.image || "./assets/pro-1.jpg";
-  const name = escapeHtml(p.business_name || p.full_name || "Professional");
-  const meta = escapeHtml(`${p.category || "Service"} • ${p.city || "Near you"}${p.zip ? " • " + p.zip : ""}`);
-  const badge = p.badge ? escapeHtml(p.badge) : "Available";
-
+function cardTemplate(item){
   return `
-    <article class="pro">
-      <img class="pro__img" src="${img}" alt="${name}" loading="lazy" />
-      <div class="pro__body">
-        <div class="pro__top">
-          <div class="pro__name">${name}</div>
-          <span class="badge">${badge}</span>
-        </div>
-        <div class="pro__meta">${meta}</div>
-        <div class="pro__cta">
-          <button class="btn btn--gold btn--sm" data-book="${escapeHtml(p.id)}">Book</button>
-          <button class="btn btn--ghost btn--sm" data-view="${escapeHtml(p.id)}">View</button>
+    <article class="card">
+      <div class="card__img" style="background-image:url('${item.img}')"></div>
+      <div class="card__body">
+        <div class="card__name">${item.name}</div>
+        <div class="card__meta">${item.city}</div>
+        <div class="card__row">
+          <span class="badge">${item.badge}</span>
+          <button class="card__book" type="button">Book</button>
         </div>
       </div>
     </article>
   `;
 }
 
-function renderPros(){
-  const list = state.filtered.length ? state.filtered : state.pros;
-  if (!list.length){
-    els.grid.innerHTML = `<div class="muted">No pros found. Try another search.</div>`;
-    return;
+track.innerHTML = recs.map(cardTemplate).join("");
+
+let index = 0;
+
+const visible = () => {
+  const w = window.innerWidth;
+  if (w < 600) return 1;
+  if (w < 900) return 2;
+  if (w < 1200) return 3;
+  return 4;
+};
+
+function pages(){
+  return Math.max(1, Math.ceil(recs.length / visible()));
+}
+
+function renderDots(){
+  dotsEl.innerHTML = "";
+  for (let i = 0; i < pages(); i++){
+    const b = document.createElement("button");
+    b.className = "dot" + (i === index ? " is-active" : "");
+    b.addEventListener("click", () => { index = i; snap(); });
+    dotsEl.appendChild(b);
   }
-  els.grid.innerHTML = list.map(proCard).join("");
 }
 
-async function loadPros(){
-  const res = await fetch("./data/pros.json", { cache: "no-store" });
-  const data = await res.json();
-  // Expecting array
-  state.pros = Array.isArray(data) ? data : (data.pros || []);
-  state.filtered = state.pros.slice();
-  renderPros();
+function snap(){
+  const card = track.querySelector(".card");
+  if (!card) return;
+  const gap = 14;
+  const cardW = card.getBoundingClientRect().width;
+  const shift = index * (visible() * (cardW + gap));
+  track.scrollTo({ left: shift, behavior: "smooth" });
+
+  [...dotsEl.children].forEach((d,i)=> d.classList.toggle("is-active", i === index));
 }
 
-function setupEvents(){
-  els.chips.addEventListener("click", (e) => {
-    const c = e.target?.dataset?.chip;
-    if (!c) return;
-    state.activeCategory = c;
-    renderChips();
-    applyFilters();
+prev.addEventListener("click", () => { index = Math.max(0, index - 1); snap(); });
+next.addEventListener("click", () => { index = Math.min(pages() - 1, index + 1); snap(); });
+
+window.addEventListener("resize", () => {
+  index = Math.min(index, pages() - 1);
+  renderDots();
+  snap();
+});
+
+renderDots();
+snap();
+
+// ------------------ Category chip state (visual only for now) ------------------
+document.querySelectorAll(".chip").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".chip").forEach(b => b.classList.remove("is-active"));
+    btn.classList.add("is-active");
   });
+});
 
-  document.getElementById("searchBtn").addEventListener("click", applyFilters);
-  els.search.addEventListener("input", applyFilters);
+// ------------------ Search button (visual only for now) ------------------
+document.getElementById("searchBtn").addEventListener("click", () => {
+  const q = document.getElementById("q").value.trim();
+  const loc = document.getElementById("loc").value;
+  const when = document.getElementById("when").value.trim();
+  console.log("Search:", { q, loc, when });
+});
 
-  // CTA + Book buttons
-  const bookBtns = ["openBook","openBook2","ctaBook","clientsBook"];
-  bookBtns.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener("click", () => openBookModal());
-  });
+// ------------------ Sparkles / luxury dust ---------- */
+(function sparkles(){
+  const canvas = document.getElementById("sparkles");
+  const ctx = canvas.getContext("2d");
 
-  document.getElementById("ctaPros").addEventListener("click", () => openWaitlistModal(true));
-  document.getElementById("prosWaitlist").addEventListener("click", () => openWaitlistModal(true));
-  document.getElementById("openWaitlist").addEventListener("click", () => openWaitlistModal(false));
+  const resize = () => {
+    canvas.width = Math.floor(window.innerWidth * devicePixelRatio);
+    canvas.height = Math.floor(window.innerHeight * devicePixelRatio);
+  };
+  resize();
+  window.addEventListener("resize", resize);
 
-  // Card actions
-  els.grid.addEventListener("click", (e) => {
-    const bookId = e.target?.dataset?.book;
-    const viewId = e.target?.dataset?.view;
+  const rand = (a,b) => a + Math.random()*(b-a);
 
-    if (bookId){
-      const p = state.pros.find(x => x.id === bookId);
-      openBookModal(p);
+  const dots = Array.from({length: 110}).map(() => ({
+    x: rand(0, canvas.width),
+    y: rand(0, canvas.height),
+    r: rand(0.9, 2.3) * devicePixelRatio,
+    vx: rand(-0.09, 0.09) * devicePixelRatio,
+    vy: rand(-0.06, 0.11) * devicePixelRatio,
+    a: rand(0.05, 0.22),
+    gold: Math.random() < 0.7
+  }));
+
+  function tick(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    for (const p of dots){
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if (p.x < -60) p.x = canvas.width + 60;
+      if (p.x > canvas.width + 60) p.x = -60;
+      if (p.y < -60) p.y = canvas.height + 60;
+      if (p.y > canvas.height + 60) p.y = -60;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.gold
+        ? `rgba(216, 180, 106, ${p.a})`
+        : `rgba(200, 190, 255, ${p.a * 0.9})`;
+      ctx.fill();
     }
-    if (viewId){
-      const p = state.pros.find(x => x.id === viewId);
-      openModal("Preview profile", `
-        <div style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap">
-          <img src="${p?.image || "./assets/pro-1.jpg"}" style="width:140px;height:140px;object-fit:cover;border-radius:14px;border:1px solid rgba(255,255,255,.12)" />
-          <div>
-            <div style="font-weight:800; font-size:16px">${escapeHtml(p?.business_name || p?.full_name || "Professional")}</div>
-            <div class="muted" style="margin-top:6px">${escapeHtml((p?.category || "Service") + " • " + (p?.city || "Near you"))}</div>
-            <div style="margin-top:12px; display:flex; gap:10px">
-              <button class="btn btn--gold btn--sm" onclick="document.querySelector('[data-close]').click();">Book</button>
-              <button class="btn btn--ghost btn--sm" data-close="1">Close</button>
-            </div>
-          </div>
-        </div>
-        <div class="muted" style="margin-top:14px">
-          (Web booking flow comes next. For now this is a premium preview like Booksy.)
-        </div>
-      `);
-    }
-  });
-}
 
-function openBookModal(pro){
-  const name = escapeHtml(pro?.business_name || "Glow’d Up Booking");
-  openModal("Book now", `
-    <div><strong>${name}</strong></div>
-    <div class="muted" style="margin-top:6px">
-      This is the web booking preview. Next step: connect to Supabase to show real services & times.
-    </div>
-    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap">
-      <a class="btn btn--gold btn--sm" href="mailto:glowdupbooking@gmail.com?subject=Book%20request&body=Hi%2C%20I%20want%20to%20book%20${encodeURIComponent(name)}">Request booking</a>
-      <button class="btn btn--ghost btn--sm" data-close="1">Close</button>
-    </div>
-  `);
-}
-
-function openWaitlistModal(proOnly){
-  const title = proOnly ? "Join pro waitlist" : "Join waitlist";
-  openModal(title, `
-    <div class="muted">Drop your email and we’ll send early access when web booking goes live.</div>
-    <form id="wlForm" style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
-      <input id="wlEmail" type="email" required placeholder="you@email.com"
-        style="flex:1; min-width:220px; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); color:#fff; outline:none;">
-      <button class="btn btn--gold" type="submit">Join</button>
-      <button class="btn btn--ghost" type="button" data-close="1">Cancel</button>
-    </form>
-    <div class="muted" style="margin-top:10px; font-size:12px">We’ll replace this with a real waitlist backend next.</div>
-  `);
-
-  const form = document.getElementById("wlForm");
-  form?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const email = document.getElementById("wlEmail").value.trim();
-    openModal("You’re in ✅", `
-      <div>Saved: <strong>${escapeHtml(email)}</strong></div>
-      <div class="muted" style="margin-top:8px">(Next: wire to Supabase table / Mailchimp.)</div>
-      <div style="margin-top:14px"><button class="btn btn--gold" data-close="1">Done</button></div>
-    `);
-  });
-}
-
-(async function init(){
-  els.year.textContent = new Date().getFullYear();
-  renderChips();
-  setupEvents();
-  await loadPros();
+    requestAnimationFrame(tick);
+  }
+  tick();
 })();
