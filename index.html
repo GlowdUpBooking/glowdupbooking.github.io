@@ -1,168 +1,134 @@
-// ------------------ Recommended carousel data (demo; later we swap to real backend) ------------------
-const imagePool = [
-  "assets/pro-1.jpg",
-  "assets/pro-2.jpg",
-  "assets/pro-3.jpg",
-  "assets/model6.png"
-];
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Glow’d Up Booking — Premium booking for pros & clients</title>
+  <meta name="description" content="Discover top beauty & grooming professionals. Book barbers, stylists, nail techs, tattoo artists, skincare experts, and more." />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
 
-const recs = [
-  { name: "Sarah", city: "Dallas, TX", badge: "Highly rated", img: imagePool[0] },
-  { name: "Jelmes", city: "Dallas, TX", badge: "Barber • Fade", img: imagePool[1] },
-  { name: "James", city: "Dallas, TX", badge: "Barber • Beard", img: imagePool[2] },
-  { name: "Luxury Nails Studio", city: "Houston, TX", badge: "Nails • Gel", img: imagePool[3] },
-  { name: "Skincare", city: "Austin, TX", badge: "Facials • Glow", img: imagePool[0] },
-  { name: "Makeup Pro", city: "Dallas, TX", badge: "Makeup • Glam", img: imagePool[3] },
-];
+<body>
+  <!-- Ambient background -->
+  <div class="bg" aria-hidden="true">
+    <div class="bg__texture"></div>
+    <div class="bg__glow bg__glow--top"></div>
+    <div class="bg__glow bg__glow--bottom"></div>
+    <canvas id="sparkles"></canvas>
+  </div>
 
-// Elements (guarded so no errors if sections are disabled)
-const track = document.getElementById("track");
-const dotsEl = document.getElementById("dots");
-const prev = document.getElementById("prev");
-const next = document.getElementById("next");
+  <!-- NAV -->
+  <header class="nav">
+    <div class="nav__inner">
+      <a class="brand" href="#top" aria-label="Glow’d Up Booking">
+        <span class="brand__mark">G</span>
+        <span class="brand__text">
+          <span class="brand__name">Glow’d Up Booking</span>
+          <span class="brand__tag">Premium booking for pros &amp; clients</span>
+        </span>
+      </a>
 
-// Build cards (if carousel exists)
-if (track) {
-  const cardTemplate = (item) => `
-    <article class="card">
-      <div class="card__img" style="background-image:url('${item.img}')"></div>
-      <div class="card__body">
-        <div class="card__name">${item.name}</div>
-        <div class="card__meta">${item.city}</div>
-        <div class="card__row">
-          <span class="badge">${item.badge}</span>
-          <button class="card__book" type="button">Book</button>
-        </div>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="#how">How it works</a>
+        <a href="#clients">For clients</a>
+        <a href="#pros">For pros</a>
+      </nav>
+
+      <div class="nav__cta">
+        <a class="btn btn--ghost" href="#waitlist">Join waitlist</a>
+        <a class="btn btn--gold" href="#waitlist">Get early access</a>
       </div>
-    </article>
-  `;
+    </div>
+  </header>
 
-  track.innerHTML = recs.map(cardTemplate).join("");
-}
+  <!-- HERO -->
+  <main class="hero" id="top">
+    <div class="hero__media" aria-hidden="true">
+      <div class="hero__img hero__img--left"></div>
+      <div class="hero__img hero__img--right"></div>
+      <div class="hero__overlay"></div>
+    </div>
 
-let index = 0;
+    <section class="hero__content">
+      <div class="pill">
+        <span class="pill__dot">✦</span>
+        <span>Now in TestFlight</span>
+        <span class="pill__sep">•</span>
+        <span class="pill__muted">Launching soon</span>
+      </div>
 
-const visible = () => {
-  const w = window.innerWidth;
-  if (w < 600) return 1;
-  if (w < 900) return 2;
-  if (w < 1200) return 3;
-  return 4;
-};
+      <h1 class="hero__title">Discover top beauty &amp; grooming professionals.</h1>
+      <p class="hero__sub">
+        Book local barbers, stylists, nail techs, tattoo artists, skincare experts, and more.
+      </p>
 
-const pages = () => Math.max(1, Math.ceil(recs.length / visible()));
+      <!-- SEARCH + DISCOVERY DISABLED UNTIL LOGIN / MARKETPLACE LAUNCH -->
+      <!--
+      <div class="search" id="search" role="search" aria-label="Search pros"> ... </div>
+      <div class="chips" aria-label="Categories"> ... </div>
+      -->
 
-function renderDots(){
-  if (!dotsEl) return;
-  dotsEl.innerHTML = "";
-  for (let i = 0; i < pages(); i++){
-    const b = document.createElement("button");
-    b.className = "dot" + (i === index ? " is-active" : "");
-    b.addEventListener("click", () => { index = i; snap(); });
-    dotsEl.appendChild(b);
-  }
-}
+      <div class="lockedBanner" role="note" aria-label="Browsing is locked">
+        <div class="lockedBanner__text">
+          <div class="lockedBanner__title">Browsing is locked for now</div>
+          <div class="lockedBanner__sub">Sign in to view pros and book appointments.</div>
+        </div>
+        <a class="btn btn--gold" href="#waitlist">Get early access</a>
+      </div>
 
-function snap(){
-  if (!track) return;
-  const card = track.querySelector(".card");
-  if (!card) return;
-  const gap = 14;
-  const cardW = card.getBoundingClientRect().width;
-  const shift = index * (visible() * (cardW + gap));
-  track.scrollTo({ left: shift, behavior: "smooth" });
+      <section class="recs" aria-label="Recommended for you">
+        <h2 class="recs__title">Recommended for you</h2>
 
-  if (dotsEl) {
-    [...dotsEl.children].forEach((d,i)=> d.classList.toggle("is-active", i === index));
-  }
-}
+        <div class="carousel is-locked" aria-disabled="true">
+          <button class="carousel__nav carousel__nav--left" aria-label="Previous" id="prev" type="button">‹</button>
+          <div class="carousel__track" id="track"></div>
+          <button class="carousel__nav carousel__nav--right" aria-label="Next" id="next" type="button">›</button>
 
-// Carousel nav (will be effectively disabled by CSS pointer-events, but kept for later)
-if (prev) prev.addEventListener("click", () => { index = Math.max(0, index - 1); snap(); });
-if (next) next.addEventListener("click", () => { index = Math.min(pages() - 1, index + 1); snap(); });
+          <div class="lockedOverlay" aria-hidden="true">
+            <div class="lockedOverlay__pill">Sign in to browse</div>
+          </div>
+        </div>
 
-window.addEventListener("resize", () => {
-  index = Math.min(index, pages() - 1);
-  renderDots();
-  snap();
-});
+        <div class="dots" id="dots" aria-label="Carousel dots"></div>
+      </section>
+    </section>
+  </main>
 
-renderDots();
-snap();
+  <section class="section" id="how">
+    <div class="section__inner">
+      <h3>How it works</h3>
+      <p>Sign up → get early access → book instantly when your city launches.</p>
+    </div>
+  </section>
 
-/*
-  ------------------ DISABLED UNTIL MARKETPLACE LAUNCH ------------------
+  <section class="section" id="clients">
+    <div class="section__inner">
+      <h3>For clients</h3>
+      <p>Discover premium pros and book with confidence. Browsing unlocks after sign in.</p>
+    </div>
+  </section>
 
-  The search bar + chips are currently commented out in index.html,
-  so we’re also disabling the JS that would attach listeners to them.
-*/
+  <section class="section" id="pros">
+    <div class="section__inner">
+      <h3>For pros</h3>
+      <p>We’re onboarding pros nationwide. Join early and get discovered first.</p>
+    </div>
+  </section>
 
-/*
-// ------------------ Category chip state (disabled) ------------------
-document.querySelectorAll(".chip").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".chip").forEach(b => b.classList.remove("is-active"));
-    btn.classList.add("is-active");
-  });
-});
-*/
+  <footer class="footer" id="waitlist">
+    <div class="footer__inner">
+      <div>
+        <h3>Join the waitlist</h3>
+        <p>We’ll notify you when web booking goes live.</p>
+      </div>
 
-/*
-// ------------------ Search button (disabled) ------------------
-document.getElementById("searchBtn").addEventListener("click", () => {
-  const q = document.getElementById("q").value.trim();
-  const loc = document.getElementById("loc").value;
-  const when = document.getElementById("when").value.trim();
-  console.log("Search:", { q, loc, when });
-});
-*/
+      <form class="waitlist" onsubmit="return false;">
+        <input type="email" placeholder="Email address" />
+        <button class="btn btn--gold" type="button">Join</button>
+      </form>
+    </div>
+  </footer>
 
-// ------------------ Sparkles / luxury dust ---------- */
-(function sparkles(){
-  const canvas = document.getElementById("sparkles");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-
-  const resize = () => {
-    canvas.width = Math.floor(window.innerWidth * devicePixelRatio);
-    canvas.height = Math.floor(window.innerHeight * devicePixelRatio);
-  };
-  resize();
-  window.addEventListener("resize", resize);
-
-  const rand = (a,b) => a + Math.random()*(b-a);
-
-  const dots = Array.from({length: 110}).map(() => ({
-    x: rand(0, canvas.width),
-    y: rand(0, canvas.height),
-    r: rand(0.9, 2.3) * devicePixelRatio,
-    vx: rand(-0.09, 0.09) * devicePixelRatio,
-    vy: rand(-0.06, 0.11) * devicePixelRatio,
-    a: rand(0.05, 0.22),
-    gold: Math.random() < 0.7
-  }));
-
-  function tick(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    for (const p of dots){
-      p.x += p.vx;
-      p.y += p.vy;
-
-      if (p.x < -60) p.x = canvas.width + 60;
-      if (p.x > canvas.width + 60) p.x = -60;
-      if (p.y < -60) p.y = canvas.height + 60;
-      if (p.y > canvas.height + 60) p.y = -60;
-
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = p.gold
-        ? `rgba(216, 180, 106, ${p.a})`
-        : `rgba(200, 190, 255, ${p.a * 0.9})`;
-      ctx.fill();
-    }
-
-    requestAnimationFrame(tick);
-  }
-  tick();
-})();
+  <script src="js/app.js"></script>
+</body>
+</html>
