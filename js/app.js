@@ -1,4 +1,4 @@
-// ------------------ Recommended carousel data (demo; next we’ll load from data/pros.json) ------------------
+// ------------------ Recommended carousel data (demo; later we swap to real backend) ------------------
 const imagePool = [
   "assets/pro-1.jpg",
   "assets/pro-2.jpg",
@@ -15,13 +15,15 @@ const recs = [
   { name: "Makeup Pro", city: "Dallas, TX", badge: "Makeup • Glam", img: imagePool[3] },
 ];
 
+// Elements (guarded so no errors if sections are disabled)
 const track = document.getElementById("track");
 const dotsEl = document.getElementById("dots");
 const prev = document.getElementById("prev");
 const next = document.getElementById("next");
 
-function cardTemplate(item){
-  return `
+// Build cards (if carousel exists)
+if (track) {
+  const cardTemplate = (item) => `
     <article class="card">
       <div class="card__img" style="background-image:url('${item.img}')"></div>
       <div class="card__body">
@@ -34,9 +36,9 @@ function cardTemplate(item){
       </div>
     </article>
   `;
-}
 
-track.innerHTML = recs.map(cardTemplate).join("");
+  track.innerHTML = recs.map(cardTemplate).join("");
+}
 
 let index = 0;
 
@@ -48,11 +50,10 @@ const visible = () => {
   return 4;
 };
 
-function pages(){
-  return Math.max(1, Math.ceil(recs.length / visible()));
-}
+const pages = () => Math.max(1, Math.ceil(recs.length / visible()));
 
 function renderDots(){
+  if (!dotsEl) return;
   dotsEl.innerHTML = "";
   for (let i = 0; i < pages(); i++){
     const b = document.createElement("button");
@@ -63,6 +64,7 @@ function renderDots(){
 }
 
 function snap(){
+  if (!track) return;
   const card = track.querySelector(".card");
   if (!card) return;
   const gap = 14;
@@ -70,11 +72,14 @@ function snap(){
   const shift = index * (visible() * (cardW + gap));
   track.scrollTo({ left: shift, behavior: "smooth" });
 
-  [...dotsEl.children].forEach((d,i)=> d.classList.toggle("is-active", i === index));
+  if (dotsEl) {
+    [...dotsEl.children].forEach((d,i)=> d.classList.toggle("is-active", i === index));
+  }
 }
 
-prev.addEventListener("click", () => { index = Math.max(0, index - 1); snap(); });
-next.addEventListener("click", () => { index = Math.min(pages() - 1, index + 1); snap(); });
+// Carousel nav (will be effectively disabled by CSS pointer-events, but kept for later)
+if (prev) prev.addEventListener("click", () => { index = Math.max(0, index - 1); snap(); });
+if (next) next.addEventListener("click", () => { index = Math.min(pages() - 1, index + 1); snap(); });
 
 window.addEventListener("resize", () => {
   index = Math.min(index, pages() - 1);
@@ -85,25 +90,37 @@ window.addEventListener("resize", () => {
 renderDots();
 snap();
 
-// ------------------ Category chip state (visual only for now) ------------------
+/*
+  ------------------ DISABLED UNTIL MARKETPLACE LAUNCH ------------------
+
+  The search bar + chips are currently commented out in index.html,
+  so we’re also disabling the JS that would attach listeners to them.
+*/
+
+/*
+// ------------------ Category chip state (disabled) ------------------
 document.querySelectorAll(".chip").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".chip").forEach(b => b.classList.remove("is-active"));
     btn.classList.add("is-active");
   });
 });
+*/
 
-// ------------------ Search button (visual only for now) ------------------
+/*
+// ------------------ Search button (disabled) ------------------
 document.getElementById("searchBtn").addEventListener("click", () => {
   const q = document.getElementById("q").value.trim();
   const loc = document.getElementById("loc").value;
   const when = document.getElementById("when").value.trim();
   console.log("Search:", { q, loc, when });
 });
+*/
 
 // ------------------ Sparkles / luxury dust ---------- */
 (function sparkles(){
   const canvas = document.getElementById("sparkles");
+  if (!canvas) return;
   const ctx = canvas.getContext("2d");
 
   const resize = () => {
