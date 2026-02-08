@@ -1,194 +1,163 @@
-const state = {
-  pros: [],
-  filtered: [],
-  activeCategory: "All",
-};
+let ALL_PROS = [];
+let visibleCount = 6;
 
-const categories = ["All","Hair","Barber","Braiding","Nails","Tattoo","Skincare","Makeup","Lashes","Massage"];
+const grid = document.getElementById("proGrid");
+const loadMoreBtn = document.getElementById("loadMoreBtn");
+const yearEl = document.getElementById("year");
+const toast = document.getElementById("toast");
 
-const els = {
-  grid: document.getElementById("prosGrid"),
-  chips: document.getElementById("categoryChips"),
-  search: document.getElementById("searchInput"),
-  year: document.getElementById("year"),
-  modal: document.getElementById("modal"),
-  modalTitle: document.getElementById("modalTitle"),
-  modalBody: document.getElementById("modalBody"),
-};
+const serviceFilter = document.getElementById("serviceFilter");
+const cityFilter = document.getElementById("cityFilter");
+const searchBtn = document.getElementById("searchBtn");
+const chipRow = document.getElementById("chipRow");
 
-function escapeHtml(str=""){
-  return str.replace(/[&<>"']/g, (m) => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[m]));
+const hamburger = document.getElementById("hamburger");
+const mobileMenu = document.getElementById("mobileMenu");
+
+function showToast(msg){
+  toast.textContent = msg;
+  toast.style.display = "block";
+  setTimeout(() => (toast.style.display = "none"), 2200);
 }
 
-function openModal(title, html){
-  els.modalTitle.textContent = title;
-  els.modalBody.innerHTML = html;
-  els.modal.classList.add("show");
-}
-function closeModal(){
-  els.modal.classList.remove("show");
-}
-document.addEventListener("click", (e) => {
-  if (e.target?.dataset?.close) closeModal();
-});
+function matchesFilters(p){
+  const svc = (serviceFilter?.value || "all").toLowerCase();
+  const city = (cityFilter?.value || "").trim().toLowerCase();
 
-function renderChips(){
-  els.chips.innerHTML = categories.map(c => {
-    const active = c === state.activeCategory ? "active" : "";
-    return `<button class="chip ${active}" data-chip="${c}">${c}</button>`;
-  }).join("");
+  const svcOk = svc === "all" ? true : (p.category || "").toLowerCase() === svc;
+  const cityOk = !city ? true : (p.city || "").toLowerCase().includes(city);
+
+  return svcOk && cityOk;
 }
 
-function applyFilters(){
-  const q = (els.search.value || "").trim().toLowerCase();
-  state.filtered = state.pros.filter(p => {
-    const catOk = state.activeCategory === "All" || (p.category || "").toLowerCase() === state.activeCategory.toLowerCase();
-    const qOk = !q || `${p.business_name} ${p.full_name} ${p.category} ${p.city} ${p.zip}`.toLowerCase().includes(q);
-    return catOk && qOk;
-  });
-  renderPros();
+function filteredPros(){
+  return ALL_PROS.filter(matchesFilters);
 }
 
-function proCard(p){
-  const img = p.image || "./assets/pro-1.jpg";
-  const name = escapeHtml(p.business_name || p.full_name || "Professional");
-  const meta = escapeHtml(`${p.category || "Service"} • ${p.city || "Near you"}${p.zip ? " • " + p.zip : ""}`);
-  const badge = p.badge ? escapeHtml(p.badge) : "Available";
+function cardHTML(p){
+  const badge = p.badge || "New";
+  const price = p.starting_price ? `$${p.starting_price}` : "$—";
+  const duration = p.duration ? `${p.duration} min` : "—";
+  const city = p.city || "—";
+  const category = p.category || "—";
+  const name = p.name || "Professional";
+  const image = p.image || "assets/pro-1.jpg";
 
   return `
-    <article class="pro">
-      <img class="pro__img" src="${img}" alt="${name}" loading="lazy" />
-      <div class="pro__body">
-        <div class="pro__top">
-          <div class="pro__name">${name}</div>
-          <span class="badge">${badge}</span>
+    <article class="card">
+      <div class="card__img">
+        <img src="${image}" alt="${name} ${category} in ${city}" loading="lazy" />
+        <div class="card__badge">${badge}</div>
+      </div>
+      <div class="card__body">
+        <div class="card__title">${name}</div>
+        <div class="card__meta">
+          <span>${category}</span>
+          <span>•</span>
+          <span>${city}</span>
+          <span>•</span>
+          <span>${duration}</span>
         </div>
-        <div class="pro__meta">${meta}</div>
-        <div class="pro__cta">
-          <button class="btn btn--gold btn--sm" data-book="${escapeHtml(p.id)}">Book</button>
-          <button class="btn btn--ghost btn--sm" data-view="${escapeHtml(p.id)}">View</button>
+        <div class="card__row">
+          <div class="price">${price}</div>
+          <button class="card__btn" data-pro="${encodeURIComponent(name)}">Book</button>
         </div>
       </div>
     </article>
   `;
 }
 
-function renderPros(){
-  const list = state.filtered.length ? state.filtered : state.pros;
-  if (!list.length){
-    els.grid.innerHTML = `<div class="muted">No pros found. Try another search.</div>`;
-    return;
-  }
-  els.grid.innerHTML = list.map(proCard).join("");
+function render(){
+  const list = filteredPros();
+  const slice = list.slice(0, visibleCount);
+
+  grid.innerHTML = slice.map(cardHTML).join("");
+
+  // Load more visibility
+  loadMoreBtn.style.display = list.length > visibleCount ? "inline-flex" : "none";
+
+  // Demo booking button
+  grid.querySelectorAll(".card__btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const pro = decodeURIComponent(btn.getAttribute("data-pro") || "");
+      showToast(`Booking preview coming soon — selected: ${pro}`);
+    });
+  });
+}
+
+function setChipActive(value){
+  document.querySelectorAll(".chip").forEach(c => c.classList.remove("is-active"));
+  const target = document.querySelector(`.chip[data-chip="${value}"]`);
+  if (target) target.classList.add("is-active");
+}
+
+function initChips(){
+  if (!chipRow) return;
+  chipRow.addEventListener("click", (e) => {
+    const btn = e.target.closest(".chip");
+    if (!btn) return;
+    const v = btn.getAttribute("data-chip");
+    setChipActive(v);
+    serviceFilter.value = v === "all" ? "all" : v;
+    visibleCount = 6;
+    render();
+  });
 }
 
 async function loadPros(){
-  const res = await fetch("./data/pros.json", { cache: "no-store" });
-  const data = await res.json();
-  // Expecting array
-  state.pros = Array.isArray(data) ? data : (data.pros || []);
-  state.filtered = state.pros.slice();
-  renderPros();
+  try{
+    const res = await fetch("data/pros.json", { cache: "no-store" });
+    ALL_PROS = await res.json();
+  }catch(err){
+    ALL_PROS = [];
+    console.error(err);
+  }
+  render();
 }
 
-function setupEvents(){
-  els.chips.addEventListener("click", (e) => {
-    const c = e.target?.dataset?.chip;
-    if (!c) return;
-    state.activeCategory = c;
-    renderChips();
-    applyFilters();
+function init(){
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  initChips();
+
+  loadMoreBtn?.addEventListener("click", () => {
+    visibleCount += 6;
+    render();
   });
 
-  document.getElementById("searchBtn").addEventListener("click", applyFilters);
-  els.search.addEventListener("input", applyFilters);
-
-  // CTA + Book buttons
-  const bookBtns = ["openBook","openBook2","ctaBook","clientsBook"];
-  bookBtns.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener("click", () => openBookModal());
+  searchBtn?.addEventListener("click", () => {
+    visibleCount = 6;
+    render();
   });
 
-  document.getElementById("ctaPros").addEventListener("click", () => openWaitlistModal(true));
-  document.getElementById("prosWaitlist").addEventListener("click", () => openWaitlistModal(true));
-  document.getElementById("openWaitlist").addEventListener("click", () => openWaitlistModal(false));
+  serviceFilter?.addEventListener("change", () => {
+    const v = serviceFilter.value;
+    setChipActive(v === "all" ? "all" : serviceFilter.options[serviceFilter.selectedIndex].text);
+    visibleCount = 6;
+    render();
+  });
 
-  // Card actions
-  els.grid.addEventListener("click", (e) => {
-    const bookId = e.target?.dataset?.book;
-    const viewId = e.target?.dataset?.view;
-
-    if (bookId){
-      const p = state.pros.find(x => x.id === bookId);
-      openBookModal(p);
-    }
-    if (viewId){
-      const p = state.pros.find(x => x.id === viewId);
-      openModal("Preview profile", `
-        <div style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap">
-          <img src="${p?.image || "./assets/pro-1.jpg"}" style="width:140px;height:140px;object-fit:cover;border-radius:14px;border:1px solid rgba(255,255,255,.12)" />
-          <div>
-            <div style="font-weight:800; font-size:16px">${escapeHtml(p?.business_name || p?.full_name || "Professional")}</div>
-            <div class="muted" style="margin-top:6px">${escapeHtml((p?.category || "Service") + " • " + (p?.city || "Near you"))}</div>
-            <div style="margin-top:12px; display:flex; gap:10px">
-              <button class="btn btn--gold btn--sm" onclick="document.querySelector('[data-close]').click();">Book</button>
-              <button class="btn btn--ghost btn--sm" data-close="1">Close</button>
-            </div>
-          </div>
-        </div>
-        <div class="muted" style="margin-top:14px">
-          (Web booking flow comes next. For now this is a premium preview like Booksy.)
-        </div>
-      `);
+  cityFilter?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter"){
+      visibleCount = 6;
+      render();
     }
   });
-}
 
-function openBookModal(pro){
-  const name = escapeHtml(pro?.business_name || "Glow’d Up Booking");
-  openModal("Book now", `
-    <div><strong>${name}</strong></div>
-    <div class="muted" style="margin-top:6px">
-      This is the web booking preview. Next step: connect to Supabase to show real services & times.
-    </div>
-    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap">
-      <a class="btn btn--gold btn--sm" href="mailto:glowdupbooking@gmail.com?subject=Book%20request&body=Hi%2C%20I%20want%20to%20book%20${encodeURIComponent(name)}">Request booking</a>
-      <button class="btn btn--ghost btn--sm" data-close="1">Close</button>
-    </div>
-  `);
-}
-
-function openWaitlistModal(proOnly){
-  const title = proOnly ? "Join pro waitlist" : "Join waitlist";
-  openModal(title, `
-    <div class="muted">Drop your email and we’ll send early access when web booking goes live.</div>
-    <form id="wlForm" style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap">
-      <input id="wlEmail" type="email" required placeholder="you@email.com"
-        style="flex:1; min-width:220px; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); color:#fff; outline:none;">
-      <button class="btn btn--gold" type="submit">Join</button>
-      <button class="btn btn--ghost" type="button" data-close="1">Cancel</button>
-    </form>
-    <div class="muted" style="margin-top:10px; font-size:12px">We’ll replace this with a real waitlist backend next.</div>
-  `);
-
-  const form = document.getElementById("wlForm");
-  form?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const email = document.getElementById("wlEmail").value.trim();
-    openModal("You’re in ✅", `
-      <div>Saved: <strong>${escapeHtml(email)}</strong></div>
-      <div class="muted" style="margin-top:8px">(Next: wire to Supabase table / Mailchimp.)</div>
-      <div style="margin-top:14px"><button class="btn btn--gold" data-close="1">Done</button></div>
-    `);
+  const joinBtn = document.getElementById("joinBtn");
+  const emailInput = document.getElementById("emailInput");
+  joinBtn?.addEventListener("click", () => {
+    const email = (emailInput?.value || "").trim();
+    if (!email) return showToast("Enter your email to join the waitlist.");
+    showToast("✅ Added to waitlist (demo).");
+    if (emailInput) emailInput.value = "";
   });
+
+  hamburger?.addEventListener("click", () => {
+    mobileMenu.classList.toggle("is-open");
+  });
+
+  loadPros();
 }
 
-(async function init(){
-  els.year.textContent = new Date().getFullYear();
-  renderChips();
-  setupEvents();
-  await loadPros();
-})();
+init();
