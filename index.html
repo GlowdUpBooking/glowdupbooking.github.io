@@ -35,8 +35,8 @@
       </nav>
 
       <div class="nav__cta">
-        <a class="btn btn--ghost" href="#waitlist">Join waitlist</a>
-        <a class="btn btn--gold" href="#waitlist">Get early access</a>
+        <a class="btn btn--ghost" href="/signup">Create account</a>
+        <a class="btn btn--gold" href="/login">Sign in</a>
       </div>
     </div>
   </header>
@@ -68,14 +68,7 @@
       <div class="chips" aria-label="Categories"> ... </div>
       -->
 
-      <div class="lockedBanner" role="note" aria-label="Browsing is locked">
-        <div class="lockedBanner__text">
-          <div class="lockedBanner__title">Browsing is locked for now</div>
-          <div class="lockedBanner__sub">Sign in to view pros and book appointments.</div>
-        </div>
-        <a class="btn btn--gold" href="#waitlist">Get early access</a>
-      </div>
-
+      <!-- RECOMMENDED (visible but non-interactive until login, silently) -->
       <section class="recs" aria-label="Recommended for you">
         <h2 class="recs__title">Recommended for you</h2>
 
@@ -83,10 +76,6 @@
           <button class="carousel__nav carousel__nav--left" aria-label="Previous" id="prev" type="button">‹</button>
           <div class="carousel__track" id="track"></div>
           <button class="carousel__nav carousel__nav--right" aria-label="Next" id="next" type="button">›</button>
-
-          <div class="lockedOverlay" aria-hidden="true">
-            <div class="lockedOverlay__pill">Sign in to browse</div>
-          </div>
         </div>
 
         <div class="dots" id="dots" aria-label="Carousel dots"></div>
@@ -97,35 +86,35 @@
   <section class="section" id="how">
     <div class="section__inner">
       <h3>How it works</h3>
-      <p>Sign up → get early access → book instantly when your city launches.</p>
+      <p>Sign in → explore pros → book instantly.</p>
     </div>
   </section>
 
   <section class="section" id="clients">
     <div class="section__inner">
       <h3>For clients</h3>
-      <p>Discover premium pros and book with confidence. Browsing unlocks after sign in.</p>
+      <p>Discover premium pros and book with confidence.</p>
     </div>
   </section>
 
   <section class="section" id="pros">
     <div class="section__inner">
       <h3>For pros</h3>
-      <p>We’re onboarding pros nationwide. Join early and get discovered first.</p>
+      <p>Manage bookings, unlock analytics, and grow your business.</p>
     </div>
   </section>
 
-  <footer class="footer" id="waitlist">
+  <footer class="footer">
     <div class="footer__inner">
       <div>
-        <h3>Join the waitlist</h3>
-        <p>We’ll notify you when web booking goes live.</p>
+        <h3>Ready to continue?</h3>
+        <p>Sign in to access the platform.</p>
       </div>
 
-      <form class="waitlist" onsubmit="return false;">
-        <input type="email" placeholder="Email address" />
-        <button class="btn btn--gold" type="button">Join</button>
-      </form>
+      <div class="footer__cta">
+        <a class="btn btn--ghost" href="/signup">Create account</a>
+        <a class="btn btn--gold" href="/login">Sign in</a>
+      </div>
     </div>
   </footer>
 
