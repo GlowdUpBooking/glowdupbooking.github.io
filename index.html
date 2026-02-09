@@ -1,104 +1,28 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Glow’d Up Booking — Premium booking for pros & clients</title>
-  <meta name="description" content="Discover top beauty & grooming professionals. Book barbers, stylists, nail techs, tattoo artists, skincare experts, and more." />
-  <link rel="stylesheet" href="css/styles.css" />
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Glow’d Up Booking</title>
 
-<body>
-  <!-- Ambient background -->
-  <div class="bg" aria-hidden="true">
-    <div class="bg__texture"></div>
-    <div class="bg__glow bg__glow--top"></div>
-    <div class="bg__glow bg__glow--bottom"></div>
-    <canvas id="sparkles"></canvas>
-  </div>
-
-  <!-- NAV -->
-  <header class="nav">
-    <div class="nav__inner">
-      <a class="brand" href="/" aria-label="Glow’d Up Booking Home">
-        <img class="brand__logo" src="assets/logo-1.png" alt="Glow’d Up Booking" />
-        <span class="brand__text">
-          <span class="brand__name">Glow’d Up Booking</span>
-          <span class="brand__tag">Premium booking for pros &amp; clients</span>
-        </span>
-      </a>
-
-      <nav class="nav__links" aria-label="Primary">
-        <a href="#how">How it works</a>
-        <a href="#clients">For clients</a>
-        <a href="#pros">For pros</a>
-      </nav>
-
-      <div class="nav__cta">
-        <a class="btn btn--ghost" href="/signup">Create account</a>
-        <a class="btn btn--gold" href="/login">Sign in</a>
-      </div>
-    </div>
-  </header>
-
-  <!-- HERO -->
-  <main class="hero" id="top">
-    <section class="hero__content">
-      <h1 class="hero__title">Discover top beauty &amp; grooming professionals.</h1>
-      <p class="hero__sub">
-        Book local barbers, stylists, nail techs, tattoo artists, skincare experts, and more.
-      </p>
-
-      <!-- Marketplace UI hidden until login (your choice #5 = B) -->
-      <!--
-      <section class="recs" aria-label="Recommended for you">
-        <h2 class="recs__title">Recommended for you</h2>
-        <div class="carousel">
-          <button class="carousel__nav carousel__nav--left" aria-label="Previous" id="prev" type="button">‹</button>
-          <div class="carousel__track" id="track"></div>
-          <button class="carousel__nav carousel__nav--right" aria-label="Next" id="next" type="button">›</button>
-        </div>
-        <div class="dots" id="dots" aria-label="Carousel dots"></div>
-      </section>
-      -->
-    </section>
-  </main>
-
-  <section class="section" id="how">
-    <div class="section__inner">
-      <h3>How it works</h3>
-      <p>Create an account → sign in → book appointments and manage everything in one place.</p>
-    </div>
-  </section>
-
-  <section class="section" id="clients">
-    <div class="section__inner">
-      <h3>For clients</h3>
-      <p>Find pros you trust, book instantly, and keep your appointments organized.</p>
-    </div>
-  </section>
-
-  <section class="section" id="pros">
-    <div class="section__inner">
-      <h3>For pros</h3>
-      <p>Accept bookings, reduce no-shows, and unlock better analytics on web.</p>
-    </div>
-  </section>
-
-  <footer class="footer">
-    <div class="footer__inner">
-      <div>
-        <h3>Continue to the platform</h3>
-        <p>Sign in to access your dashboard.</p>
-      </div>
-
-      <div class="footer__cta">
-        <a class="btn btn--ghost" href="/signup">Create account</a>
-        <a class="btn btn--gold" href="/login">Sign in</a>
-      </div>
-    </div>
-  </footer>
-
-  <script src="js/app.js"></script>
-</body>
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var p = params.get("p");
+        if (!p) return;
+        params.delete("p");
+        var restored = decodeURIComponent(p);
+        var extra = params.toString();
+        window.history.replaceState(
+          null,
+          "",
+          restored + (extra ? (restored.includes("?") ? "&" : "?") + extra : "")
+        );
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
