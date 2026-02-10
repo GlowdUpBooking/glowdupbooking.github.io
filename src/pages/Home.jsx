@@ -1,27 +1,3 @@
-const progress = [
-  { title: "Web Platform (React)", status: "Now", detail: "Premium UI, routing, deploy pipeline" },
-  { title: "Supabase Auth", status: "Now", detail: "Sign up, sign in, sessions, protected routes" },
-  { title: "Pro Dashboard", status: "Next", detail: "Schedule, services, availability, profile" },
-  { title: "Client Booking", status: "Next", detail: "Book flow, confirmations, history" },
-  { title: "Analytics", status: "Planned", detail: "Revenue, retention, cancellations, exports" },
-  { title: "Notifications", status: "Planned", detail: "Email/SMS reminders, reschedule links" },
-];
-
-const featureIdeas = [
-  { title: "Advanced analytics", detail: "KPIs, trends, exports, performance insights" },
-  { title: "Client history + notes", detail: "Preferences, photos, past services, internal notes" },
-  { title: "Team accounts", detail: "Studios/salons with multiple pros and roles" },
-  { title: "Intake forms", detail: "Collect info before appointment by category" },
-  { title: "Deposits & policies", detail: "No-show protection + cancellation rules" },
-  { title: "Portfolio + reviews", detail: "Show work and convert visitors" },
-];
-
-function StatusPill({ value }) {
-  const cls =
-    value === "Now" ? "pill pill-now" : value === "Next" ? "pill pill-next" : "pill pill-planned";
-  return <span className={cls}>{value}</span>;
-}
-
 export default function Home() {
   return (
     <div className="page">
@@ -36,6 +12,10 @@ export default function Home() {
               <div className="brandTag">Premium booking platform</div>
             </div>
           </a>
+
+          <nav className="navLinks">
+            <a className="navLink" href="/pricing">Pricing</a>
+          </nav>
 
           <div className="navCta">
             <a className="btn ghost" href="/signup">Create account</a>
@@ -55,6 +35,7 @@ export default function Home() {
           <div className="heroBtns">
             <a className="btn gold" href="/login">Sign in</a>
             <a className="btn ghost" href="/signup">Create account</a>
+            <a className="btn ghost" href="/pricing">View pricing</a>
           </div>
         </section>
 
@@ -65,11 +46,28 @@ export default function Home() {
           </div>
 
           <div className="grid">
-            {progress.map((x) => (
+            {[
+              { title: "Web Platform (React)", status: "Now", detail: "Premium UI, routing, deploy pipeline" },
+              { title: "Supabase Auth", status: "Now", detail: "Sign up, sign in, sessions, protected routes" },
+              { title: "Pro Dashboard", status: "Next", detail: "Schedule, services, availability, profile" },
+              { title: "Client Booking", status: "Next", detail: "Book flow, confirmations, history" },
+              { title: "Analytics", status: "Planned", detail: "Revenue, retention, cancellations, exports" },
+              { title: "Notifications", status: "Planned", detail: "Email/SMS reminders, reschedule links" },
+            ].map((x) => (
               <div className="card" key={x.title}>
                 <div className="cardTop">
                   <div className="cardTitle">{x.title}</div>
-                  <StatusPill value={x.status} />
+                  <span
+                    className={
+                      x.status === "Now"
+                        ? "pill pill-now"
+                        : x.status === "Next"
+                        ? "pill pill-next"
+                        : "pill pill-planned"
+                    }
+                  >
+                    {x.status}
+                  </span>
                 </div>
                 <div className="cardDetail">{x.detail}</div>
               </div>
@@ -84,7 +82,14 @@ export default function Home() {
           </div>
 
           <div className="grid">
-            {featureIdeas.map((x) => (
+            {[
+              { title: "Advanced analytics", detail: "KPIs, trends, exports, performance insights" },
+              { title: "Client history + notes", detail: "Preferences, photos, past services, internal notes" },
+              { title: "Team accounts", detail: "Studios/salons with multiple pros and roles" },
+              { title: "Intake forms", detail: "Collect info before appointment by category" },
+              { title: "Deposits & policies", detail: "No-show protection + cancellation rules" },
+              { title: "Portfolio + reviews", detail: "Show work and convert visitors" },
+            ].map((x) => (
               <div className="card" key={x.title}>
                 <div className="cardTitle">{x.title}</div>
                 <div className="cardDetail">{x.detail}</div>
@@ -101,6 +106,7 @@ export default function Home() {
             <div className="footerSub">© Kamara Labs LLC</div>
           </div>
           <div className="footerLinks">
+            <a href="/pricing">Pricing</a>
             <a href="/login">Sign in</a>
             <a href="/signup">Create account</a>
           </div>
