@@ -1,3 +1,4 @@
+// src/pages/Pricing.jsx
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 
@@ -7,7 +8,10 @@ export default function Pricing() {
   const [claimed, setClaimed] = useState(0);
   const [err, setErr] = useState("");
 
-  const remaining = useMemo(() => Math.max(0, (maxSpots ?? 500) - (claimed ?? 0)), [maxSpots, claimed]);
+  const remaining = useMemo(
+    () => Math.max(0, (maxSpots ?? 500) - (claimed ?? 0)),
+    [maxSpots, claimed]
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -30,7 +34,7 @@ export default function Pricing() {
         setClaimed(data?.claimed_spots ?? 0);
       } catch (e) {
         if (!mounted) return;
-        setErr("Countdown unavailable (still fine to sign up).");
+        setErr("Availability counter unavailable (still fine to sign up).");
       } finally {
         if (!mounted) return;
         setLoading(false);
@@ -71,10 +75,9 @@ export default function Pricing() {
 
       <main className="container">
         <section className="heroPanel">
-          <h1>Pricing built for professionals.</h1>
+          <h1>Simple pricing for professionals.</h1>
           <p>
-            Clients book free. Pros get premium tools on web + app — with fair platform fees that
-            scale only when you earn.
+            Clients book free. Pros get premium tools on web + app — powered by a straightforward subscription.
           </p>
 
           <div className="heroBtns">
@@ -85,17 +88,20 @@ export default function Pricing() {
 
         <section className="section">
           <div className="sectionHead">
-            <h2>Founding Pro</h2>
-            <p>Limited offer for the first 500 professionals.</p>
+            <h2>Plans</h2>
+            <p>Choose what fits your workflow.</p>
           </div>
 
           <div className="pricingGrid">
+            {/* Annual (featured) */}
             <div className="priceCard priceCard--featured">
               <div className="priceTop">
                 <div>
-                  <div className="priceBadge">Founding • Limited</div>
-                  <div className="priceTitle">Founding Pro</div>
-                  <div className="priceSub">Pay once. Lock in your year.</div>
+                  <div className="priceBadge">Annual • Best value</div>
+                  <div className="priceTitle">Pro (Annual)</div>
+                  <div className="priceSub">
+                    One payment for the year. Built for serious professionals.
+                  </div>
                 </div>
 
                 <div className="priceNumber">
@@ -106,34 +112,67 @@ export default function Pricing() {
 
               <div className="countdownRow">
                 <div className="countdownPill">
-                  {loading ? "Checking spots…" : `Spots left: ${remaining} / ${maxSpots}`}
+                  {loading ? "Checking availability…" : `Early access spots left: ${remaining} / ${maxSpots}`}
                 </div>
                 {err ? <div className="countdownNote">{err}</div> : null}
               </div>
 
               <ul className="priceList">
-                <li><strong>Choose any 4 months</strong> in your year with <strong>$0 platform fees</strong></li>
-                <li>Founding badge + early placement when marketplace launches</li>
-                <li>Access to web platform + app tools</li>
-                <li>City-by-city rollout (marketplace search turns on when density is ready)</li>
+                <li>Web + app access</li>
+                <li>Booking tools as they roll out</li>
+                <li>Analytics modules as they roll out</li>
+                <li>City-by-city rollout for marketplace discovery</li>
               </ul>
 
               <div className="priceCtas">
-                <a className="btn gold full" href="/signup">Claim founding spot</a>
+                <a className="btn gold full" href="/signup">Choose annual</a>
                 <a className="btn ghost full" href="/login">Already have an account?</a>
               </div>
 
               <div className="finePrint">
-                Intro offer for the first 500. Pricing may evolve after early access.
+                Subscription-only for now. We’ll add advanced tools over time.
               </div>
             </div>
 
+            {/* 6-month (popular) */}
             <div className="priceCard">
               <div className="priceTop">
                 <div>
-                  <div className="priceBadge priceBadge--muted">Standard</div>
-                  <div className="priceTitle">Pro</div>
-                  <div className="priceSub">Everything you need to run bookings.</div>
+                  <div className="priceBadge">6 months • Most popular</div>
+                  <div className="priceTitle">Pro (6 months)</div>
+                  <div className="priceSub">A strong middle option with savings.</div>
+                </div>
+
+                <div className="priceNumber">
+                  <span className="priceAmount">$59</span>
+                  <span className="priceTerm">/6 months</span>
+                </div>
+              </div>
+
+              <ul className="priceList">
+                <li>Web + app access</li>
+                <li>Booking tools as they roll out</li>
+                <li>Analytics modules as they roll out</li>
+                <li>City-by-city rollout for marketplace discovery</li>
+              </ul>
+
+              <div className="priceCtas">
+                <a className="btn gold full" href="/signup">Choose 6 months</a>
+                <a className="btn ghost full" href="/login">Sign in</a>
+              </div>
+
+              <div className="finePrint">
+                Great for pros who want savings without a full year commitment.
+              </div>
+            </div>
+
+            {/* Monthly */}
+            <div className="priceCard">
+              <div className="priceTop">
+                <div>
+                  <div className="priceBadge priceBadge--muted">Monthly</div>
+                  <div className="priceTitle">Pro (Monthly)</div>
+                  <div className="priceSub">Flexible month-to-month.</div>
                 </div>
 
                 <div className="priceNumber">
@@ -144,26 +183,18 @@ export default function Pricing() {
 
               <ul className="priceList">
                 <li>Web + app access</li>
-                <li>Booking tools + pro dashboard foundation</li>
+                <li>Booking tools as they roll out</li>
                 <li>Analytics modules as they roll out</li>
-                <li>Support for link-based booking before marketplace search launches</li>
+                <li>City-by-city rollout for marketplace discovery</li>
               </ul>
 
-              <div className="feeBox">
-                <div className="feeTitle">Platform fees</div>
-                <div className="feeRow">
-                  <span>Direct bookings (your link / repeats)</span>
-                  <strong>5% capped at $5</strong>
-                </div>
-                <div className="feeRow">
-                  <span>Marketplace bookings (later)</span>
-                  <strong>10% capped at $10</strong>
-                </div>
+              <div className="priceCtas">
+                <a className="btn gold full" href="/signup">Choose monthly</a>
+                <a className="btn ghost full" href="/login">Sign in</a>
               </div>
 
-              <div className="priceCtas">
-                <a className="btn gold full" href="/signup">Create account</a>
-                <a className="btn ghost full" href="/login">Sign in</a>
+              <div className="finePrint">
+                Best if you’re just getting started or want maximum flexibility.
               </div>
             </div>
           </div>
@@ -178,20 +209,13 @@ export default function Pricing() {
           <div className="grid">
             <div className="card">
               <div className="cardTitle">Do clients pay to book?</div>
-              <div className="cardDetail">No — clients book free. Pros choose a plan.</div>
+              <div className="cardDetail">No — clients book free.</div>
             </div>
 
             <div className="card">
-              <div className="cardTitle">When do platform fees apply?</div>
+              <div className="cardTitle">Do you take a cut of bookings?</div>
               <div className="cardDetail">
-                Fees apply to completed online bookings made through Glow’d Up. Direct bookings have a lower fee than marketplace bookings.
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="cardTitle">How do the 4 fee-free months work?</div>
-              <div className="cardDetail">
-                Founding Pros will be able to pick any 4 months inside their settings to waive platform fees for those months.
+                Not right now. Pricing is subscription-only while we build density and ship core features.
               </div>
             </div>
 
@@ -203,16 +227,23 @@ export default function Pricing() {
             </div>
 
             <div className="card">
-              <div className="cardTitle">Can I cancel the $15/mo plan?</div>
+              <div className="cardTitle">Can I cancel?</div>
               <div className="cardDetail">
-                Yes. Subscription billing will be handled in the platform (Stripe integration next).
+                Monthly will be cancelable. 6-month and annual cover their full term (billing integration next).
               </div>
             </div>
 
             <div className="card">
-              <div className="cardTitle">Do you support deposits?</div>
+              <div className="cardTitle">What’s included?</div>
               <div className="cardDetail">
-                Deposits + policies are on the roadmap (and are a big part of reducing no-shows).
+                Web + app access, booking tools, and analytics modules as they roll out.
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="cardTitle">Will pricing change?</div>
+              <div className="cardDetail">
+                We’ll keep pricing simple. If we add major paid features later, we’ll communicate changes clearly.
               </div>
             </div>
           </div>
