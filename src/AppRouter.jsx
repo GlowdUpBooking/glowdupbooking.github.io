@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { supabase } from "./lib/supabase";
 
 import Home from "./pages/Home";
+import Pricing from "./pages/Pricing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import App from "./pages/App";
@@ -30,12 +31,13 @@ export default function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/pricing" element={<Pricing />} />
       <Route path="/login" element={<Login session={session} />} />
       <Route path="/signup" element={<Signup session={session} />} />
       <Route
         path="/app"
         element={
-          <ProtectedRoute session={session}>
+          <ProtectedRoute>
             <App />
           </ProtectedRoute>
         }
