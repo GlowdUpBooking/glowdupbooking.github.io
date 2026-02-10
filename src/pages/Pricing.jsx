@@ -110,11 +110,30 @@ export default function Pricing() {
                 </div>
               </div>
 
-              <div className="countdownRow">
-                <div className="countdownPill">
-                  {loading ? "Checking availability…" : `Early access spots left: ${remaining} / ${maxSpots}`}
+              {/* Founder Annual price lock */}
+              <div className="founderBox">
+                <div className="founderTop">
+                  <span className="founderBadge">Founder Annual</span>
+                  <span className="founderRule">Price locked while active</span>
                 </div>
-                {err ? <div className="countdownNote">{err}</div> : null}
+
+                <div className="founderText">
+                  First 500 Pros who choose the Annual plan get <strong>$99/year locked in</strong>{" "}
+                  for as long as their membership stays active.
+                </div>
+
+                <div className="countdownRow">
+                  <div className="countdownPill">
+                    {loading
+                      ? "Checking founder spots…"
+                      : `Founder spots left: ${remaining} / ${maxSpots}`}
+                  </div>
+                  {err ? <div className="countdownNote">{err}</div> : null}
+                </div>
+
+                <div className="founderFine">
+                  If your membership is canceled or lapses, Founder pricing is forfeited.
+                </div>
               </div>
 
               <ul className="priceList">
@@ -208,6 +227,22 @@ export default function Pricing() {
 
           <div className="grid">
             <div className="card">
+              <div className="cardTitle">What is Founder Annual?</div>
+              <div className="cardDetail">
+                Founder Annual is a limited early access offer. The first 500 Annual members keep $99/year pricing
+                as long as their membership stays active.
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="cardTitle">What does “price locked while active” mean?</div>
+              <div className="cardDetail">
+                If you keep your Annual membership active (no cancellation or lapse), you keep the Founder price.
+                If it ends and you rejoin later, current pricing applies.
+              </div>
+            </div>
+
+            <div className="card">
               <div className="cardTitle">Do clients pay to book?</div>
               <div className="cardDetail">No — clients book free.</div>
             </div>
@@ -230,20 +265,6 @@ export default function Pricing() {
               <div className="cardTitle">Can I cancel?</div>
               <div className="cardDetail">
                 Monthly will be cancelable. 6-month and annual cover their full term (billing integration next).
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="cardTitle">What’s included?</div>
-              <div className="cardDetail">
-                Web + app access, booking tools, and analytics modules as they roll out.
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="cardTitle">Will pricing change?</div>
-              <div className="cardDetail">
-                We’ll keep pricing simple. If we add major paid features later, we’ll communicate changes clearly.
               </div>
             </div>
           </div>
