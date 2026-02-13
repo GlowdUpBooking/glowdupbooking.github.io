@@ -303,6 +303,16 @@ input:focus{border-color: rgba(216,180,106,.35)}
   color: rgba(244,241,246,.92);
   font-size: 13px;
 }
+
+select{
+  padding:12px 12px;
+  border-radius:14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.25);
+  color: var(--text);
+  outline:none;
+}
+select:focus{border-color: rgba(216,180,106,.35)}
 .authLinks{display:flex; justify-content:space-between; margin-top:14px; color:rgba(244,241,246,.82); font-size:13px}
 .authLinks a:hover{color:var(--text)}
 
