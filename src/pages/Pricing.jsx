@@ -8,6 +8,9 @@ export default function Pricing() {
   const [claimed, setClaimed] = useState(0);
   const [err, setErr] = useState("");
 
+  const [sessionLoading, setSessionLoading] = useState(false);
+  const [toast, setToast] = useState("");
+
   const remaining = useMemo(
     () => Math.max(0, (maxSpots ?? 500) - (claimed ?? 0)),
     [maxSpots, claimed]
@@ -16,7 +19,7 @@ export default function Pricing() {
   useEffect(() => {
     let mounted = true;
 
-    async function load() {
+    async function loadFounderCounter() {
       setLoading(true);
       setErr("");
 
@@ -41,11 +44,63 @@ export default function Pricing() {
       }
     }
 
-    load();
+    loadFounderCounter();
     return () => {
       mounted = false;
     };
   }, []);
+
+  // Read success/canceled after Stripe returns
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("success") === "1") {
+      setToast("✅ Payment complete. Your Pro access will update shortly.");
+    }
+    if (params.get("canceled") === "1") {
+      setToast("Payment canceled — no worries. You can try again anytime.");
+    }
+  }, []);
+
+  async function startCheckout(interval) {
+    setToast("");
+    setSessionLoading(true);
+
+    try {
+      const { data: authData } = await supabase.auth.getSession();
+      const session = authData?.session;
+
+      // Not logged in → go to signup
+      if (!session?.access_token) {
+        window.location.href = "/signup";
+        return;
+      }
+
+      // Call Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke(
+        "create-checkout-session",
+        {
+          body: { interval }, // "monthly" | "6mo" | "annual"
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+
+      if (error) throw error;
+
+      if (!data?.url) {
+        throw new Error("No checkout URL returned");
+      }
+
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
+    } catch (e) {
+      console.error(e);
+      setToast("Something went wrong starting checkout. Please try again.");
+    } finally {
+      setSessionLoading(false);
+    }
+  }
 
   return (
     <div className="page">
@@ -54,7 +109,11 @@ export default function Pricing() {
       <header className="nav">
         <div className="navInner">
           <a className="brand" href="/">
-            <img className="logo" src="/assets/logo-1.png" alt="Glow’d Up Booking" />
+            <img
+              className="logo"
+              src="/assets/logo-1.png"
+              alt="Glow’d Up Booking"
+            />
             <div className="brandText">
               <div className="brandName">Glow’d Up Booking</div>
               <div className="brandTag">Pricing</div>
@@ -62,13 +121,21 @@ export default function Pricing() {
           </a>
 
           <nav className="navLinks">
-            <a className="navLink" href="/">Home</a>
-            <a className="navLink navLink--active" href="/pricing">Pricing</a>
+            <a className="navLink" href="/">
+              Home
+            </a>
+            <a className="navLink navLink--active" href="/pricing">
+              Pricing
+            </a>
           </nav>
 
           <div className="navCta">
-            <a className="btn ghost" href="/signup">Create account</a>
-            <a className="btn gold" href="/login">Sign in</a>
+            <a className="btn ghost" href="/signup">
+              Create account
+            </a>
+            <a className="btn gold" href="/login">
+              Sign in
+            </a>
           </div>
         </div>
       </header>
@@ -77,13 +144,22 @@ export default function Pricing() {
         <section className="heroPanel">
           <h1>Simple pricing for professionals.</h1>
           <p>
-            Clients book free. Pros get premium tools on web + app — powered by a straightforward subscription.
+            Clients book free. Pros get premium tools on web + app — powered by a
+            straightforward subscription.
           </p>
 
           <div className="heroBtns">
-            <a className="btn gold" href="/signup">Create account</a>
-            <a className="btn ghost" href="/login">Sign in</a>
+            <a className="btn gold" href="/signup">
+              Create account
+            </a>
+            <a className="btn ghost" href="/login">
+              Sign in
+            </a>
           </div>
+
+          {toast ? (
+            <div style={{ marginTop: 14, opacity: 0.9 }}>{toast}</div>
+          ) : null}
         </section>
 
         <section className="section">
@@ -118,8 +194,9 @@ export default function Pricing() {
                 </div>
 
                 <div className="founderText">
-                  First 500 Pros who choose the Annual plan get <strong>$99/year locked in</strong>{" "}
-                  for as long as their membership stays active.
+                  First 500 Pros who choose the Annual plan get{" "}
+                  <strong>$99/year locked in</strong> for as long as their
+                  membership stays active.
                 </div>
 
                 <div className="countdownRow">
@@ -132,7 +209,8 @@ export default function Pricing() {
                 </div>
 
                 <div className="founderFine">
-                  If your membership is canceled or lapses, Founder pricing is forfeited.
+                  If your membership is canceled or lapses, Founder pricing is
+                  forfeited.
                 </div>
               </div>
 
@@ -144,8 +222,17 @@ export default function Pricing() {
               </ul>
 
               <div className="priceCtas">
-                <a className="btn gold full" href="/signup">Choose annual</a>
-                <a className="btn ghost full" href="/login">Already have an account?</a>
+                <button
+                  className="btn gold full"
+                  onClick={() => startCheckout("annual")}
+                  disabled={sessionLoading}
+                >
+                  {sessionLoading ? "Redirecting…" : "Choose annual"}
+                </button>
+
+                <a className="btn ghost full" href="/login">
+                  Already have an account?
+                </a>
               </div>
 
               <div className="finePrint">
@@ -159,7 +246,9 @@ export default function Pricing() {
                 <div>
                   <div className="priceBadge">6 months • Most popular</div>
                   <div className="priceTitle">Pro (6 months)</div>
-                  <div className="priceSub">A strong middle option with savings.</div>
+                  <div className="priceSub">
+                    A strong middle option with savings.
+                  </div>
                 </div>
 
                 <div className="priceNumber">
@@ -176,8 +265,16 @@ export default function Pricing() {
               </ul>
 
               <div className="priceCtas">
-                <a className="btn gold full" href="/signup">Choose 6 months</a>
-                <a className="btn ghost full" href="/login">Sign in</a>
+                <button
+                  className="btn gold full"
+                  onClick={() => startCheckout("6mo")}
+                  disabled={sessionLoading}
+                >
+                  {sessionLoading ? "Redirecting…" : "Choose 6 months"}
+                </button>
+                <a className="btn ghost full" href="/login">
+                  Sign in
+                </a>
               </div>
 
               <div className="finePrint">
@@ -208,8 +305,16 @@ export default function Pricing() {
               </ul>
 
               <div className="priceCtas">
-                <a className="btn gold full" href="/signup">Choose monthly</a>
-                <a className="btn ghost full" href="/login">Sign in</a>
+                <button
+                  className="btn gold full"
+                  onClick={() => startCheckout("monthly")}
+                  disabled={sessionLoading}
+                >
+                  {sessionLoading ? "Redirecting…" : "Choose monthly"}
+                </button>
+                <a className="btn ghost full" href="/login">
+                  Sign in
+                </a>
               </div>
 
               <div className="finePrint">
@@ -229,16 +334,20 @@ export default function Pricing() {
             <div className="card">
               <div className="cardTitle">What is Founder Annual?</div>
               <div className="cardDetail">
-                Founder Annual is a limited early access offer. The first 500 Annual members keep $99/year pricing
-                as long as their membership stays active.
+                Founder Annual is a limited early access offer. The first 500
+                Annual members keep $99/year pricing as long as their membership
+                stays active.
               </div>
             </div>
 
             <div className="card">
-              <div className="cardTitle">What does “price locked while active” mean?</div>
+              <div className="cardTitle">
+                What does “price locked while active” mean?
+              </div>
               <div className="cardDetail">
-                If you keep your Annual membership active (no cancellation or lapse), you keep the Founder price.
-                If it ends and you rejoin later, current pricing applies.
+                If you keep your Annual membership active (no cancellation or
+                lapse), you keep the Founder price. If it ends and you rejoin
+                later, current pricing applies.
               </div>
             </div>
 
@@ -250,21 +359,24 @@ export default function Pricing() {
             <div className="card">
               <div className="cardTitle">Do you take a cut of bookings?</div>
               <div className="cardDetail">
-                Not right now. Pricing is subscription-only while we build density and ship core features.
+                Not right now. Pricing is subscription-only while we build
+                density and ship core features.
               </div>
             </div>
 
             <div className="card">
               <div className="cardTitle">When does marketplace search launch?</div>
               <div className="cardDetail">
-                City-by-city. We’ll enable it once there are enough pros in an area to make discovery worth it.
+                City-by-city. We’ll enable it once there are enough pros in an
+                area to make discovery worth it.
               </div>
             </div>
 
             <div className="card">
               <div className="cardTitle">Can I cancel?</div>
               <div className="cardDetail">
-                Monthly will be cancelable. 6-month and annual cover their full term (billing integration next).
+                Monthly will be cancelable. 6-month and annual cover their full
+                term (billing integration next).
               </div>
             </div>
           </div>

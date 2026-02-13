@@ -1,0 +1,8 @@
+*.bak
+app.json
+supabase/.temp/
+*.bak
+settings.json
+app.json
+.env
+.env.*

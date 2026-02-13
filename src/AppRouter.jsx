@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import App from "./pages/App";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PaywallRoute from "./components/PaywallRoute"; // ✅ add this
 
 export default function AppRouter() {
   const [session, setSession] = useState(null);
@@ -38,7 +39,9 @@ export default function AppRouter() {
         path="/app"
         element={
           <ProtectedRoute>
-            <App />
+            <PaywallRoute>
+              <App />
+            </PaywallRoute>
           </ProtectedRoute>
         }
       />
