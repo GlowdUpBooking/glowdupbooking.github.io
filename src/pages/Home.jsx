@@ -1,145 +1,173 @@
+import { Link } from "react-router-dom";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+
 export default function Home() {
   return (
-    <div className="page">
-      <div className="bg" aria-hidden="true" />
+    <div className="lp">
+      {/* Top Nav */}
+      <header className="lpNav">
+        <div className="lpNavInner">
+          <Link className="lpBrand" to="/">
+            <span className="lpBrandStrong">Glow’d Up</span>
+            <span className="lpBrandLight"> Booking</span>
+          </Link>
 
-      <header className="nav">
-        <div className="navInner">
-          <a className="brand" href="/">
-            <img className="logo" src="/assets/logo-1.png" alt="Glow’d Up Booking" />
-            <div className="brandText">
-              <div className="brandName">Glow’d Up Booking</div>
-              <div className="brandTag">Tailored to Pros</div>
-            </div>
-          </a>
-
-          <nav className="navLinks">
-            <a className="navLink" href="/pricing">Pricing</a>
-          </nav>
-
-          <div className="navCta">
-            <a className="btn ghost" href="/signup">Get early access</a>
-            <a className="btn gold" href="/login">Sign in</a>
+          <div className="lpNavRight">
+            <Link className="lpNavLink" to="/pricing">
+              Pricing
+            </Link>
+            <Link className="lpNavBtn" to="/login">
+              Sign In <span className="lpArrow">→</span>
+            </Link>
           </div>
         </div>
       </header>
 
-      <main className="container">
-        <section className="heroPanel">
-          <h1>Your Bookings. Your Brand. Your Clients.</h1>
-          <p>
-            Glow’d Up Booking is a luxury booking platform made for professionals—tattoo artists,
-            barbers, stylists, nail techs, and more. Share your link, collect deposits, and manage
-            your schedule without marketplace noise.
+      {/* Hero Collage Strip */}
+      <section className="lpHero">
+        <div className="lpHeroStrip" aria-hidden="true">
+          <div className="lpHeroImg lpHeroImg1" />
+          <div className="lpHeroImg lpHeroImg2" />
+          <div className="lpHeroImg lpHeroImg3" />
+          <div className="lpHeroImg lpHeroImg4" />
+        </div>
+
+        <div className="lpHeroInner">
+          <h1 className="lpH1">
+            Your Bookings. Your Brand.
+            <br />
+            Your Clients.
+          </h1>
+
+          <p className="lpLead">
+            Glow’d Up Booking is a premium booking platform made for professionals—
+            tattoo artists, barbers, stylists, nail techs, and more. Share your link,
+            collect deposits, and manage your schedule without marketplace noise.
           </p>
 
-          <div className="heroBtns">
-            <a className="btn gold" href="/signup">Get Early Access (Pro)</a>
-            <a className="btn ghost" href="#how-it-works">See How It Works</a>
-            <a className="btn ghost" href="/pricing">View pricing</a>
+          <div className="lpHeroBtns">
+            <Link to="/pricing">
+              <Button variant="outline" className="lpBtn">
+                Get Early Access (Pro)
+              </Button>
+            </Link>
+            <Link to="/pricing">
+              <Button variant="outline" className="lpBtn">
+                See How It Works
+              </Button>
+            </Link>
+            <Link to="/pricing">
+              <Button variant="outline" className="lpBtn">
+                View pricing
+              </Button>
+            </Link>
           </div>
 
-          <p className="heroMicro">
-            Pro-first launch • Invite-only booking • Clients book through <strong>your</strong> link
-          </p>
-        </section>
-
-        <section className="section" id="how-it-works">
-          <div className="sectionHead">
-            <h2>Designed for the way Pros actually book</h2>
-            <p>Simple, premium, and built around your workflow.</p>
-          </div>
-
-          <div className="grid">
-            {[
-              { title: "Create your pro profile", status: "Step 1", detail: "Services, availability, policies, branding" },
-              { title: "Share your booking link", status: "Step 2", detail: "DM, Instagram bio, text, website — one link" },
-              { title: "Get booked + paid", status: "Step 3", detail: "Deposits, confirmations, reminders, reschedule flow" },
-            ].map((x) => (
-              <div className="card" key={x.title}>
-                <div className="cardTop">
-                  <div className="cardTitle">{x.title}</div>
-                  <span className="pill pill-now">{x.status}</span>
-                </div>
-                <div className="cardDetail">{x.detail}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="section">
-          <div className="sectionHead">
-            <h2>What we’re building</h2>
-            <p>Pro tools first — then we scale city by city.</p>
-          </div>
-
-          <div className="grid">
-            {[
-              { title: "Web Platform (React)", status: "Now", detail: "Premium UI, routing, production deployment" },
-              { title: "Supabase Auth", status: "Now", detail: "Sign up, sign in, sessions, protected routes" },
-              { title: "Pro Dashboard", status: "Next", detail: "Schedule, services, availability, pro profile" },
-              { title: "Client Booking", status: "Next", detail: "Link-based booking, confirmations, appointment history" },
-              { title: "Analytics", status: "Planned", detail: "Revenue, retention, cancellations, exports" },
-              { title: "Notifications", status: "Planned", detail: "Email/SMS reminders, reschedule links" },
-            ].map((x) => (
-              <div className="card" key={x.title}>
-                <div className="cardTop">
-                  <div className="cardTitle">{x.title}</div>
-                  <span
-                    className={
-                      x.status === "Now"
-                        ? "pill pill-now"
-                        : x.status === "Next"
-                        ? "pill pill-next"
-                        : "pill pill-planned"
-                    }
-                  >
-                    {x.status}
-                  </span>
-                </div>
-                <div className="cardDetail">{x.detail}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="section">
-          <div className="sectionHead">
-            <h2>Pro-first upgrades</h2>
-            <p>High-impact tools that make Pros look and operate premium.</p>
-          </div>
-
-          <div className="grid">
-            {[
-              { title: "Deposits & policies", detail: "No-show protection + clear cancellation rules" },
-              { title: "Client history + notes", detail: "Preferences, photos, past services, internal notes" },
-              { title: "Advanced analytics", detail: "KPIs, trends, exports, performance insights" },
-              { title: "Intake forms", detail: "Collect info before appointments by category" },
-              { title: "Team accounts", detail: "Studios/salons with multiple pros and roles" },
-              { title: "Portfolio + reviews", detail: "Show work and convert visitors" },
-            ].map((x) => (
-              <div className="card" key={x.title}>
-                <div className="cardTitle">{x.title}</div>
-                <div className="cardDetail">{x.detail}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </main>
-
-      <footer className="footer">
-        <div className="footerInner">
-          <div>
-            <div className="footerTitle">Glow’d Up Booking</div>
-            <div className="footerSub">© Kamara Labs LLC</div>
-          </div>
-          <div className="footerLinks">
-            <a href="/pricing">Pricing</a>
-            <a href="/login">Sign in</a>
-            <a href="/signup">Get early access</a>
+          <div className="lpMicro">
+            Pro-first launch · Invite-only booking · Clients book through your link
           </div>
         </div>
-      </footer>
+      </section>
+
+      {/* Pricing Preview (same as screenshot) */}
+      <section className="lpPricing">
+        <div className="lpPricingInner">
+          <div className="lpPricingHead">
+            <h2 className="lpH2">Simple pricing for professionals.</h2>
+            <div className="lpSub">Choose what fits your workflow.</div>
+          </div>
+
+          <div className="lpGrid">
+            {/* Starter */}
+            <Card className="lpPriceCard">
+              <div className="lpTier">Tier 1 — Starter</div>
+              <div className="lpPriceLine">
+                <span className="lpPrice">$9.99</span>
+                <span className="lpTerm">/month</span>
+              </div>
+
+              <ul className="lpList">
+                <li>✓ Pro profile + booking link</li>
+                <li>✓ Add services (name, price, duration)</li>
+                <li>✓ Basic scheduling + booking requests</li>
+                <li>✓ Clients book through your link</li>
+              </ul>
+
+              <Link to="/pricing" className="lpChooseWrap">
+                <Button variant="outline" className="lpChoose">
+                  Choose Starter
+                </Button>
+              </Link>
+            </Card>
+
+            {/* Pro (Featured) */}
+            <Card className="lpPriceCard lpFeatured">
+              <div className="lpTier">Tier 2 • Pro (Featured)</div>
+              <div className="lpPriceLine">
+                <span className="lpPrice">$14.99</span>
+                <span className="lpTerm">/month</span>
+              </div>
+
+              <ul className="lpList">
+                <li>✓ Everything in Starter</li>
+                <li>✓ Priority placement (later when you open marketplace)</li>
+                <li>✓ Advanced scheduling tools (availability rules, buffers, etc.)</li>
+                <li>✓ Deposits + booking controls</li>
+                <li>✓ Portfolio/service photos</li>
+                <li>✓ Better customization + branding</li>
+              </ul>
+
+              <Link to="/pricing" className="lpChooseWrap">
+                <Button variant="outline" className="lpChoose">
+                  Choose Pro
+                </Button>
+              </Link>
+            </Card>
+
+            {/* Founder */}
+            <Card className="lpPriceCard">
+              <div className="lpTier">Tier 3 • Founder (Annual)</div>
+              <div className="lpPriceLine">
+                <span className="lpPrice">$99</span>
+                <span className="lpTerm">/year</span>
+              </div>
+
+              <div className="lpFounderBox">
+                <div className="lpFounderTop">
+                  <div className="lpFounderTitle">Founder Annual</div>
+                  <div className="lpFounderRule">Price locked while active</div>
+                </div>
+              </div>
+
+              <div className="lpFounderText">
+                First 1,000 Pros lock in <strong>$99/year</strong> forever.{" "}
+                <span className="lpFounderWarn">Don’t miss out</span>
+              </div>
+
+              <ul className="lpList">
+                <li>✓ Everything in Pro</li>
+                <li>✓ Locked-in annual price (best deal)</li>
+                <li>✓ Founder badge + early feature access</li>
+                <li>✓ Priority support</li>
+              </ul>
+
+              <Link to="/pricing" className="lpChooseWrap">
+                <Button variant="outline" className="lpChoose">
+                  Choose Founder
+                </Button>
+              </Link>
+            </Card>
+          </div>
+
+          <div className="lpFooterLine">
+            <div className="lpFooterBig">Founder spots left ~ Only 1,000 nationwide</div>
+            <div className="lpFooterSmall">
+              First 1,000 Pros lock in $99/year forever. Don’t miss out.
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

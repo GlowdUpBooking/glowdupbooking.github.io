@@ -1,5 +1,6 @@
+// src/pages/Signup.jsx
 import { useMemo, useState } from "react";
-import { supabase } from "../lib/supabaseClient"; // adjust path if yours differs
+import { supabase } from "../lib/supabase";
 import { Link, useNavigate } from "react-router-dom";
 
 const CATEGORIES = [
@@ -45,11 +46,29 @@ export default function Signup() {
   function setField(key, val) {
     setForm((p) => ({ ...p, [key]: val }));
     setMsg("");
+    setOk(false);
+  }
+
+  function validationMessage() {
+    if (form.fullName.trim().length < 2) return "Please enter your full name.";
+    if (form.businessName.trim().length < 2) return "Please enter a business/brand name.";
+    if (form.city.trim().length < 2) return "Please enter your city.";
+    if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) return "Please enter a valid email address.";
+    if (form.password.length < 8) return "Password must be at least 8 characters.";
+    return "";
   }
 
   async function onSubmit(e) {
     e.preventDefault();
-    if (!canSubmit || busy) return;
+
+    // ✅ Instead of silently doing nothing, show WHY the form can’t submit
+    const vMsg = validationMessage();
+    if (vMsg) {
+      setMsg(vMsg);
+      return;
+    }
+
+    if (busy) return;
 
     setBusy(true);
     setMsg("");
@@ -73,15 +92,14 @@ export default function Signup() {
 
       if (error) throw error;
 
-      // 2) OPTIONAL: If you have a profiles table, upsert a row.
-      // If you don't have this table yet, leave it — it won't break your signup flow
-      // as long as you keep it inside try/catch.
+      // 2) OPTIONAL: Upsert profile row (if you use public.profiles)
       if (data?.user?.id) {
         const { error: pErr } = await supabase
           .from("profiles")
           .upsert(
             {
               id: data.user.id,
+              role: "professional", // ✅ make sure role is set
               full_name: form.fullName.trim(),
               business_name: form.businessName.trim(),
               category: form.category,
@@ -92,14 +110,18 @@ export default function Signup() {
             { onConflict: "id" }
           );
 
-        // ignore profiles errors if table isn't set up yet
         if (pErr) console.warn("profiles upsert skipped:", pErr.message);
       }
 
+      // If email confirmation is OFF, Supabase returns a session immediately.
+      if (data?.session) {
+        nav("/app", { replace: true });
+        return;
+      }
+
+      // If email confirmation is ON, no session yet.
       setOk(true);
       setMsg("Account created. Check your email to confirm, then sign in.");
-      // If you don't require email confirmation, you can redirect immediately:
-      // nav("/app");
     } catch (err) {
       setMsg(err?.message || "Something went wrong. Please try again.");
     } finally {
@@ -109,6 +131,8 @@ export default function Signup() {
 
   return (
     <div className="authPage">
+      <div className="bg" aria-hidden="true" />
+
       <div className="authCard">
         <img className="authLogo" src="/assets/logo-1.png" alt="Glow’d Up Booking" />
 
@@ -127,6 +151,7 @@ export default function Signup() {
               onChange={(e) => setField("fullName", e.target.value)}
               placeholder="Your name"
               autoComplete="name"
+              required
             />
           </label>
 
@@ -137,6 +162,7 @@ export default function Signup() {
               onChange={(e) => setField("businessName", e.target.value)}
               placeholder="e.g., Kamara Cuts / Ink by ____"
               autoComplete="organization"
+              required
             />
           </label>
 
@@ -169,6 +195,7 @@ export default function Signup() {
               onChange={(e) => setField("city", e.target.value)}
               placeholder="Dallas, Houston, Austin..."
               autoComplete="address-level2"
+              required
             />
           </label>
 
@@ -185,10 +212,12 @@ export default function Signup() {
           <label>
             Email
             <input
+              type="email"
               value={form.email}
               onChange={(e) => setField("email", e.target.value)}
               placeholder="you@business.com"
               autoComplete="email"
+              required
             />
           </label>
 
@@ -200,10 +229,18 @@ export default function Signup() {
               onChange={(e) => setField("password", e.target.value)}
               placeholder="••••••••"
               autoComplete="new-password"
+              required
+              minLength={8}
             />
+            {form.password.length > 0 && form.password.length < 8 ? (
+              <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
+                Password must be at least 8 characters.
+              </div>
+            ) : null}
           </label>
 
-          <button className="btn gold full" disabled={!canSubmit || busy} type="submit">
+          {/* ✅ Only disable while busy; invalid form shows message instead of “nothing happens” */}
+          <button className="btn gold full" disabled={busy} type="submit">
             {busy ? "Creating…" : "Create account"}
           </button>
 
@@ -218,6 +255,11 @@ export default function Signup() {
               for your clients — not a marketplace.
             </p>
           ) : null}
+
+          {/* Optional: show a tiny live readiness indicator */}
+          <p className="muted" style={{ marginTop: 10, fontSize: 12, opacity: 0.75 }}>
+            {canSubmit ? "✅ Ready to create account" : "Fill all required fields to continue"}
+          </p>
         </form>
       </div>
     </div>

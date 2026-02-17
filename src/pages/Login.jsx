@@ -10,8 +10,8 @@ export default function Login({ session }) {
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
-    if (session) nav("/app", { replace: true });
-  }, [session, nav]);
+    if (session?.access_token) nav("/app", { replace: true });
+  }, [session?.access_token, nav]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -19,10 +19,16 @@ export default function Login({ session }) {
     setBusy(true);
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+
     setBusy(false);
 
-    if (error) setMsg(error.message);
-    else nav("/app", { replace: true });
+    if (error) {
+      setMsg(error.message);
+      return;
+    }
+
+    // Let AppRouter's onAuthStateChange set session, but this is fine too:
+    nav("/app", { replace: true });
   }
 
   return (
