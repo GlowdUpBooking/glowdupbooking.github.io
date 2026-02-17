@@ -1,39 +1,562 @@
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import AppShell from "../components/layout/AppShell";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
 
+function money(n) {
+  const num = Number(n ?? 0);
+  try {
+    return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(num);
+  } catch {
+    return `$${num}`;
+  }
+}
+
+function durationLabel(mins) {
+  const m = Number(mins ?? 0);
+  const h = Math.floor(m / 60);
+  const mm = m % 60;
+  if (h && mm) return `${h}h ${mm}m`;
+  if (h) return `${h}h`;
+  return `${mm}m`;
+}
+
+function safeFirstName(fullName, fallback = "there") {
+  const v = (fullName || fallback).trim();
+  const first = v.split(" ")[0]?.trim();
+  return first || fallback;
+}
+
 export default function App() {
+  const nav = useNavigate();
+
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
+
+  // Auth / subscription
+  const [user, setUser] = useState(null);
+  const [subStatus, setSubStatus] = useState(null);
+  const [plan, setPlan] = useState(null);
+  const [interval, setInterval] = useState(null);
+  const [currentPeriodEnd, setCurrentPeriodEnd] = useState(null);
+
+  // Profile + services
+  const [profile, setProfile] = useState(null);
+  const [services, setServices] = useState([]);
+  const [stats, setStats] = useState({
+    bookings: 0,
+    nextAppointment: "n/a",
+    services: 0,
+    inquiries: 0,
+  });
+
+  const isActive = subStatus === "active";
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      setLoading(true);
+      setErr("");
+
+      try {
+        // 1) Auth
+        const { data: userRes, error: userErr } = await supabase.auth.getUser();
+        if (userErr) throw userErr;
+
+        const u = userRes?.user ?? null;
+        if (!mounted) return;
+        setUser(u);
+
+        if (!u) {
+          nav("/login", { replace: true });
+          return;
+        }
+
+        // 2) Subscription
+        const { data: subRow, error: subErr } = await supabase
+          .from("pro_subscriptions")
+          .select("status, interval, plan, current_period_end")
+          .eq("user_id", u.id)
+          .maybeSingle();
+
+        if (subErr) {
+          console.error("[App] pro_subscriptions error:", subErr);
+        }
+
+        if (!mounted) return;
+
+        setSubStatus(subRow?.status ?? null);
+        setPlan(subRow?.plan ?? null);
+        setInterval(subRow?.interval ?? null);
+        setCurrentPeriodEnd(subRow?.current_period_end ?? null);
+
+        // If not active, stop here (they'll see upgrade screen)
+        if (subRow?.status !== "active") {
+          setLoading(false);
+          return;
+        }
+
+        // 3) Profile
+        const { data: prof, error: profErr } = await supabase
+          .from("profiles")
+          .select(
+            `
+            id,
+            role,
+            onboarding_step,
+            business_name,
+            full_name,
+            business_type,
+            avatar_url,
+            display_location,
+            travels_to_clients,
+            travel_radius_miles,
+            instagram_handle,
+            website_url
+          `
+          )
+          .eq("id", u.id)
+          .maybeSingle();
+
+        if (profErr) {
+          console.error("[App] profiles error:", profErr);
+          setErr("Couldn’t load your profile yet. Please refresh.");
+          setLoading(false);
+          return;
+        }
+
+        // If missing, create a forgiving default then send to onboarding
+        if (!prof) {
+          await supabase
+            .from("profiles")
+            .upsert({ id: u.id, role: "professional", onboarding_step: "basics" }, { onConflict: "id" });
+
+          nav("/app/onboarding", { replace: true });
+          return;
+        }
+
+        // Gate: pros must finish onboarding
+        if (prof.role === "professional" && prof.onboarding_step !== "complete") {
+          nav("/app/onboarding", { replace: true });
+          return;
+        }
+
+        if (!mounted) return;
+        setProfile(prof);
+
+        // 4) Services
+        const { data: svcs, error: svcErr } = await supabase
+          .from("services")
+          .select("id, stylist_id, description, duration_minutes, price, image_url, created_at")
+          .eq("stylist_id", u.id)
+          .order("created_at", { ascending: false });
+
+        if (svcErr) {
+          console.error("[App] services error:", svcErr);
+          setErr("Couldn’t load services yet. Please refresh.");
+          setLoading(false);
+          return;
+        }
+
+        const serviceIds = (svcs || []).map((s) => s.id);
+
+        // 5) Service Photos (pick first photo per service by sort_order)
+        let photosByService = {};
+        if (serviceIds.length) {
+          const { data: photos, error: photoErr } = await supabase
+            .from("service_photos")
+            .select("service_id, url, sort_order")
+            .in("service_id", serviceIds)
+            .order("sort_order", { ascending: true });
+
+          if (photoErr) {
+            console.error("[App] service_photos error:", photoErr);
+          } else {
+            for (const p of photos || []) {
+              if (!photosByService[p.service_id]) photosByService[p.service_id] = [];
+              photosByService[p.service_id].push(p);
+            }
+          }
+        }
+
+        const mappedServices =
+          (svcs || []).map((s) => {
+            const photo0 = photosByService[s.id]?.[0]?.url || null;
+            const thumb = photo0 || s.image_url || "/assets/cover.png";
+
+            return {
+              id: s.id,
+              title: s.description || "Service",
+              duration_minutes: s.duration_minutes ?? 0,
+              price: s.price ?? 0,
+              thumb,
+            };
+          }) ?? [];
+
+        if (!mounted) return;
+        setServices(mappedServices);
+
+        // 6) Stats (simple for now)
+        setStats((prev) => ({
+          ...prev,
+          services: mappedServices.length,
+        }));
+
+        setLoading(false);
+      } catch (e) {
+        console.error("[App] load error:", e);
+        if (!mounted) return;
+        setErr("Something went wrong loading your dashboard.");
+        setLoading(false);
+      }
+    }
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
+  }, [nav]);
+
+  const firstName = useMemo(() => {
+    if (profile?.full_name) return safeFirstName(profile.full_name, "there");
+    if (profile?.business_name) return safeFirstName(profile.business_name, "there");
+    return "there";
+  }, [profile]);
+
   async function signOut() {
     await supabase.auth.signOut();
     window.location.href = "/";
   }
 
-  return (
-    <div className="page">
-      <div className="bg" aria-hidden="true" />
+  const planLabel = useMemo(() => {
+    if (plan === "starter") return "Starter";
+    if (plan === "pro") return "Pro";
+    if (plan === "founder") return "Founder";
+    return "Plan";
+  }, [plan]);
 
-      <header className="nav">
-        <div className="navInner">
-          <a className="brand" href="/">
-            <img className="logo" src="/assets/logo-1.png" alt="Glow’d Up Booking" />
-            <div className="brandText">
-              <div className="brandName">Glow’d Up Booking</div>
-              <div className="brandTag">Platform</div>
+  function formatDate(iso) {
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return null;
+    return d.toLocaleDateString();
+  }
+
+  // Loading screen
+  if (loading) {
+    return (
+      <AppShell title="Dashboard" onSignOut={signOut}>
+        <Card style={{ padding: 18 }}>
+          <div style={{ fontWeight: 800, fontSize: 18 }}>Loading…</div>
+          <div className="u-muted" style={{ marginTop: 6 }}>
+            Please wait.
+          </div>
+        </Card>
+      </AppShell>
+    );
+  }
+
+  // If subscription is not active, show upgrade screen (styled)
+  if (!isActive) {
+    return (
+      <AppShell title="Dashboard" onSignOut={signOut}>
+        <Card style={{ padding: 18 }}>
+          <div style={{ fontWeight: 900, fontSize: 22 }}>Upgrade to unlock the platform</div>
+          <div className="u-muted" style={{ marginTop: 10, maxWidth: 720 }}>
+            You’re signed in{user?.email ? ` as ${user.email}` : ""}, but your subscription isn’t active yet.
+            Choose a plan to access the pro tools.
+          </div>
+
+          <div style={{ marginTop: 14 }} className="u-muted">
+            <div>
+              <strong>Status:</strong> {subStatus ?? "none found"}
             </div>
-          </a>
+            <div>
+              <strong>Plan:</strong> {planLabel}
+            </div>
+            {interval ? (
+              <div>
+                <strong>Billing:</strong> {interval}
+              </div>
+            ) : null}
+            {currentPeriodEnd ? (
+              <div>
+                <strong>Renews / ends:</strong> {formatDate(currentPeriodEnd) ?? currentPeriodEnd}
+              </div>
+            ) : null}
+          </div>
 
-          <div className="navCta">
-            <button className="btn ghost" onClick={signOut}>Sign out</button>
+          {err ? (
+            <div style={{ marginTop: 12 }} className="u-muted">
+              {err}
+            </div>
+          ) : null}
+
+          <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <Button variant="primary" onClick={() => nav("/pricing")}>
+              View plans
+            </Button>
+            <Button variant="outline" onClick={() => nav("/pricing")}>
+              Manage subscription
+            </Button>
+          </div>
+
+          <div className="u-muted2" style={{ marginTop: 12 }}>
+            If you just paid, it may take a few seconds for access to update. Refresh in a moment.
+          </div>
+        </Card>
+      </AppShell>
+    );
+  }
+
+  // Dashboard content
+  const displayBusinessName = profile?.business_name || "Your Business";
+  const displayType = profile?.business_type || "Professional";
+  const displayLocation = profile?.display_location || "—";
+  const mobileLabel = profile?.travels_to_clients ? "Yes" : "No";
+  const radiusLabel =
+    profile?.travels_to_clients && (profile?.travel_radius_miles ?? null) !== null
+      ? `${profile.travel_radius_miles} miles`
+      : "—";
+
+  return (
+    <AppShell title="Dashboard" onSignOut={signOut}>
+      <div className="g-page">
+        <h1 className="g-h1">Welcome back, {firstName}!</h1>
+
+        <div className="g-grid">
+          {/* LEFT COLUMN */}
+          <div className="g-colLeft">
+            {/* Plan Card */}
+            <Card className="g-planCard">
+              <div className="g-planTop">
+                <div className="u-muted">Current Plan</div>
+                <div className="g-badge">{planLabel}</div>
+              </div>
+
+              <div className="g-planBottom">
+                <div className="g-planMeta">
+                  <span className="g-dotIcon">👤</span>
+                  <span className="u-muted">
+                    {currentPeriodEnd ? `Renews on ${formatDate(currentPeriodEnd)}` : "Subscription active"}
+                  </span>
+                </div>
+
+                <a className="g-link" href="/pricing" onClick={(e) => e.preventDefault()}>
+                  Manage Subscription <span className="g-ext">↗</span>
+                </a>
+              </div>
+            </Card>
+
+            {/* Profile Card */}
+            <Card className="g-profileCard">
+              <div className="g-profileRow">
+                <div className="g-avatarWrap">
+                  <img
+                    className="g-avatar"
+                    src={profile?.avatar_url || "/assets/cover.png"}
+                    alt={displayBusinessName}
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                  <div className="g-avatarFallback" aria-hidden="true" />
+                </div>
+
+                <div className="g-profileMain">
+                  <div className="g-profileName">{displayBusinessName}</div>
+                  <div className="g-profileType">{displayType}</div>
+
+                  <div className="g-profileMeta">
+                    <div className="g-metaItem">
+                      <span className="g-metaIcon">📍</span>
+                      <span>{displayLocation}</span>
+                    </div>
+                    <div className="g-metaItem">
+                      <span className="g-metaIcon">🚗</span>
+                      <span>Mobile: {mobileLabel}</span>
+                    </div>
+                    <div className="g-metaItem">
+                      <span className="g-metaIcon">〽</span>
+                      <span>Radius: {radiusLabel}</span>
+                    </div>
+                  </div>
+
+                  <div className="g-profileLinks">
+                    {profile?.instagram_handle ? (
+                      <div className="g-metaItem">
+                        <span className="g-metaIcon">◎</span>
+                        <span>{profile.instagram_handle.startsWith("@") ? profile.instagram_handle : `@${profile.instagram_handle}`}</span>
+                      </div>
+                    ) : null}
+
+                    {profile?.website_url ? (
+                      <div className="g-metaItem">
+                        <span className="g-metaIcon">⌂</span>
+                        <span>{profile.website_url}</span>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="g-profileCtas">
+                  <Button variant="primary" className="g-ctaWide" onClick={() => nav("/app/onboarding/basics")}>
+                    Edit Profile
+                  </Button>
+
+                  <Button variant="outline" className="g-ctaWide" onClick={() => nav("/app/services")}>
+                    Manage Services
+                  </Button>
+                </div>
+              </div>
+            </Card>
+
+            {/* Services List */}
+            <Card className="g-servicesCard">
+              <div className="g-cardHeader">
+                <div className="g-cardTitle">Your Services</div>
+                <Button variant="outline" onClick={() => nav("/app/onboarding/services")}>
+                  + Add Service
+                </Button>
+              </div>
+
+              {services.length ? (
+                <div className="g-serviceList">
+                  {services.map((s) => (
+                    <div key={s.id} className="g-serviceRow">
+                      <div className="g-serviceLeft">
+                        <div className="g-serviceThumbWrap">
+                          <img
+                            className="g-serviceThumb"
+                            src={s.thumb}
+                            alt={s.title}
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                          <div className="g-serviceThumbFallback" aria-hidden="true" />
+                        </div>
+
+                        <div className="g-serviceInfo">
+                          <div className="g-serviceTitle">{s.title}</div>
+                          <div className="g-serviceSub">{durationLabel(s.duration_minutes)}</div>
+                        </div>
+                      </div>
+
+                      <div className="g-serviceRight">
+                        <div className="g-price">{money(s.price)}</div>
+                        <Button
+                          variant="outline"
+                          className="g-editPill"
+                          onClick={() => nav(`/app/services/${s.id}`)}
+                        >
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="u-muted" style={{ padding: "10px 2px" }}>
+                  No services yet. Click <strong>+ Add Service</strong> to create your first one.
+                </div>
+              )}
+            </Card>
+          </div>
+
+          {/* RIGHT COLUMN */}
+          <div className="g-colRight">
+            {/* At a Glance */}
+            <Card className="g-glanceCard">
+              <div className="g-cardTitle">At a Glance</div>
+
+              <div className="g-statList">
+                <div className="g-statRow">
+                  <div className="g-statLeft">
+                    <span className="g-statIcon">▦</span>Bookings
+                  </div>
+                  <div className="g-statVal">{stats.bookings}</div>
+                </div>
+                <div className="g-divider" />
+
+                <div className="g-statRow">
+                  <div className="g-statLeft">
+                    <span className="g-statIcon">🕒</span>Next Appointment
+                  </div>
+                  <div className="g-statVal">{stats.nextAppointment}</div>
+                </div>
+                <div className="g-divider" />
+
+                <div className="g-statRow">
+                  <div className="g-statLeft">
+                    <span className="g-statIcon">🏷</span>Services
+                  </div>
+                  <div className="g-statVal">{stats.services}</div>
+                </div>
+                <div className="g-divider" />
+
+                <div className="g-statRow">
+                  <div className="g-statLeft">
+                    <span className="g-statIcon">✉</span>Inquiries
+                  </div>
+                  <div className="g-statVal">{stats.inquiries}</div>
+                </div>
+              </div>
+
+              <Button variant="outline" className="btnFull" onClick={() => nav("/app/calendar")}>
+                + New Booking
+              </Button>
+
+              {err ? (
+                <div className="u-muted" style={{ marginTop: 12 }}>
+                  {err}
+                </div>
+              ) : null}
+            </Card>
+
+            {/* Get Started */}
+            <Card className="g-startCard">
+              <div className="g-cardTitle">Get Started</div>
+
+              <div className="g-checkList">
+                <div className="g-checkRow">
+                  <div className="g-checkIcon">⬆</div>
+                  <div className="g-checkBody">
+                    <div className="g-checkTitle">Upload portfolio photos</div>
+                    <div className="g-checkDesc">Showcase your work by adding photos to your services.</div>
+                  </div>
+                </div>
+
+                <div className="g-checkRow">
+                  <div className="g-checkIcon">🗓</div>
+                  <div className="g-checkBody">
+                    <div className="g-checkTitle">Set your availability</div>
+                    <div className="g-checkDesc">Set your available hours so clients know when they can book you.</div>
+                  </div>
+                </div>
+
+                <div className="g-checkRow">
+                  <div className="g-checkIcon">☑</div>
+                  <div className="g-checkBody">
+                    <div className="g-checkTitle">Accept client bookings</div>
+                    <div className="g-checkDesc">Start accepting bookings and managing your schedule.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="g-guideRow">
+                <button className="g-linkBtn" onClick={() => nav("/app/onboarding")}>
+                  View Guide →
+                </button>
+              </div>
+            </Card>
           </div>
         </div>
-      </header>
-
-      <main className="container">
-        <section className="heroPanel">
-          <h1>Dashboard</h1>
-          <p>
-            You’re signed in. Next we’ll add your real platform modules: bookings, pros, analytics.
-          </p>
-        </section>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }

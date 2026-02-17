@@ -6,7 +6,12 @@ settings.json
 app.json
 .env
 .env.*
-
-# env files
 .env
 .env.*
+.env
+.env.*
+.env
+.env.*
+
+# supabase local
+supabase/.temp/

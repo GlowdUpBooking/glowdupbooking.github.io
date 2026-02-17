@@ -19,16 +19,34 @@ function json(status: number, body: Record<string, unknown>) {
   });
 }
 
+type Tier = "starter_monthly" | "pro_monthly" | "founder_annual";
+type Interval = "monthly" | "annual";
+
+function normalizeFromTier(tier: Tier) {
+  if (tier === "starter_monthly") return { plan: "starter", interval: "monthly" as Interval };
+  if (tier === "pro_monthly") return { plan: "pro", interval: "monthly" as Interval };
+  return { plan: "founder", interval: "annual" as Interval };
+}
+
 function readMeta(obj: any) {
   const m = obj?.metadata ?? {};
-  return {
-    userId: typeof m.user_id === "string" ? m.user_id : null,
-    plan: typeof m.plan === "string" ? m.plan : "pro",
-    interval:
-      m.interval === "monthly" || m.interval === "6mo" || m.interval === "annual"
-        ? m.interval
-        : null,
-  };
+
+  const userId = typeof m.user_id === "string" ? m.user_id : null;
+
+  const tier: Tier | null =
+    m.tier === "starter_monthly" || m.tier === "pro_monthly" || m.tier === "founder_annual"
+      ? m.tier
+      : null;
+
+  const intervalFromOldMeta: Interval | null =
+    m.interval === "monthly" || m.interval === "annual" ? m.interval : null;
+
+  const derived = tier ? normalizeFromTier(tier) : null;
+
+  const plan = typeof m.plan === "string" ? m.plan : derived?.plan ?? "pro";
+  const interval = derived?.interval ?? intervalFromOldMeta ?? "monthly";
+
+  return { userId, tier, plan, interval };
 }
 
 async function upsertProSubscription(params: {
@@ -51,7 +69,7 @@ async function upsertProSubscription(params: {
       current_period_end: params.currentPeriodEnd,
       updated_at: new Date().toISOString(),
     },
-    { onConflict: "user_id" },
+    { onConflict: "user_id" }
   );
   if (error) throw error;
 }
@@ -66,32 +84,31 @@ Deno.serve(async (req) => {
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(raw, sig, STRIPE_WEBHOOK_SECRET);
+    // ✅ FIX: use async verification in Deno / WebCrypto environments
+    event = await stripe.webhooks.constructEventAsync(raw, sig, STRIPE_WEBHOOK_SECRET);
   } catch (e) {
     return json(400, { error: "bad_signature", details: String(e) });
   }
 
   try {
-    // ✅ checkout completed = guaranteed moment to write subscription row
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
 
-      // Map userId: prefer metadata, fallback to client_reference_id
       const meta = readMeta(session);
+
       const userId =
         meta.userId ??
         (typeof session.client_reference_id === "string" ? session.client_reference_id : null);
 
       if (!userId) return json(200, { ok: true, note: "missing_user" });
 
-      const stripeCustomerId =
-        typeof session.customer === "string" ? session.customer : null;
-
+      const stripeCustomerId = typeof session.customer === "string" ? session.customer : null;
       const stripeSubscriptionId =
         typeof session.subscription === "string" ? session.subscription : null;
 
-      let interval = meta.interval; // monthly/6mo/annual
-      let plan = meta.plan ?? "pro";
+      let plan = meta.plan;
+      let interval = meta.interval;
+      let tier = meta.tier;
       let status = "active";
       let currentPeriodEndIso: string | null = null;
 
@@ -100,14 +117,11 @@ Deno.serve(async (req) => {
         status = sub.status;
         currentPeriodEndIso = new Date(sub.current_period_end * 1000).toISOString();
 
-        // If metadata wasn’t present on session, it SHOULD be on subscription (after our fix)
         const subMeta = readMeta(sub);
-        interval = interval ?? subMeta.interval;
+        tier = tier ?? subMeta.tier;
         plan = subMeta.plan ?? plan;
+        interval = subMeta.interval ?? interval;
       }
-
-      // If interval still missing, default to monthly so row still exists (prevents bouncing)
-      interval = interval ?? "monthly";
 
       await upsertProSubscription({
         userId,
@@ -119,8 +133,8 @@ Deno.serve(async (req) => {
         currentPeriodEnd: currentPeriodEndIso,
       });
 
-      // Founder annual claim (first 500 annual only)
-      if (interval === "annual") {
+      // Founder claim only when founder_annual
+      if (tier === "founder_annual") {
         const { data } = await admin.rpc("claim_founder_annual", { p_user_id: userId });
         if (data?.claimed === true) {
           await admin
@@ -137,11 +151,11 @@ Deno.serve(async (req) => {
       return json(200, { received: true });
     }
 
-    // keep row in sync on updates
     if (event.type === "customer.subscription.updated") {
       const sub = event.data.object as Stripe.Subscription;
       const meta = readMeta(sub);
-      if (!meta.userId || !meta.interval) return json(200, { ok: true, note: "missing_meta" });
+
+      if (!meta.userId) return json(200, { ok: true, note: "missing_user" });
 
       const currentPeriodEndIso = new Date(sub.current_period_end * 1000).toISOString();
 
@@ -150,7 +164,7 @@ Deno.serve(async (req) => {
         stripeCustomerId: typeof sub.customer === "string" ? sub.customer : null,
         stripeSubscriptionId: sub.id,
         plan: meta.plan ?? "pro",
-        interval: meta.interval,
+        interval: meta.interval ?? "monthly",
         status: sub.status,
         currentPeriodEnd: currentPeriodEndIso,
       });
@@ -158,10 +172,10 @@ Deno.serve(async (req) => {
       return json(200, { received: true });
     }
 
-    // cancel/ended
     if (event.type === "customer.subscription.deleted") {
       const sub = event.data.object as Stripe.Subscription;
       const meta = readMeta(sub);
+
       if (!meta.userId) return json(200, { ok: true, note: "missing_user" });
 
       await upsertProSubscription({
@@ -174,7 +188,6 @@ Deno.serve(async (req) => {
         currentPeriodEnd: null,
       });
 
-      // forfeits founder if you want “only while active”
       await admin
         .from("pro_subscriptions")
         .update({
