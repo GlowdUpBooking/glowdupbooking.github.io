@@ -6,3 +6,7 @@ settings.json
 app.json
 .env
 .env.*
+
+# env files
+.env
+.env.*
