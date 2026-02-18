@@ -2,14 +2,47 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-import Input from "../components/ui/Input";
 import { supabase } from "../lib/supabase";
 
-export default function Signup({ session }) {
-  const nav = useNavigate();
+const CATEGORIES = [
+  "Tattoo Artist",
+  "Barber",
+  "Hair Stylist",
+  "Nail Tech",
+  "Makeup Artist",
+  "Braider",
+  "Esthetician",
+  "Lash Tech",
+  "Piercer",
+  "Other",
+];
 
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
+function normalizeCity(s) {
+  return (s || "").trim();
+}
+
+function Field({
+  label,
+  required,
+  className = "",
+  error,
+  children,
+  hint,
+}) {
+  return (
+    <div className={`authField ${className}`.trim()}>
+      <label className="authLabel">
+        {label} {required ? "*" : ""}
+      </label>
+      {children}
+      {hint ? <div className="authHint">{hint}</div> : null}
+      {error ? <div className="authError">{error}</div> : null}
+    </div>
+  );
+}
+
+export default function Signup({ session }) {
+  const navigate = useNavigate();
 
   const [fullName, setFullName] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -19,237 +52,235 @@ export default function Signup({ session }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const categories = useMemo(
-    () => [
-      "Tattoo Artist",
-      "Barber",
-      "Hair Stylist",
-      "Nail Tech",
-      "Lash Tech",
-      "Makeup Artist",
-      "Braider",
-      "Esthetician",
-      "Other",
-    ],
-    []
-  );
+  const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState("");
 
-  // If already signed in, you can send them to /app (Paywall will gate)
-  if (session) {
-    // don’t hard redirect in render loops; just show a small message
+  const canSubmit = useMemo(() => {
     return (
-      <div className="lp authPage">
-        <header className="lpNav">
-          <div className="lpNavInner">
-            <Link className="lpBrand" to="/">
-              <span className="lpBrandStrong">Glow’d Up</span>
-              <span className="lpBrandLight"> Booking</span>
-            </Link>
-            <div className="lpNavRight">
-              <Link className="lpNavLink" to="/pricing">
-                Plans
-              </Link>
-              <Link className="lpNavBtn" to="/app">
-                Go to app <span className="lpArrow">→</span>
-              </Link>
-            </div>
-          </div>
-        </header>
-
-        <main className="authWrap">
-          <Card className="authCard">
-            <h1 className="authTitle">You’re already signed in</h1>
-            <p className="authSub">
-              Continue to the app. If you don’t have an active plan, you’ll be
-              prompted to choose one.
-            </p>
-            <div className="authActions">
-              <Link to="/app" style={{ width: "100%" }}>
-                <Button variant="outline" className="authPrimaryBtn">
-                  Continue
-                </Button>
-              </Link>
-            </div>
-          </Card>
-        </main>
-      </div>
+      fullName.trim().length >= 2 &&
+      businessName.trim().length >= 2 &&
+      category.trim().length > 0 &&
+      normalizeCity(city).length >= 2 &&
+      email.trim().length >= 4 &&
+      password.length >= 8
     );
-  }
+  }, [fullName, businessName, category, city, email, password]);
 
   async function onSubmit(e) {
     e.preventDefault();
-    setErr("");
-    setLoading(true);
+    setFormError("");
+
+    if (!canSubmit) {
+      setFormError("Please fill all required fields to continue.");
+      return;
+    }
 
     try {
-      // Create account
-      const { data, error } = await supabase.auth.signUp({
-        email,
+      setLoading(true);
+
+      const { error } = await supabase.auth.signUp({
+        email: email.trim(),
         password,
+        options: {
+          data: {
+            full_name: fullName.trim(),
+            business_name: businessName.trim(),
+            category: category.trim(),
+            city: normalizeCity(city),
+            phone: phone.trim() || null,
+          },
+        },
       });
+
       if (error) throw error;
 
-      // Create/seed profile (optional but recommended)
-      const userId = data?.user?.id;
-      if (userId) {
-        await supabase.from("profiles").upsert(
-          {
-            id: userId,
-            full_name: fullName,
-            business_name: businessName,
-            business_type: category,
-            city,
-            phone: phone || null,
-            onboarding_step: "basics",
-          },
-          { onConflict: "id" }
-        );
-      }
-
-      // Send them to pricing/plans to pay (Paywall logic will enforce)
-      nav("/pricing");
-    } catch (e) {
-      setErr(e?.message || "Something went wrong. Please try again.");
+      // Route them to plans to subscribe
+      navigate("/pricing", { replace: true });
+    } catch (err) {
+      setFormError(err?.message || "Could not create account. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
+  // Already logged in view
+  if (session) {
+    return (
+      <div className="authPage">
+        <div className="authTopNav">
+          <div className="authTopNavInner">
+            <Link className="authBrand" to="/">
+              <span className="authBrandStrong">Glow’d Up</span>
+              <span className="authBrandLight"> Booking</span>
+            </Link>
+            <div className="authTopNavRight">
+              <Link className="authNavLink" to="/pricing">
+                Plans
+              </Link>
+              <Link className="authNavBtn" to="/app">
+                Go to app <span className="authArrow">→</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="authShell">
+          <Card className="authCard">
+            <div className="authHeader">
+              <h1 className="authTitle">You’re already signed in</h1>
+              <p className="authSub">
+                Head to the app, or view plans if you need to subscribe.
+              </p>
+            </div>
+
+            <div className="authActions">
+              <Link to="/app" style={{ width: "100%" }}>
+                <Button className="authPrimaryBtn">Go to app</Button>
+              </Link>
+              <Link to="/pricing" style={{ width: "100%" }}>
+                <Button variant="outline" className="authPrimaryBtn">
+                  View plans
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="lp authPage">
-      {/* Top Nav - same as landing */}
-      <header className="lpNav">
-        <div className="lpNavInner">
-          <Link className="lpBrand" to="/">
-            <span className="lpBrandStrong">Glow’d Up</span>
-            <span className="lpBrandLight"> Booking</span>
+    <div className="authPage">
+      <header className="authTopNav">
+        <div className="authTopNavInner">
+          <Link className="authBrand" to="/">
+            <span className="authBrandStrong">Glow’d Up</span>
+            <span className="authBrandLight"> Booking</span>
           </Link>
 
-          <div className="lpNavRight">
-            <Link className="lpNavLink" to="/pricing">
+          <div className="authTopNavRight">
+            <Link className="authNavLink" to="/pricing">
               Plans
             </Link>
-            <Link className="lpNavBtn" to="/login">
-              Sign In <span className="lpArrow">→</span>
+            <Link className="authNavBtn" to="/login">
+              Sign In <span className="authArrow">→</span>
             </Link>
           </div>
         </div>
       </header>
 
-      <main className="authWrap">
+      <main className="authShell">
         <Card className="authCard">
-          <div className="authHead">
+          <div className="authHeader">
             <h1 className="authTitle">Create your Pro account</h1>
             <p className="authSub">
-              Pro-first access. Set up your profile, then you’ll get your booking
-              link.
+              Pro-first access. Set up your profile, then you’ll get your booking link.
             </p>
           </div>
 
-          {err ? <div className="authAlert">{err}</div> : null}
+          {formError ? <div className="authFormError">{formError}</div> : null}
 
           <form onSubmit={onSubmit} className="authForm">
             <div className="authGrid">
-              <Input
-                label="Full name"
-                required
-                name="fullName"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Your name"
-                autoComplete="name"
-              />
+              <Field label="Full name" required>
+                <input
+                  className="authInput"
+                  placeholder="Your name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  autoComplete="name"
+                />
+              </Field>
 
-              <Input
-                label="Business / brand name"
-                required
-                name="businessName"
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="e.g., Kamara Cuts / Ink"
-              />
+              <Field label="Business / brand name" required>
+                <input
+                  className="authInput"
+                  placeholder="e.g., Kamara Cuts / Ink"
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  autoComplete="organization"
+                />
+              </Field>
 
-              <Input
-                label="Category"
-                required
-                name="category"
-                as="select"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-              >
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </Input>
+              <Field label="Category" required>
+                <select
+                  className="authInput authSelect"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </Field>
 
-              <Input
-                label="City"
-                required
-                name="city"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="Dallas, Houston, Austin"
-                autoComplete="address-level2"
-              />
+              <Field label="City" required>
+                <input
+                  className="authInput"
+                  placeholder="Dallas, Houston, Austin"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  autoComplete="address-level2"
+                />
+              </Field>
 
-              <Input
-                label="Phone (optional)"
-                name="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="For booking + reminders"
-                autoComplete="tel"
-              />
+              <Field label="Phone (optional)">
+                <input
+                  className="authInput"
+                  placeholder="For booking + reminders"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  autoComplete="tel"
+                  inputMode="tel"
+                />
+              </Field>
 
-              <Input
-                label="Email"
-                required
-                name="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@business.com"
-                autoComplete="email"
-              />
+              <Field label="Email" required>
+                <input
+                  className="authInput"
+                  placeholder="you@business.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  inputMode="email"
+                />
+              </Field>
+
+              <Field label="Password (8+ characters)" required className="authFull">
+                <input
+                  className="authInput"
+                  type="password"
+                  placeholder="Create a password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                />
+              </Field>
             </div>
-
-            <Input
-              label="Password (8+ characters)"
-              required
-              name="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              autoComplete="new-password"
-            />
 
             <div className="authActions">
               <Button
-                variant="outline"
                 className="authPrimaryBtn"
+                disabled={!canSubmit || loading}
                 type="submit"
-                disabled={loading}
               >
-                {loading ? "Creating…" : "Create account"}
+                {loading ? "Creating..." : "Create account"}
               </Button>
+            </div>
 
-              <div className="authMeta">
-                <span>Already have an account?</span>{" "}
-                <Link to="/login" className="authLink">
-                  Sign in
-                </Link>
+            <div className="authFooter">
+              <div className="authFooterLinks">
+                <span>Already have an account?</span>
+                <Link to="/login">Sign in</Link>
                 <span className="authDot">·</span>
-                <Link to="/pricing" className="authLink">
-                  View plans
-                </Link>
+                <Link to="/pricing">View plans</Link>
               </div>
 
-              <div className="authFine">
-                By creating an account, you agree to Pro-first onboarding. Your
-                booking link is built for your clients — not a marketplace.
+              <div className="authFinePrint">
+                By creating an account, you agree to Pro-first onboarding. Your booking link
+                is built for your clients — not a marketplace.
               </div>
             </div>
           </form>
