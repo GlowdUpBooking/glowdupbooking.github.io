@@ -3,6 +3,12 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 
 export default function Home() {
+  const scrollToPricing = (e) => {
+    e.preventDefault();
+    const el = document.getElementById("pricing");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <div className="lp">
       {/* Top Nav */}
@@ -14,9 +20,15 @@ export default function Home() {
           </Link>
 
           <div className="lpNavRight">
-            <Link className="lpNavLink" to="/pricing">
-              Pricing
+            {/* Plans = scroll, NOT route */}
+            <a className="lpNavLink" href="#pricing" onClick={scrollToPricing}>
+              Plans
+            </a>
+
+            <Link className="lpNavLink" to="/signup">
+              Create account
             </Link>
+
             <Link className="lpNavBtn" to="/login">
               Sign In <span className="lpArrow">→</span>
             </Link>
@@ -47,19 +59,21 @@ export default function Home() {
           </p>
 
           <div className="lpHeroBtns">
-            <Link to="/pricing">
+            <Link to="/signup">
               <Button variant="outline" className="lpBtn">
                 Get Early Access (Pro)
               </Button>
             </Link>
-            <Link to="/pricing">
+
+            <a href="#pricing" onClick={scrollToPricing}>
               <Button variant="outline" className="lpBtn">
-                See How It Works
+                See Plans
               </Button>
-            </Link>
-            <Link to="/pricing">
+            </a>
+
+            <Link to="/login">
               <Button variant="outline" className="lpBtn">
-                View pricing
+                Sign in
               </Button>
             </Link>
           </div>
@@ -70,8 +84,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing Preview (same as screenshot) */}
-      <section className="lpPricing">
+      {/* Pricing Preview (marketing-only) */}
+      <section className="lpPricing" id="pricing">
         <div className="lpPricingInner">
           <div className="lpPricingHead">
             <h2 className="lpH2">Simple pricing for professionals.</h2>
@@ -94,9 +108,9 @@ export default function Home() {
                 <li>✓ Clients book through your link</li>
               </ul>
 
-              <Link to="/pricing" className="lpChooseWrap">
+              <Link to="/signup" className="lpChooseWrap">
                 <Button variant="outline" className="lpChoose">
-                  Choose Starter
+                  Create account
                 </Button>
               </Link>
             </Card>
@@ -118,9 +132,9 @@ export default function Home() {
                 <li>✓ Better customization + branding</li>
               </ul>
 
-              <Link to="/pricing" className="lpChooseWrap">
+              <Link to="/signup" className="lpChooseWrap">
                 <Button variant="outline" className="lpChoose">
-                  Choose Pro
+                  Create account
                 </Button>
               </Link>
             </Card>
@@ -152,9 +166,9 @@ export default function Home() {
                 <li>✓ Priority support</li>
               </ul>
 
-              <Link to="/pricing" className="lpChooseWrap">
+              <Link to="/signup" className="lpChooseWrap">
                 <Button variant="outline" className="lpChoose">
-                  Choose Founder
+                  Create account
                 </Button>
               </Link>
             </Card>
