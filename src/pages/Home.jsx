@@ -1,14 +1,10 @@
+// src/pages/Home.jsx
 import { Link } from "react-router-dom";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import PaywallBanner from "../components/Pricing/PaywallBanner";
 
 export default function Home() {
-  const scrollToPricing = (e) => {
-    e.preventDefault();
-    const el = document.getElementById("pricing");
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   return (
     <div className="lp">
       {/* Top Nav */}
@@ -20,15 +16,12 @@ export default function Home() {
           </Link>
 
           <div className="lpNavRight">
-            {/* Plans = scroll, NOT route */}
-            <a className="lpNavLink" href="#pricing" onClick={scrollToPricing}>
+            <a className="lpNavLink" href="#plans">
               Plans
             </a>
-
             <Link className="lpNavLink" to="/signup">
               Create account
             </Link>
-
             <Link className="lpNavBtn" to="/login">
               Sign In <span className="lpArrow">→</span>
             </Link>
@@ -53,9 +46,9 @@ export default function Home() {
           </h1>
 
           <p className="lpLead">
-            Glow’d Up Booking is a premium booking platform made for professionals—
-            tattoo artists, barbers, stylists, nail techs, and more. Share your link,
-            collect deposits, and manage your schedule without marketplace noise.
+            Glow’d Up Booking is a premium booking platform made for professionals— tattoo artists,
+            barbers, stylists, nail techs, and more. Share your link, collect deposits, and manage
+            your schedule without marketplace noise.
           </p>
 
           <div className="lpHeroBtns">
@@ -64,13 +57,11 @@ export default function Home() {
                 Get Early Access (Pro)
               </Button>
             </Link>
-
-            <a href="#pricing" onClick={scrollToPricing}>
+            <a href="#plans">
               <Button variant="outline" className="lpBtn">
                 See Plans
               </Button>
             </a>
-
             <Link to="/login">
               <Button variant="outline" className="lpBtn">
                 Sign in
@@ -84,18 +75,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing Preview (marketing-only) */}
-      <section className="lpPricing" id="pricing">
+      {/* Plans */}
+      <section id="plans" className="lpPricing">
         <div className="lpPricingInner">
           <div className="lpPricingHead">
             <h2 className="lpH2">Simple pricing for professionals.</h2>
             <div className="lpSub">Choose what fits your workflow.</div>
           </div>
 
+          {/* ✅ Counter / founder availability (this is what was missing) */}
+          <PaywallBanner />
+
           <div className="lpGrid">
             {/* Starter */}
             <Card className="lpPriceCard">
-              <div className="lpTier">Tier 1 — Starter</div>
+              <div className="lpTier">Starter</div>
               <div className="lpPriceLine">
                 <span className="lpPrice">$9.99</span>
                 <span className="lpTerm">/month</span>
@@ -117,7 +111,7 @@ export default function Home() {
 
             {/* Pro (Featured) */}
             <Card className="lpPriceCard lpFeatured">
-              <div className="lpTier">Tier 2 • Pro (Featured)</div>
+              <div className="lpTier">Pro (Featured)</div>
               <div className="lpPriceLine">
                 <span className="lpPrice">$14.99</span>
                 <span className="lpTerm">/month</span>
@@ -141,7 +135,7 @@ export default function Home() {
 
             {/* Founder */}
             <Card className="lpPriceCard">
-              <div className="lpTier">Tier 3 • Founder (Annual)</div>
+              <div className="lpTier">Founder (Annual)</div>
               <div className="lpPriceLine">
                 <span className="lpPrice">$99</span>
                 <span className="lpTerm">/year</span>
@@ -172,13 +166,6 @@ export default function Home() {
                 </Button>
               </Link>
             </Card>
-          </div>
-
-          <div className="lpFooterLine">
-            <div className="lpFooterBig">Founder spots left ~ Only 1,000 nationwide</div>
-            <div className="lpFooterSmall">
-              First 1,000 Pros lock in $99/year forever. Don’t miss out.
-            </div>
           </div>
         </div>
       </section>

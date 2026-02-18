@@ -1,7 +1,9 @@
 // src/pages/Signup.jsx
 import { useMemo, useState } from "react";
-import { supabase } from "../lib/supabase";
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
 
 const CATEGORIES = [
   "Tattoo Artist",
@@ -9,70 +11,45 @@ const CATEGORIES = [
   "Hair Stylist",
   "Nail Tech",
   "Makeup Artist",
-  "Esthetician",
   "Lash Tech",
-  "Braider",
+  "Brow Tech",
+  "Esthetician",
+  "Massage Therapist",
   "Other",
 ];
 
-export default function Signup() {
+export default function Signup({ session }) {
   const nav = useNavigate();
 
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+
   const [form, setForm] = useState({
-    fullName: "",
-    businessName: "",
-    category: "Tattoo Artist",
+    full_name: "",
+    business_name: "",
+    business_type: "Tattoo Artist",
     city: "",
     phone: "",
     email: "",
     password: "",
   });
 
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState("");
-  const [ok, setOk] = useState(false);
-
   const canSubmit = useMemo(() => {
-    const emailOk = /^\S+@\S+\.\S+$/.test(form.email.trim());
     return (
-      form.fullName.trim().length >= 2 &&
-      form.businessName.trim().length >= 2 &&
-      form.city.trim().length >= 2 &&
-      emailOk &&
-      form.password.length >= 8
+      form.full_name.trim().length > 1 &&
+      form.business_name.trim().length > 1 &&
+      form.business_type.trim().length > 0 &&
+      form.city.trim().length > 1 &&
+      form.email.trim().length > 3 &&
+      form.password.length >= 8 &&
+      !loading
     );
-  }, [form]);
-
-  function setField(key, val) {
-    setForm((p) => ({ ...p, [key]: val }));
-    setMsg("");
-    setOk(false);
-  }
-
-  function validationMessage() {
-    if (form.fullName.trim().length < 2) return "Please enter your full name.";
-    if (form.businessName.trim().length < 2) return "Please enter a business/brand name.";
-    if (form.city.trim().length < 2) return "Please enter your city.";
-    if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) return "Please enter a valid email address.";
-    if (form.password.length < 8) return "Password must be at least 8 characters.";
-    return "";
-  }
+  }, [form, loading]);
 
   async function onSubmit(e) {
     e.preventDefault();
-
-    // ✅ Instead of silently doing nothing, show WHY the form can’t submit
-    const vMsg = validationMessage();
-    if (vMsg) {
-      setMsg(vMsg);
-      return;
-    }
-
-    if (busy) return;
-
-    setBusy(true);
-    setMsg("");
-    setOk(false);
+    setErr("");
+    setLoading(true);
 
     try {
       // 1) Create auth user
@@ -81,187 +58,192 @@ export default function Signup() {
         password: form.password,
         options: {
           data: {
-            full_name: form.fullName.trim(),
-            business_name: form.businessName.trim(),
-            category: form.category,
-            city: form.city.trim(),
-            phone: form.phone.trim(),
+            full_name: form.full_name.trim(),
           },
         },
       });
 
       if (error) throw error;
 
-      // 2) OPTIONAL: Upsert profile row (if you use public.profiles)
-      if (data?.user?.id) {
-        const { error: pErr } = await supabase
-          .from("profiles")
-          .upsert(
-            {
-              id: data.user.id,
-              role: "professional", // ✅ make sure role is set
-              full_name: form.fullName.trim(),
-              business_name: form.businessName.trim(),
-              category: form.category,
-              city: form.city.trim(),
-              phone: form.phone.trim() || null,
-              created_at: new Date().toISOString(),
-            },
-            { onConflict: "id" }
-          );
-
-        if (pErr) console.warn("profiles upsert skipped:", pErr.message);
+      const userId = data?.user?.id;
+      if (!userId) {
+        // Email confirmations can cause user to be null, but still no reason to break layout.
+        // You can customize this later.
+        throw new Error("Account created. Please check your email to confirm your account.");
       }
 
-      // If email confirmation is OFF, Supabase returns a session immediately.
-      if (data?.session) {
-        nav("/app", { replace: true });
-        return;
-      }
+      // 2) Upsert profile details (match your existing `profiles` columns)
+      const { error: pErr } = await supabase.from("profiles").upsert(
+        {
+          id: userId,
+          full_name: form.full_name.trim(),
+          business_name: form.business_name.trim(),
+          business_type: form.business_type.trim(),
+          city: form.city.trim(),
+          phone: form.phone.trim() || null,
+          role: "pro",
+          onboarding_step: "start",
+        },
+        { onConflict: "id" }
+      );
 
-      // If email confirmation is ON, no session yet.
-      setOk(true);
-      setMsg("Account created. Check your email to confirm, then sign in.");
-    } catch (err) {
-      setMsg(err?.message || "Something went wrong. Please try again.");
+      if (pErr) throw pErr;
+
+      // 3) Send them to pricing (or paywall flow)
+      nav("/pricing", { replace: true });
+    } catch (e) {
+      setErr(e?.message ?? "Signup failed");
     } finally {
-      setBusy(false);
+      setLoading(false);
     }
+  }
+
+  // If already logged in, send them forward (you can adjust destination later)
+  if (session) {
+    // If they’re logged in but not subscribed, your gate will handle it.
+    // Keep it simple:
+    nav("/app", { replace: true });
+    return null;
   }
 
   return (
     <div className="authPage">
-      <div className="bg" aria-hidden="true" />
+      <div className="authShell">
+        <div className="authHeader">
+          <Link className="authBrand" to="/">
+            <span className="authBrandStrong">Glow’d Up</span>
+            <span className="authBrandLight"> Booking</span>
+          </Link>
 
-      <div className="authCard">
-        <img className="authLogo" src="/assets/logo-1.png" alt="Glow’d Up Booking" />
-
-        <h1>Create your Pro account</h1>
-        <p className="muted">
-          Pro-first access. Set up your profile, then you’ll get your booking link.
-        </p>
-
-        {msg ? <div className="authMsg">{msg}</div> : null}
-
-        <form className="authForm" onSubmit={onSubmit}>
-          <label>
-            Full name
-            <input
-              value={form.fullName}
-              onChange={(e) => setField("fullName", e.target.value)}
-              placeholder="Your name"
-              autoComplete="name"
-              required
-            />
-          </label>
-
-          <label>
-            Business / brand name
-            <input
-              value={form.businessName}
-              onChange={(e) => setField("businessName", e.target.value)}
-              placeholder="e.g., Kamara Cuts / Ink by ____"
-              autoComplete="organization"
-              required
-            />
-          </label>
-
-          <label>
-            Category
-            <select
-              value={form.category}
-              onChange={(e) => setField("category", e.target.value)}
-              style={{
-                padding: "12px 12px",
-                borderRadius: "14px",
-                border: "1px solid rgba(255,255,255,.10)",
-                background: "rgba(0,0,0,.25)",
-                color: "var(--text)",
-                outline: "none",
-              }}
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            City
-            <input
-              value={form.city}
-              onChange={(e) => setField("city", e.target.value)}
-              placeholder="Dallas, Houston, Austin..."
-              autoComplete="address-level2"
-              required
-            />
-          </label>
-
-          <label>
-            Phone (optional)
-            <input
-              value={form.phone}
-              onChange={(e) => setField("phone", e.target.value)}
-              placeholder="For booking + reminder alerts"
-              autoComplete="tel"
-            />
-          </label>
-
-          <label>
-            Email
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => setField("email", e.target.value)}
-              placeholder="you@business.com"
-              autoComplete="email"
-              required
-            />
-          </label>
-
-          <label>
-            Password (8+ characters)
-            <input
-              type="password"
-              value={form.password}
-              onChange={(e) => setField("password", e.target.value)}
-              placeholder="••••••••"
-              autoComplete="new-password"
-              required
-              minLength={8}
-            />
-            {form.password.length > 0 && form.password.length < 8 ? (
-              <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
-                Password must be at least 8 characters.
-              </div>
-            ) : null}
-          </label>
-
-          {/* ✅ Only disable while busy; invalid form shows message instead of “nothing happens” */}
-          <button className="btn gold full" disabled={busy} type="submit">
-            {busy ? "Creating…" : "Create account"}
-          </button>
-
-          <div className="authLinks">
-            <Link to="/login">Already have an account?</Link>
-            <Link to="/pricing">View pricing</Link>
+          <div className="authHeaderRight">
+            <Link className="authLink" to="/pricing">
+              Pricing
+            </Link>
+            <Link className="authLinkBtn" to="/login">
+              Sign In <span className="lpArrow">→</span>
+            </Link>
           </div>
+        </div>
 
-          {!ok ? (
-            <p className="muted" style={{ marginTop: 8, fontSize: 12 }}>
-              By creating an account, you agree to Pro-first onboarding. Your booking link is built
-              for your clients — not a marketplace.
-            </p>
-          ) : null}
-
-          {/* Optional: show a tiny live readiness indicator */}
-          <p className="muted" style={{ marginTop: 10, fontSize: 12, opacity: 0.75 }}>
-            {canSubmit ? "✅ Ready to create account" : "Fill all required fields to continue"}
+        <Card className="authCard">
+          <h1 className="authTitle">Create your Pro account</h1>
+          <p className="authSub">
+            Pro-first access. Set up your profile, then you’ll get your booking link.
           </p>
-        </form>
+
+          {err ? <div className="authError">{err}</div> : null}
+
+          <form onSubmit={onSubmit} className="authForm">
+            <div className="formGrid">
+              <Field label="Full name" required>
+                <input
+                  className="authInput"
+                  placeholder="Your name"
+                  value={form.full_name}
+                  onChange={(e) => setForm((s) => ({ ...s, full_name: e.target.value }))}
+                  autoComplete="name"
+                />
+              </Field>
+
+              <Field label="Business / brand name" required>
+                <input
+                  className="authInput"
+                  placeholder="e.g., Kamara Cuts / Ink"
+                  value={form.business_name}
+                  onChange={(e) => setForm((s) => ({ ...s, business_name: e.target.value }))}
+                />
+              </Field>
+
+              <Field label="Category" required>
+                <select
+                  className="authInput"
+                  value={form.business_type}
+                  onChange={(e) => setForm((s) => ({ ...s, business_type: e.target.value }))}
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="City" required>
+                <input
+                  className="authInput"
+                  placeholder="Dallas, Houston, Austin"
+                  value={form.city}
+                  onChange={(e) => setForm((s) => ({ ...s, city: e.target.value }))}
+                />
+              </Field>
+
+              <Field label="Phone (optional)">
+                <input
+                  className="authInput"
+                  placeholder="For booking + reminders"
+                  value={form.phone}
+                  onChange={(e) => setForm((s) => ({ ...s, phone: e.target.value }))}
+                  autoComplete="tel"
+                />
+              </Field>
+
+              <Field label="Email" required>
+                <input
+                  className="authInput"
+                  placeholder="you@business.com"
+                  value={form.email}
+                  onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
+                  autoComplete="email"
+                />
+              </Field>
+
+              <Field label="Password (8+ characters)" required className="span2">
+                <input
+                  className="authInput"
+                  type="password"
+                  placeholder="••••••••"
+                  value={form.password}
+                  onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))}
+                  autoComplete="new-password"
+                />
+              </Field>
+            </div>
+
+            <div className="authActions">
+              <Button
+                className="authPrimaryBtn"
+                variant="outline"
+                type="submit"
+                disabled={!canSubmit}
+              >
+                {loading ? "Creating…" : "Create account"}
+              </Button>
+
+              <div className="authMeta">
+                Already have an account? <Link to="/login">Sign in</Link>
+                <span className="authDot">·</span>
+                <Link to="/pricing">View pricing</Link>
+              </div>
+
+              <div className="authFinePrint">
+                By creating an account, you agree to Pro-first onboarding. Your booking link is
+                built for your clients — not a marketplace.
+              </div>
+            </div>
+          </form>
+        </Card>
       </div>
+    </div>
+  );
+}
+
+function Field({ label, required, className = "", children }) {
+  return (
+    <div className={`formField ${className}`}>
+      <label className="formLabel">
+        {label} {required ? <span className="req">*</span> : null}
+      </label>
+      {children}
     </div>
   );
 }
