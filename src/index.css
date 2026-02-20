@@ -1,234 +1,49 @@
-/* ===========================
-   Auth / Signup / Login (Preview #1)
-   - Matches landing vibe (not too dark)
-   - Bigger inputs, clean spacing
-   =========================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
 
-.authPage{
-  min-height: 100vh;
-  padding: 0;
-  display: block;
+:root{
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color-scheme: dark;
+
+  /* === Glowdupbooking.com style theme tokens === */
+  --bg: #0b0b0c;
+  --text: #ffffff;
+
+  --glass: rgba(0,0,0,0.55);
+  --glass2: rgba(255,255,255,0.06);
+
+  --border: rgba(255,255,255,0.10);
+  --borderSoft: rgba(255,255,255,0.06);
+
+  --muted: rgba(255,255,255,0.78);
+  --muted2: rgba(255,255,255,0.75);
+
+  --shadow: 0 30px 80px rgba(0,0,0,0.55);
+
+  --radiusLg: 22px;
+  --radiusMd: 14px;
+
+  --inputBg: rgba(255,255,255,0.06);
+  --inputBorder: rgba(255,255,255,0.12);
+  --inputFocusBorder: rgba(255,255,255,0.28);
+  --inputFocusRing: rgba(255,255,255,0.06);
+
+  --ctaBg: #ffffff;
+  --ctaText: #0b0b0c;
+  --ctaBorder: rgba(255,255,255,0.18);
+
+  --pageRadial1: radial-gradient(1200px 800px at 50% 20%, rgba(255,255,255,0.08), rgba(0,0,0,0) 60%);
+  --pageRadial2: radial-gradient(900px 600px at 10% 10%, rgba(255,255,255,0.06), rgba(0,0,0,0) 50%);
 }
 
-/* Top sticky bar */
-.authTopNav{
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  backdrop-filter: blur(10px);
-  background: rgba(0,0,0,.50);
-  border-bottom: 1px solid var(--border);
-}
+*{ box-sizing: border-box; }
 
-.authTopNavInner{
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 18px 22px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.authBrand{
-  text-decoration: none;
-  color: var(--text);
-  font-weight: 700;
-  letter-spacing: .2px;
-}
-.authBrandStrong{ font-weight: 850; }
-.authBrandLight{ opacity: .9; font-weight: 650; }
-
-.authTopNavRight{
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.authNavLink{
-  color: rgba(243,245,255,.78);
-  text-decoration: none;
-  font-weight: 650;
-  font-size: 14px;
-}
-.authNavLink:hover{ color: var(--text); }
-
-.authNavBtn{
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 14px;
-  border-radius: 999px;
-  text-decoration: none;
-  color: var(--text);
-  border: 1px solid var(--border2);
-  background: rgba(255,255,255,.04);
-}
-.authNavBtn:hover{
-  background: rgba(255,255,255,.07);
-  border-color: rgba(255,255,255,.18);
-}
-.authArrow{ opacity: .85; }
-
-/* Center shell */
-.authShell{
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 34px 18px 60px;
-  display: flex;
-  justify-content: center;
-}
-
-/* Card container uses your existing .card look, but we enhance spacing */
-.authCard{
-  width: 100%;
-  max-width: 980px;
-  padding: 30px 26px;
-  border-radius: 24px;
-}
-
-/* Head text */
-.authHeader{ margin-bottom: 18px; }
-
-.authTitle{
-  margin: 0 0 10px;
-  font-size: clamp(30px, 3.2vw, 44px);
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-  color: var(--text);
-}
-
-.authSub{
+html, body{
+  height: 100%;
   margin: 0;
-  color: var(--muted);
-  font-size: 16px;
-  line-height: 1.5;
-  max-width: 760px;
-}
-
-/* Form grid */
-.authForm{ margin-top: 10px; }
-
-.authGrid{
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px 18px;
-  margin-top: 12px;
-}
-
-.authFull{ grid-column: 1 / -1; }
-
-/* Field + label */
-.authField{
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-}
-
-.authLabel{
-  font-size: 13px;
-  font-weight: 750;
-  color: rgba(243,245,255,.78);
-  letter-spacing: .2px;
-}
-
-/* Inputs: bigger + nicer */
-.authInput{
-  width: 100%;
-  height: 54px;
-  border-radius: 16px;
-  border: 1px solid var(--border2);
-  background: rgba(0,0,0,.28);
+  background: var(--bg);
   color: var(--text);
-  padding: 0 16px;
-  font-size: 16px;
-  font-weight: 650;
-  outline: none;
 }
 
-.authInput::placeholder{
-  color: rgba(243,245,255,.38);
-  font-weight: 600;
-}
-
-.authInput:focus{
-  border-color: rgba(255,255,255,.22);
-  box-shadow: 0 0 0 4px rgba(255,255,255,.06);
-  background: rgba(0,0,0,.34);
-}
-
-.authSelect{
-  padding-right: 42px;
-  appearance: none;
-}
-
-/* Errors */
-.authFormError{
-  margin: 14px 0 18px;
-  padding: 12px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,80,80,.35);
-  background: rgba(255,80,80,.10);
-  color: rgba(255,255,255,.92);
-  font-weight: 650;
-}
-
-.authError{
-  font-size: 12px;
-  color: rgba(255,160,160,.95);
-  font-weight: 700;
-}
-
-/* Actions + footer */
-.authActions{
-  margin-top: 18px;
-  display: flex;
-  gap: 12px;
-}
-
-.authPrimaryBtn{
-  width: 100%;
-  height: 54px;
-  border-radius: 16px;
-  font-size: 16px;
-  font-weight: 850;
-}
-
-.authFooter{
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
-}
-
-.authFooterLinks{
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  color: rgba(243,245,255,.70);
-  font-size: 13px;
-  font-weight: 650;
-}
-
-.authFooterLinks a{
-  color: rgba(243,245,255,.92);
-  text-decoration: none;
-  border-bottom: 1px solid rgba(255,255,255,.14);
-}
-.authFooterLinks a:hover{ border-bottom-color: rgba(255,255,255,.28); }
-
-.authDot{ opacity: .7; }
-
-.authFinePrint{
-  margin-top: 8px;
-  color: rgba(243,245,255,.55);
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-/* Responsive */
-@media (max-width: 900px){
-  .authGrid{ grid-template-columns: 1fr; }
-  .authCard{ padding: 24px 18px; }
+#root{
+  min-height: 100%;
 }

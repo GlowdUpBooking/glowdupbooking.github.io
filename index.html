@@ -4,22 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Glow’d Up Booking</title>
-
-    <script>
-      (function () {
-        var params = new URLSearchParams(window.location.search);
-        var p = params.get("p");
-        if (!p) return;
-        params.delete("p");
-        var restored = decodeURIComponent(p);
-        var extra = params.toString();
-        window.history.replaceState(
-          null,
-          "",
-          restored + (extra ? (restored.includes("?") ? "&" : "?") + extra : "")
-        );
-      })();
-    </script>
   </head>
   <body>
     <div id="root"></div>

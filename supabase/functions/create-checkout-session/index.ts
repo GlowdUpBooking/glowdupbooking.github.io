@@ -3,8 +3,8 @@
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
-type Plan = "starter" | "pro" | "founder";
-type Tier = "starter_monthly" | "pro_monthly" | "founder_annual";
+type Plan = "free" | "starter" | "pro" | "founder" | "studio";
+type Tier = "starter_monthly" | "pro_monthly" | "founder_annual" | "studio_monthly";
 
 function getEnv(name: string) {
   const v = Deno.env.get(name);
@@ -23,16 +23,10 @@ function safeErr(e: unknown) {
   };
 }
 
-/** CORS allowlist */
 function corsHeaders(req: Request) {
   const origin = req.headers.get("origin") ?? "";
-  const allowlistRaw =
-    getEnv("ALLOWED_ORIGINS") ?? "http://localhost:5173,http://127.0.0.1:5173";
-  const allowlist = allowlistRaw
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-
+  const allowlistRaw = getEnv("ALLOWED_ORIGINS") ?? "http://localhost:5173,http://127.0.0.1:5173";
+  const allowlist = allowlistRaw.split(",").map((s) => s.trim()).filter(Boolean);
   const allowed = allowlist.includes(origin);
   return {
     "Access-Control-Allow-Origin": allowed ? origin : allowlist[0] ?? "",
@@ -53,10 +47,6 @@ function json(req: Request, status: number, body: Record<string, unknown>) {
   });
 }
 
-/**
- * ✅ Verify the Supabase JWT and return the user id (prevents spoofing).
- * Uses /auth/v1/user with the project's anon key.
- */
 async function getUserIdFromJwt(authHeader: string) {
   const supabaseUrl = getEnv("SUPABASE_URL") ?? getEnv("SB_URL");
   const anonKey =
@@ -75,19 +65,12 @@ async function getUserIdFromJwt(authHeader: string) {
   }
 
   const res = await fetch(`${supabaseUrl}/auth/v1/user`, {
-    headers: {
-      Authorization: auth,
-      apikey: anonKey,
-    },
+    headers: { Authorization: auth, apikey: anonKey },
   });
 
   if (!res.ok) {
     const t = await res.text().catch(() => "");
-    return {
-      userId: null,
-      reason: `auth_lookup_failed:${res.status}` as const,
-      detail: t,
-    };
+    return { userId: null, reason: `auth_lookup_failed:${res.status}` as const, detail: t };
   }
 
   const data = await res.json().catch(() => null);
@@ -100,6 +83,7 @@ function assertTier(x: any): Tier | null {
   if (t === "starter_monthly") return "starter_monthly";
   if (t === "pro_monthly") return "pro_monthly";
   if (t === "founder_annual") return "founder_annual";
+  if (t === "studio_monthly") return "studio_monthly";
   return null;
 }
 
@@ -111,15 +95,15 @@ serve(async (req) => {
 
   try {
     const stripeKey = getEnv("STRIPE_SECRET_KEY");
-    const siteUrl = getEnv("SITE_URL"); // ✅ for prod, set this
+    const siteUrl = getEnv("SITE_URL");
 
     const priceStarter = getEnv("STRIPE_PRICE_STARTER_MONTHLY");
     const pricePro = getEnv("STRIPE_PRICE_PRO_MONTHLY");
     const priceFounder = getEnv("STRIPE_PRICE_FOUNDER_ANNUAL");
+    const priceStudio = getEnv("STRIPE_PRICE_STUDIO_MONTHLY"); // optional (only used if you have it)
 
     if (!stripeKey) return json(req, 500, { error: "Missing STRIPE_SECRET_KEY" });
     if (!siteUrl) return json(req, 500, { error: "Missing SITE_URL (required for prod redirects)" });
-
     if (!priceStarter || !pricePro || !priceFounder) {
       return json(req, 500, {
         error: "Missing Stripe price env vars",
@@ -142,16 +126,10 @@ serve(async (req) => {
     if (!tier) {
       return json(req, 400, {
         error: "invalid_tier",
-        allowed: ["starter_monthly", "pro_monthly", "founder_annual"],
+        allowed: ["starter_monthly", "pro_monthly", "founder_annual", "studio_monthly"],
         received: payload?.tier ?? null,
       });
     }
-
-    const plan: Plan =
-      tier === "starter_monthly" ? "starter" : tier === "pro_monthly" ? "pro" : "founder";
-    const interval = tier === "founder_annual" ? "annual" : "monthly";
-    const priceId =
-      tier === "starter_monthly" ? priceStarter : tier === "pro_monthly" ? pricePro : priceFounder;
 
     const authHeader = req.headers.get("authorization") ?? "";
     const { userId, reason, detail } = await getUserIdFromJwt(authHeader);
@@ -159,6 +137,35 @@ serve(async (req) => {
     if (!userId) {
       if (DEBUG) console.log("[create-checkout-session] auth failed", { reason, detail });
       return json(req, 401, { error: "not_authenticated", reason });
+    }
+
+    let plan: Plan = "pro";
+    let interval: "monthly" | "annual" = "monthly";
+    let priceId: string | null = null;
+
+    if (tier === "starter_monthly") {
+      plan = "starter";
+      interval = "monthly";
+      priceId = priceStarter;
+    } else if (tier === "pro_monthly") {
+      plan = "pro";
+      interval = "monthly";
+      priceId = pricePro;
+    } else if (tier === "founder_annual") {
+      plan = "founder";
+      interval = "annual";
+      priceId = priceFounder;
+    } else if (tier === "studio_monthly") {
+      plan = "studio";
+      interval = "monthly";
+      priceId = priceStudio;
+    }
+
+    if (!priceId) {
+      return json(req, 500, {
+        error: "Missing price for tier (set STRIPE_PRICE_STUDIO_MONTHLY if using Studio)",
+        tier,
+      });
     }
 
     const successUrl = `${siteUrl}/app?checkout=success`;

@@ -9,8 +9,7 @@ function json(status: number, body: Record<string, unknown>) {
     headers: {
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers":
-        "authorization, x-client-info, apikey, content-type",
+      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     },
   });
@@ -48,7 +47,6 @@ async function stripeGet(path: string, stripeKey: string) {
 }
 
 function normalizePrice(p: any) {
-  // Stripe "price" object
   const unitAmount =
     typeof p?.unit_amount === "number"
       ? p.unit_amount
@@ -57,12 +55,8 @@ function normalizePrice(p: any) {
       : null;
 
   const currency = typeof p?.currency === "string" ? p.currency.toUpperCase() : "USD";
-
-  const interval =
-    typeof p?.recurring?.interval === "string" ? p.recurring.interval : null; // "month" | "year"
-
-  const intervalCount =
-    typeof p?.recurring?.interval_count === "number" ? p.recurring.interval_count : 1;
+  const interval = typeof p?.recurring?.interval === "string" ? p.recurring.interval : null;
+  const intervalCount = typeof p?.recurring?.interval_count === "number" ? p.recurring.interval_count : 1;
 
   const productName =
     typeof p?.product?.name === "string"
@@ -73,9 +67,9 @@ function normalizePrice(p: any) {
 
   return {
     id: p?.id ?? null,
-    unit_amount: unitAmount, // in cents for USD
+    unit_amount: unitAmount,
     currency,
-    interval, // month/year
+    interval,
     interval_count: intervalCount,
     product_name: productName,
     livemode: !!p?.livemode,
@@ -85,7 +79,6 @@ function normalizePrice(p: any) {
 serve(async (req) => {
   if (req.method === "OPTIONS") return json(200, { ok: true });
 
-  // allow GET or POST
   if (req.method !== "GET" && req.method !== "POST") {
     return json(405, { error: "method_not_allowed" });
   }
@@ -94,6 +87,7 @@ serve(async (req) => {
   const priceStarter = getEnv("STRIPE_PRICE_STARTER_MONTHLY");
   const pricePro = getEnv("STRIPE_PRICE_PRO_MONTHLY");
   const priceFounder = getEnv("STRIPE_PRICE_FOUNDER_ANNUAL");
+  const priceStudio = getEnv("STRIPE_PRICE_STUDIO_MONTHLY"); // optional
 
   if (!stripeKey) return json(500, { error: "Missing STRIPE_SECRET_KEY" });
   if (!priceStarter || !pricePro || !priceFounder) {
@@ -107,10 +101,15 @@ serve(async (req) => {
     });
   }
 
-  // Fetch each Stripe price (expand product so UI can show name if needed)
   const starterRes = await stripeGet(`prices/${priceStarter}?expand[]=product`, stripeKey);
   const proRes = await stripeGet(`prices/${pricePro}?expand[]=product`, stripeKey);
   const founderRes = await stripeGet(`prices/${priceFounder}?expand[]=product`, stripeKey);
+
+  let studioNorm: any = null;
+  if (priceStudio) {
+    const studioRes = await stripeGet(`prices/${priceStudio}?expand[]=product`, stripeKey);
+    if (studioRes.ok) studioNorm = normalizePrice(studioRes.data);
+  }
 
   if (!starterRes.ok || !proRes.ok || !founderRes.ok) {
     return json(500, {
@@ -126,9 +125,15 @@ serve(async (req) => {
   return json(200, {
     ok: true,
     prices: {
+      // Free is $0 and not a Stripe price
+      free_monthly: { id: "free", unit_amount: 0, currency: "USD", interval: "month", interval_count: 1, product_name: "Free", livemode: null },
+
       starter_monthly: normalizePrice(starterRes.data),
       pro_monthly: normalizePrice(proRes.data),
       founder_annual: normalizePrice(founderRes.data),
+
+      // optional: only present if you set STRIPE_PRICE_STUDIO_MONTHLY
+      studio_monthly: studioNorm,
     },
   });
 });

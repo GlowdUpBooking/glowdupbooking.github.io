@@ -5,7 +5,9 @@ import AppRouter from "./AppRouter";
 import { AuthProvider } from "./components/auth/AuthProvider";
 
 import "./index.css";
-import "./styles/landing.css"; // ✅ ADD THIS
+// IMPORTANT: app.css contains global .card styles that break the home pricing grid
+// import "./styles/app.css";
+import "./styles/landing.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

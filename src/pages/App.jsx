@@ -259,59 +259,9 @@ export default function App() {
       </AppShell>
     );
   }
-
-  // If subscription is not active, show upgrade screen (styled)
-  if (!isActive) {
-    return (
-      <AppShell title="Dashboard" onSignOut={signOut}>
-        <Card style={{ padding: 18 }}>
-          <div style={{ fontWeight: 900, fontSize: 22 }}>Upgrade to unlock the platform</div>
-          <div className="u-muted" style={{ marginTop: 10, maxWidth: 720 }}>
-            You’re signed in{user?.email ? ` as ${user.email}` : ""}, but your subscription isn’t active yet.
-            Choose a plan to access the pro tools.
-          </div>
-
-          <div style={{ marginTop: 14 }} className="u-muted">
-            <div>
-              <strong>Status:</strong> {subStatus ?? "none found"}
-            </div>
-            <div>
-              <strong>Plan:</strong> {planLabel}
-            </div>
-            {interval ? (
-              <div>
-                <strong>Billing:</strong> {interval}
-              </div>
-            ) : null}
-            {currentPeriodEnd ? (
-              <div>
-                <strong>Renews / ends:</strong> {formatDate(currentPeriodEnd) ?? currentPeriodEnd}
-              </div>
-            ) : null}
-          </div>
-
-          {err ? (
-            <div style={{ marginTop: 12 }} className="u-muted">
-              {err}
-            </div>
-          ) : null}
-
-          <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <Button variant="primary" onClick={() => nav("/pricing")}>
-              View plans
-            </Button>
-            <Button variant="outline" onClick={() => nav("/pricing")}>
-              Manage subscription
-            </Button>
-          </div>
-
-          <div className="u-muted2" style={{ marginTop: 12 }}>
-            If you just paid, it may take a few seconds for access to update. Refresh in a moment.
-          </div>
-        </Card>
-      </AppShell>
-    );
-  }
+  // If subscription is not active, DO NOT block the app for starter/free.
+  // We show an upgrade card, but continue rendering the dashboard.
+  const showUpgrade = !isActive;
 
   // Dashboard content
   const displayBusinessName = profile?.business_name || "Your Business";

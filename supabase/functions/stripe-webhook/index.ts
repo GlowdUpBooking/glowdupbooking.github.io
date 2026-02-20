@@ -19,22 +19,25 @@ function json(status: number, body: Record<string, unknown>) {
   });
 }
 
-type Tier = "starter_monthly" | "pro_monthly" | "founder_annual";
+type Tier = "starter_monthly" | "pro_monthly" | "founder_annual" | "studio_monthly";
 type Interval = "monthly" | "annual";
 
 function normalizeFromTier(tier: Tier) {
   if (tier === "starter_monthly") return { plan: "starter", interval: "monthly" as Interval };
   if (tier === "pro_monthly") return { plan: "pro", interval: "monthly" as Interval };
+  if (tier === "studio_monthly") return { plan: "studio", interval: "monthly" as Interval };
   return { plan: "founder", interval: "annual" as Interval };
 }
 
 function readMeta(obj: any) {
   const m = obj?.metadata ?? {};
-
   const userId = typeof m.user_id === "string" ? m.user_id : null;
 
   const tier: Tier | null =
-    m.tier === "starter_monthly" || m.tier === "pro_monthly" || m.tier === "founder_annual"
+    m.tier === "starter_monthly" ||
+    m.tier === "pro_monthly" ||
+    m.tier === "founder_annual" ||
+    m.tier === "studio_monthly"
       ? m.tier
       : null;
 
@@ -43,7 +46,7 @@ function readMeta(obj: any) {
 
   const derived = tier ? normalizeFromTier(tier) : null;
 
-  const plan = typeof m.plan === "string" ? m.plan : derived?.plan ?? "pro";
+  const plan = typeof m.plan === "string" ? m.plan : derived?.plan ?? "starter";
   const interval = derived?.interval ?? intervalFromOldMeta ?? "monthly";
 
   return { userId, tier, plan, interval };
@@ -84,7 +87,6 @@ Deno.serve(async (req) => {
 
   let event: Stripe.Event;
   try {
-    // ✅ FIX: use async verification in Deno / WebCrypto environments
     event = await stripe.webhooks.constructEventAsync(raw, sig, STRIPE_WEBHOOK_SECRET);
   } catch (e) {
     return json(400, { error: "bad_signature", details: String(e) });
@@ -95,7 +97,6 @@ Deno.serve(async (req) => {
       const session = event.data.object as Stripe.Checkout.Session;
 
       const meta = readMeta(session);
-
       const userId =
         meta.userId ??
         (typeof session.client_reference_id === "string" ? session.client_reference_id : null);
@@ -163,7 +164,7 @@ Deno.serve(async (req) => {
         userId: meta.userId,
         stripeCustomerId: typeof sub.customer === "string" ? sub.customer : null,
         stripeSubscriptionId: sub.id,
-        plan: meta.plan ?? "pro",
+        plan: meta.plan ?? "starter",
         interval: meta.interval ?? "monthly",
         status: sub.status,
         currentPeriodEnd: currentPeriodEndIso,
@@ -182,12 +183,13 @@ Deno.serve(async (req) => {
         userId: meta.userId,
         stripeCustomerId: typeof sub.customer === "string" ? sub.customer : null,
         stripeSubscriptionId: sub.id,
-        plan: meta.plan ?? "pro",
+        plan: meta.plan ?? "starter",
         interval: meta.interval ?? "monthly",
         status: "canceled",
         currentPeriodEnd: null,
       });
 
+      // if founder cancels, remove founder flags
       await admin
         .from("pro_subscriptions")
         .update({

@@ -1,25 +1,25 @@
+// src/components/billing/RequireSubscription.jsx
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../auth/AuthProvider";
 import FullScreenLoader from "../ui/FullScreenLoader";
 
-function computeAllowed(row) {
+function isActiveRow(row) {
   if (!row) return false;
   if (row.status !== "active") return false;
-  if (row.plan !== "pro") return false;
 
-  // If current_period_end is null, treat as allowed (ex: founder/manual)
+  // If current_period_end is null, treat as active (free/manual/founder flags)
   if (!row.current_period_end) return true;
 
   return new Date(row.current_period_end).getTime() > Date.now();
 }
 
-export default function RequireSubscription({ children }) {
+export default function RequireSubscription({ children, mode = "require-subscribed" }) {
   const { user } = useAuth();
   const location = useLocation();
   const [loading, setLoading] = useState(true);
-  const [allowed, setAllowed] = useState(false);
+  const [active, setActive] = useState(false);
 
   const next = useMemo(
     () => encodeURIComponent(location.pathname + location.search),
@@ -30,7 +30,7 @@ export default function RequireSubscription({ children }) {
     let mounted = true;
 
     async function run() {
-      if (!user) return; // RequireAuth should run before this
+      if (!user) return;
       setLoading(true);
 
       const { data, error } = await supabase
@@ -41,8 +41,8 @@ export default function RequireSubscription({ children }) {
 
       if (!mounted) return;
 
-      const ok = !error && computeAllowed(data);
-      setAllowed(ok);
+      const ok = !error && isActiveRow(data);
+      setActive(ok);
       setLoading(false);
     }
 
@@ -52,11 +52,20 @@ export default function RequireSubscription({ children }) {
     };
   }, [user]);
 
-  if (loading) return <FullScreenLoader label="Checking your subscription..." />;
+  if (loading) return <FullScreenLoader label="Checking your plan..." />;
 
-  if (!allowed) {
-    return <Navigate to={`/pricing?next=${next}`} replace />;
+  // require-subscribed: must have ANY active plan (free counts)
+  if (mode === "require-subscribed") {
+    if (!active) return <Navigate to={`/pricing?next=${next}`} replace />;
+    return children;
   }
 
-  return children;
+  // require-not-subscribed: must have NO active plan
+  if (mode === "require-not-subscribed") {
+    if (active) return <Navigate to="/app" replace />;
+    return children;
+  }
+
+  // unknown mode => fail safe
+  return <Navigate to={`/pricing?next=${next}`} replace />;
 }

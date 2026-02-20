@@ -1,0 +1,246 @@
+/* Fresh rebuild — isolated Pricing styles only */
+
+.prPage{
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 800px at 50% 20%, rgba(255,255,255,0.08), rgba(0,0,0,0) 60%),
+    radial-gradient(900px 600px at 10% 10%, rgba(255,255,255,0.06), rgba(0,0,0,0) 50%),
+    #0b0b0c;
+  color: #fff;
+}
+
+/* NAV */
+.prNav{
+  height: 72px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(10px);
+}
+
+.prNavInner{
+  width: min(1200px, 92vw);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 16px;
+}
+
+.prBrand{
+  color:#fff;
+  text-decoration:none;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.prNavRight{
+  display:flex;
+  align-items:center;
+  gap: 16px;
+}
+
+.prNavLink{
+  color: rgba(255,255,255,0.85);
+  text-decoration:none;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.prNavLink:hover{ color:#fff; }
+
+.prNavBtn{
+  display:inline-flex;
+  align-items:center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.06);
+  color:#fff;
+  text-decoration:none;
+  font-weight: 900;
+  font-size: 14px;
+}
+.prNavBtn:hover{
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.26);
+}
+
+.prArrow{ opacity: .9; }
+
+/* LAYOUT */
+.prMain{ display:flex; justify-content:center; }
+.prWrap{ width: min(1200px, 92vw); padding: 56px 0 72px; }
+
+.prHeader{ text-align:center; margin-bottom: 18px; }
+.prH1{
+  font-size: clamp(40px, 4.8vw, 64px);
+  line-height: 1.05;
+  margin: 0;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+.prSub{
+  margin: 14px auto 0;
+  max-width: 900px;
+  color: rgba(255,255,255,0.78);
+  font-size: 16px;
+  line-height: 1.7;
+}
+.prMicro{
+  margin-top: 10px;
+  color: rgba(255,255,255,0.70);
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.prToast{
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.06);
+  font-weight: 800;
+  color: rgba(255,255,255,0.88);
+}
+.prToastErr{
+  border-color: rgba(255,120,120,0.35);
+  background: rgba(255,80,80,0.10);
+}
+
+/* GRID */
+.prGrid{
+  margin-top: 18px;
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.prCard{
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.55);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.55);
+  padding: 18px;
+  display:flex;
+  flex-direction:column;
+  overflow: hidden;
+  min-height: 560px;
+}
+
+.prCardTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+}
+
+.prTier{
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  font-size: 16px;
+}
+
+.prTag{
+  font-size: 12px;
+  font-weight: 900;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.86);
+}
+
+.prPriceRow{
+  display:flex;
+  align-items:baseline;
+  gap: 8px;
+  margin-top: 10px;
+}
+.prPrice{
+  font-size: 44px;
+  font-weight: 950;
+  letter-spacing: -0.03em;
+}
+.prTerm{
+  font-size: 14px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.65);
+}
+
+.prDesc{
+  margin-top: 10px;
+  color: rgba(255,255,255,0.78);
+  line-height: 1.6;
+  font-weight: 700;
+}
+
+.prList{
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: rgba(255,255,255,0.86);
+  line-height: 1.7;
+  font-weight: 750;
+  flex: 1;
+}
+
+.prNote{
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+}
+.prNoteTitle{
+  font-weight: 950;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  opacity: 0.9;
+  text-transform: uppercase;
+}
+.prNoteText{
+  margin-top: 6px;
+  color: rgba(255,255,255,0.78);
+  font-weight: 750;
+  line-height: 1.55;
+}
+
+/* BUTTON */
+.prBtn{
+  margin-top: 14px;
+  width: 100%;
+  height: 48px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: #fff;
+  color: #0b0b0c;
+  font-weight: 950;
+  cursor: pointer;
+}
+.prBtn:hover{ transform: translateY(-1px); }
+.prBtn:active{ transform: translateY(0px); }
+
+/* FOOTER */
+.prFine{
+  margin-top: 18px;
+  opacity: 0.9;
+}
+.prFine ul{
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.70);
+  font-weight: 700;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1100px){
+  .prGrid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px){
+  .prGrid{ grid-template-columns: 1fr; }
+  .prCard{ min-height: auto; }
+}

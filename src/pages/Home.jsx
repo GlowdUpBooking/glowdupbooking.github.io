@@ -1,8 +1,19 @@
 // src/pages/Home.jsx
+import React from "react";
 import { Link } from "react-router-dom";
-import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-import PaywallBanner from "../components/Pricing/PaywallBanner";
+import "../styles/landing.css";
+
+const founderTotal = 1000;
+const founderClaimed = 5; // TODO: wire to real number later
+const founderLeft = Math.max(0, founderTotal - founderClaimed);
+const founderPct = Math.min(100, Math.max(0, (founderClaimed / founderTotal) * 100));
+
+function buildSignupUrl(plan) {
+  const next = encodeURIComponent("/onboarding");
+  const p = encodeURIComponent(plan);
+  return `/signup?plan=${p}&next=${next}`;
+}
 
 export default function Home() {
   return (
@@ -11,25 +22,25 @@ export default function Home() {
       <header className="lpNav">
         <div className="lpNavInner">
           <Link className="lpBrand" to="/">
-            <span className="lpBrandStrong">Glow’d Up</span>
-            <span className="lpBrandLight"> Booking</span>
+            <span className="lpBrandStrong">Glow’d Up</span>{" "}
+            <span className="lpBrandLight">Booking</span>
           </Link>
 
-          <div className="lpNavRight">
-            <a className="lpNavLink" href="#plans">
+          <nav className="lpNavRight">
+            <Link className="lpNavLink" to="/pricing">
               Plans
-            </a>
-            <Link className="lpNavLink" to="/signup">
+            </Link>
+            <Link className="lpNavLink" to={buildSignupUrl("free")}>
               Create account
             </Link>
             <Link className="lpNavBtn" to="/login">
               Sign In <span className="lpArrow">→</span>
             </Link>
-          </div>
+          </nav>
         </div>
       </header>
 
-      {/* Hero Collage Strip */}
+      {/* Hero */}
       <section className="lpHero">
         <div className="lpHeroStrip" aria-hidden="true">
           <div className="lpHeroImg lpHeroImg1" />
@@ -39,133 +50,229 @@ export default function Home() {
         </div>
 
         <div className="lpHeroInner">
-          <h1 className="lpH1">
-            Your Bookings. Your Brand.
-            <br />
-            Your Clients.
-          </h1>
+          <div className="lpKicker">FOR BEAUTY PROS • CLIENT BOOKING COMING SOON</div>
+
+          <h1 className="lpH1">Your Bookings. Your Brand. Your Clients.</h1>
 
           <p className="lpLead">
-            Glow’d Up Booking is a premium booking platform made for professionals— tattoo artists,
-            barbers, stylists, nail techs, and more. Share your link, collect deposits, and manage
-            your schedule without marketplace noise.
+            Glow’d Up Booking is a premium booking platform made for professionals — barbers,
+            stylists, tattoo artists, nail techs, and more. Share your link, collect deposits, and
+            manage your schedule without marketplace noise.
           </p>
 
           <div className="lpHeroBtns">
-            <Link to="/signup">
-              <Button variant="outline" className="lpBtn">
-                Get Early Access (Pro)
-              </Button>
+            <Link className="lpBtn lpBtnPrimary" to={buildSignupUrl("free")}>
+              Start Free
             </Link>
-            <a href="#plans">
-              <Button variant="outline" className="lpBtn">
-                See Plans
-              </Button>
-            </a>
-            <Link to="/login">
-              <Button variant="outline" className="lpBtn">
-                Sign in
-              </Button>
+            <Link className="lpBtn lpBtnGhost" to="/pricing">
+              See Plans
+            </Link>
+            <Link className="lpBtn lpBtnGhost" to="/login">
+              Sign in
             </Link>
           </div>
 
-          <div className="lpMicro">
-            Pro-first launch · Invite-only booking · Clients book through your link
-          </div>
+          <div className="lpMicro">Start free • Upgrade when you’re ready • Clients book through your link</div>
         </div>
       </section>
 
-      {/* Plans */}
-      <section id="plans" className="lpPricing">
+      {/* Pricing Preview */}
+      <section className="lpPricing" id="plans">
         <div className="lpPricingInner">
           <div className="lpPricingHead">
-            <h2 className="lpH2">Simple pricing for professionals.</h2>
-            <div className="lpSub">Choose what fits your workflow.</div>
+            <h2 className="lpH2">Pro plans built for growth.</h2>
+            <div className="lpSub">
+              No booking fee to pros. You earn on deposits / prepay + optional instant payout fees.
+            </div>
           </div>
 
-          {/* ✅ Counter / founder availability (this is what was missing) */}
-          <PaywallBanner />
+          {/* Founder progress */}
+          <div className="lpFounderBar" role="group" aria-label="Founder spots progress">
+            <div className="lpFounderTop">
+              <div className="lpFounderTitle">
+                Founder spots left: <span className="lpFounderEm">{founderLeft}</span> of {founderTotal}
+              </div>
+              <div className="lpFounderRule">First {founderTotal} pros lock in $99/year while active.</div>
+            </div>
+            <div className="lpProgressTrack" aria-hidden="true">
+              <div className="lpProgressFill" style={{ width: `${founderPct}%` }} />
+            </div>
+          </div>
 
-          <div className="lpGrid">
-            {/* Starter */}
+          <div className="lpGrid lpGrid4">
+            {/* FREE */}
             <Card className="lpPriceCard">
-              <div className="lpTier">Starter</div>
-              <div className="lpPriceLine">
-                <span className="lpPrice">$9.99</span>
-                <span className="lpTerm">/month</span>
+              <div className="lpTierRow">
+                <div className="lpTier">Free</div>
+                <div className="lpChip">Try it</div>
               </div>
 
+              <div className="lpPriceLine">
+                <div className="lpPrice">$0</div>
+                <div className="lpTerm">/month</div>
+              </div>
+
+              <div className="lpMiniDesc">For new pros testing the platform.</div>
+
+              <div className="lpSectionTitle">Bookings</div>
               <ul className="lpList">
-                <li>✓ Pro profile + booking link</li>
-                <li>✓ Add services (name, price, duration)</li>
-                <li>✓ Basic scheduling + booking requests</li>
-                <li>✓ Clients book through your link</li>
+                <li>Unlimited booking requests</li>
+                <li>
+                  <b>20</b> accepted bookings per month (resets on the 1st)
+                </li>
               </ul>
 
-              <Link to="/signup" className="lpChooseWrap">
-                <Button variant="outline" className="lpChoose">
-                  Create account
-                </Button>
+              <div className="lpSectionTitle">Payments</div>
+              <ul className="lpList">
+                <li>Deposit optional ✅ (per service)</li>
+                <li>Full prepay not allowed ❌</li>
+              </ul>
+
+              <div className="lpSectionTitle">Payout</div>
+              <ul className="lpList">
+                <li>Standard payouts only</li>
+                <li>No instant payout tools</li>
+              </ul>
+
+              <div className="lpSectionTitle">Tools</div>
+              <ul className="lpList">
+                <li>Basic profile + services + booking link</li>
+                <li>Basic availability / calendar</li>
+                <li>Basic client management</li>
+              </ul>
+
+              <div className="lpFine">
+                <div className="lpFineTitle">Monetization</div>
+                Deposits run through Stripe — you take your platform cut. No booking fees charged to pros.
+              </div>
+
+              <Link className="lpChooseWrap" to={buildSignupUrl("free")}>
+                <span className="lpChooseBtn">Start Free</span>
               </Link>
             </Card>
 
-            {/* Pro (Featured) */}
+{/* PRO */}
+            <Card className="lpPriceCard">
+              <div className="lpTierRow">
+                <div className="lpTier">Pro</div>
+                <div className="lpChip">Popular</div>
+              </div>
+
+              <div className="lpPriceLine">
+                <div className="lpPrice">$24.99</div>
+                <div className="lpTerm">/month</div>
+              </div>
+
+              <div className="lpMiniDesc">Same feature set as Founder Pro (normal pricing).</div>
+
+              <div className="lpSectionTitle">Includes</div>
+              <ul className="lpList">
+                <li>Unlimited accepted bookings</li>
+                <li>Deposit optional ✅</li>
+                <li>Full prepay optional ✅</li>
+                <li>Instant payout option ✅ (fee applies)</li>
+                <li>Advanced controls + customization</li>
+              </ul>
+
+              <Link className="lpChooseWrap" to={buildSignupUrl("pro")}>
+                <span className="lpChooseBtn">Choose Pro</span>
+              </Link>
+            </Card>
+
+            
+            {/* FOUNDER */}
             <Card className="lpPriceCard lpFeatured">
-              <div className="lpTier">Pro (Featured)</div>
-              <div className="lpPriceLine">
-                <span className="lpPrice">$14.99</span>
-                <span className="lpTerm">/month</span>
+              <div className="lpTierRow">
+                <div className="lpTier">Founder Pro</div>
+                <div className="lpChip">Limited</div>
               </div>
 
+              <div className="lpPriceLine">
+                <div className="lpPrice">$99</div>
+                <div className="lpTerm">/year</div>
+              </div>
+
+              <div className="lpMiniDesc">Early adopters. Locked price while you stay active.</div>
+
+              <div className="lpSectionTitle">Bookings</div>
               <ul className="lpList">
-                <li>✓ Everything in Starter</li>
-                <li>✓ Priority placement (later when you open marketplace)</li>
-                <li>✓ Advanced scheduling tools (availability rules, buffers, etc.)</li>
-                <li>✓ Deposits + booking controls</li>
-                <li>✓ Portfolio/service photos</li>
-                <li>✓ Better customization + branding</li>
+                <li>Unlimited accepted bookings (no cap)</li>
               </ul>
 
-              <Link to="/signup" className="lpChooseWrap">
-                <Button variant="outline" className="lpChoose">
-                  Create account
-                </Button>
-              </Link>
-            </Card>
+              <div className="lpSectionTitle">Payments</div>
+              <ul className="lpList">
+                <li>Deposit optional ✅</li>
+                <li>Full prepay optional ✅</li>
+              </ul>
 
-            {/* Founder */}
-            <Card className="lpPriceCard">
-              <div className="lpTier">Founder (Annual)</div>
-              <div className="lpPriceLine">
-                <span className="lpPrice">$99</span>
-                <span className="lpTerm">/year</span>
+              <div className="lpSectionTitle">Payout</div>
+              <ul className="lpList">
+                <li>Standard payouts ✅</li>
+                <li>Instant payout available ✅ (extra fee)</li>
+              </ul>
+
+              <div className="lpSectionTitle">Tools</div>
+              <ul className="lpList">
+                <li>Everything in Free</li>
+                <li>More customization + better insights</li>
+                <li>Priority support</li>
+              </ul>
+
+              <div className="lpFine">
+                <div className="lpFineTitle">Founder lock</div>
+                Only available until 1,000 claimed. If your membership lapses for more than 7 days,
+                Founder pricing can’t be reclaimed.
               </div>
 
-              <div className="lpFounderBox">
-                <div className="lpFounderTop">
-                  <div className="lpFounderTitle">Founder Annual</div>
-                  <div className="lpFounderRule">Price locked while active</div>
+              <Link className="lpChooseWrap" to={buildSignupUrl("founder")}>
+                <span className="lpChooseBtn">Claim Founder</span>
+              </Link>
+
+              <div className="lpTinyNote">{founderLeft} Founder spots left</div>
+            </Card>
+
+
+            {/* STUDIO / TEAM (ONLY AFTER FOUNDER SELLS OUT) */}
+            {founderLeft === 0 && (
+              <Card className="lpPriceCard">
+                <div className="lpTierRow">
+                  <div className="lpTier">Studio / Team</div>
+                  <div className="lpChip">Teams</div>
                 </div>
-              </div>
 
-              <div className="lpFounderText">
-                First 1,000 Pros lock in <strong>$99/year</strong> forever.{" "}
-                <span className="lpFounderWarn">Don’t miss out</span>
-              </div>
+                <div className="lpPriceLine">
+                  <div className="lpPrice">$49.99</div>
+                  <div className="lpTerm">/month</div>
+                </div>
 
-              <ul className="lpList">
-                <li>✓ Everything in Pro</li>
-                <li>✓ Locked-in annual price (best deal)</li>
-                <li>✓ Founder badge + early feature access</li>
-                <li>✓ Priority support</li>
-              </ul>
+                <div className="lpMiniDesc">For shops, shared suites, and teams.</div>
 
-              <Link to="/signup" className="lpChooseWrap">
-                <Button variant="outline" className="lpChoose">
-                  Create account
-                </Button>
-              </Link>
-            </Card>
+                <div className="lpSectionTitle">Seats</div>
+                <ul className="lpList">
+                  <li>Includes up to 3 members</li>
+                  <li>+ $10/month per additional member</li>
+                </ul>
+
+                <div className="lpSectionTitle">Includes</div>
+                <ul className="lpList">
+                  <li>Everything in Pro</li>
+                  <li>Team seats / roles</li>
+                  <li>Shared calendar + staff assignment (rolling out)</li>
+                  <li>Stronger analytics + controls</li>
+                </ul>
+
+                <Link className="lpChooseWrap" to={buildSignupUrl("studio")}>
+                  <span className="lpChooseBtn">Choose Studio</span>
+                </Link>
+              </Card>
+            )}
+          </div>
+
+          <div className="lpFootnotes">
+            <div>• Free accepted booking cap resets on the 1st of every month.</div>
+            <div>• Free tier cannot take full payment upfront.</div>
+            <div>• Deposits can be optional for everyone.</div>
+            <div>• No booking fees to pros — platform earns on deposits/prepay + instant payout fees.</div>
           </div>
         </div>
       </section>

@@ -5,21 +5,16 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import App from "./pages/App";
 
-// ✅ Paywall (repurposed Pricing.jsx)
+// Pricing / Paywall
 import Pricing from "./pages/Pricing";
 
-// ✅ Onboarding pages
-import OnboardingIndex from "./pages/onboarding/OnboardingIndex";
-import OnboardingBasics from "./pages/onboarding/OnboardingBasics";
-import OnboardingLocation from "./pages/onboarding/OnboardingLocation";
-import OnboardingTravel from "./pages/onboarding/OnboardingTravel";
-import OnboardingSocial from "./pages/onboarding/OnboardingSocial";
-import OnboardingServices from "./pages/onboarding/OnboardingServices";
-
-// ✅ Route guards (components)
+// ✅ Route guards
 import RequireAuth from "./components/auth/RequireAuth";
 import RequireSubscription from "./components/billing/RequireSubscription";
 import RequireOnboarding from "./components/onboarding/RequireOnboarding";
+
+// Onboarding (existing file in your tree)
+import Onboarding from "./pages/Onboarding";
 
 export default function AppRouter() {
   return (
@@ -29,7 +24,10 @@ export default function AppRouter() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
-      {/* ✅ Paywall (only for logged-in users WITHOUT subscription) */}
+      {/* Pricing page (public ok; you can keep it public or wrap it later) */}
+      <Route path="/pricing" element={<Pricing />} />
+
+      {/* Paywall page: only for logged-in users who are NOT Pro/Founder */}
       <Route
         path="/paywall"
         element={
@@ -41,78 +39,24 @@ export default function AppRouter() {
         }
       />
 
-      {/* ✅ Onboarding (must be logged in + subscribed) */}
+      {/* Onboarding: allow all logged-in users (starter/free included) */}
       <Route
         path="/app/onboarding"
         element={
           <RequireAuth>
-            <RequireSubscription>
-              <OnboardingIndex />
-            </RequireSubscription>
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/app/onboarding/basics"
-        element={
-          <RequireAuth>
-            <RequireSubscription>
-              <OnboardingBasics />
-            </RequireSubscription>
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/app/onboarding/location"
-        element={
-          <RequireAuth>
-            <RequireSubscription>
-              <OnboardingLocation />
-            </RequireSubscription>
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/app/onboarding/travel"
-        element={
-          <RequireAuth>
-            <RequireSubscription>
-              <OnboardingTravel />
-            </RequireSubscription>
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/app/onboarding/social"
-        element={
-          <RequireAuth>
-            <RequireSubscription>
-              <OnboardingSocial />
-            </RequireSubscription>
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/app/onboarding/services"
-        element={
-          <RequireAuth>
-            <RequireSubscription>
-              <OnboardingServices />
-            </RequireSubscription>
+            <Onboarding />
           </RequireAuth>
         }
       />
 
-      {/* ✅ App Dashboard (must be logged in + subscribed + onboarding complete) */}
+      {/* App Dashboard: allow all logged-in users, but still enforce onboarding completion */}
       <Route
         path="/app"
         element={
           <RequireAuth>
-            <RequireSubscription>
-              <RequireOnboarding>
-                <App />
-              </RequireOnboarding>
-            </RequireSubscription>
+            <RequireOnboarding>
+              <App />
+            </RequireOnboarding>
           </RequireAuth>
         }
       />

@@ -1,5 +1,6 @@
+// src/pages/Signup.jsx
 import { useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
@@ -24,18 +25,31 @@ function normalizeCity(s) {
 
 function isValidEmail(v) {
   const email = (v || "").trim();
-  // Simple, reliable client-side check (Supabase will still validate server-side)
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 function isValidPhone(v) {
-  if (!v) return true; // optional
+  if (!v) return true;
   const digits = String(v).replace(/\D/g, "");
   return digits.length >= 10 && digits.length <= 15;
 }
 
+function planLabel(p) {
+  const v = (p || "").toLowerCase();
+  if (v === "free") return "Free";
+  if (v === "starter") return "Starter";
+  if (v === "pro") return "Pro";
+  if (v === "founder") return "Founder";
+  return null;
+}
+
 export default function Signup({ session }) {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const qs = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const pickedPlan = planLabel(qs.get("plan"));
+  const next = qs.get("next"); // optional
 
   const [fullName, setFullName] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -44,10 +58,8 @@ export default function Signup({ session }) {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [loading, setLoading] = useState(false);
 
-  // Field-level errors (keyed by field name)
   const [errors, setErrors] = useState({
     fullName: "",
     businessName: "",
@@ -59,7 +71,6 @@ export default function Signup({ session }) {
     form: "",
   });
 
-  // Refs so we can focus the first invalid input
   const refs = {
     fullName: useRef(null),
     businessName: useRef(null),
@@ -71,7 +82,7 @@ export default function Signup({ session }) {
   };
 
   function validate(values) {
-    const next = {
+    const nextErrs = {
       fullName: "",
       businessName: "",
       category: "",
@@ -83,30 +94,30 @@ export default function Signup({ session }) {
     };
 
     const n = (values.fullName || "").trim();
-    if (n.length < 2) next.fullName = "Please enter your full name.";
+    if (n.length < 2) nextErrs.fullName = "Please enter your full name.";
 
     const b = (values.businessName || "").trim();
-    if (b.length < 2) next.businessName = "Please enter your business / brand name.";
+    if (b.length < 2) nextErrs.businessName = "Please enter your business / brand name.";
 
     const c = (values.category || "").trim();
-    if (!c) next.category = "Please choose a category.";
+    if (!c) nextErrs.category = "Please choose a category.";
 
     const cityN = normalizeCity(values.city);
-    if (cityN.length < 2) next.city = "Please enter your city.";
+    if (cityN.length < 2) nextErrs.city = "Please enter your city.";
 
     if (!isValidPhone(values.phone)) {
-      next.phone = "Phone number looks invalid. Use at least 10 digits.";
+      nextErrs.phone = "Phone number looks invalid. Use at least 10 digits.";
     }
 
     const e = (values.email || "").trim();
-    if (!e) next.email = "Email is required.";
-    else if (!isValidEmail(e)) next.email = "Enter a valid email (example: you@domain.com).";
+    if (!e) nextErrs.email = "Email is required.";
+    else if (!isValidEmail(e)) nextErrs.email = "Enter a valid email (example: you@domain.com).";
 
     const p = values.password || "";
-    if (!p) next.password = "Password is required.";
-    else if (p.length < 8) next.password = "Password must be at least 8 characters.";
+    if (!p) nextErrs.password = "Password is required.";
+    else if (p.length < 8) nextErrs.password = "Password must be at least 8 characters.";
 
-    return next;
+    return nextErrs;
   }
 
   function firstErrorField(nextErrors) {
@@ -119,23 +130,22 @@ export default function Signup({ session }) {
     if (r && typeof r.focus === "function") r.focus();
   }
 
-  // validate live (optional) — here we only clear a field error when user edits it
   function clearFieldError(name) {
     setErrors((prev) => ({ ...prev, [name]: "", form: "" }));
   }
 
   const canSubmit = useMemo(() => {
-    const next = validate({ fullName, businessName, category, city, phone, email, password });
-    return !Object.entries(next).some(([k, v]) => k !== "form" && Boolean(v));
+    const nextErrs = validate({ fullName, businessName, category, city, phone, email, password });
+    return !Object.entries(nextErrs).some(([k, v]) => k !== "form" && Boolean(v));
   }, [fullName, businessName, category, city, phone, email, password]);
 
   async function onSubmit(e) {
     e.preventDefault();
 
-    const next = validate({ fullName, businessName, category, city, phone, email, password });
-    setErrors(next);
+    const nextErrs = validate({ fullName, businessName, category, city, phone, email, password });
+    setErrors(nextErrs);
 
-    const first = firstErrorField(next);
+    const first = firstErrorField(nextErrs);
     if (first) {
       focusField(first);
       return;
@@ -154,16 +164,14 @@ export default function Signup({ session }) {
             category: category.trim(),
             city: normalizeCity(city),
             phone: phone.trim() || null,
+            selected_plan: (qs.get("plan") || "free").toLowerCase(),
           },
         },
       });
 
       if (error) {
-        // Map common Supabase errors -> field errors
         const msg = (error.message || "").toLowerCase();
-
-        // default form-level message
-        const mapped = { ...next, form: error.message || "Signup failed. Try again." };
+        const mapped = { ...nextErrs, form: error.message || "Signup failed. Try again." };
 
         if (msg.includes("email") && (msg.includes("invalid") || msg.includes("format"))) {
           mapped.email = "That email doesn’t look valid. Example: you@domain.com";
@@ -193,8 +201,13 @@ export default function Signup({ session }) {
         return;
       }
 
-      // Route to plans after signup
-      navigate("/pricing", { replace: true });
+      // Store plan locally (simple + reliable), onboarding can read this later if needed.
+      try {
+        localStorage.setItem("gub_selected_plan", (qs.get("plan") || "free").toLowerCase());
+      } catch {}
+
+      // Default flow: after account creation -> onboarding (most apps do this)
+      navigate("/app/onboarding", { replace: true });
     } catch (err) {
       setErrors((prev) => ({
         ...prev,
@@ -209,7 +222,7 @@ export default function Signup({ session }) {
   if (session) {
     return (
       <div className="authPage">
-        <div className="authTopNav">
+        <header className="authTopNav">
           <div className="authTopNavInner">
             <Link className="authBrand" to="/">
               <span className="authBrandStrong">Glow’d Up</span>
@@ -224,20 +237,20 @@ export default function Signup({ session }) {
               </Link>
             </div>
           </div>
-        </div>
+        </header>
 
         <div className="authShell">
           <Card className="authCard">
             <h1 className="authTitle">You’re already signed in</h1>
-            <p className="authSub">Head to the app, or view plans if you need to subscribe.</p>
+            <p className="authSub">Head to onboarding or the app.</p>
 
             <div className="authActions">
-              <Link to="/app" style={{ width: "100%" }}>
-                <Button className="authPrimaryBtn">Go to app</Button>
+              <Link to="/app/onboarding" style={{ width: "100%" }}>
+                <Button className="authPrimaryBtn">Continue onboarding</Button>
               </Link>
-              <Link to="/pricing" style={{ width: "100%" }}>
+              <Link to="/app" style={{ width: "100%" }}>
                 <Button variant="outline" className="authSecondaryBtn">
-                  View plans
+                  Go to app
                 </Button>
               </Link>
             </div>
@@ -271,9 +284,13 @@ export default function Signup({ session }) {
         <Card className="authCard">
           <div className="authHeader">
             <h1 className="authTitle">Create your Pro account</h1>
-            <p className="authSub">
-              Pro-first access. Set up your profile, then you’ll get your booking link.
-            </p>
+            <p className="authSub">Start free. Set up your profile, then share your booking link.</p>
+            {pickedPlan ? (
+              <div className="authPlanPill">
+                Selected plan: <strong>{pickedPlan}</strong>
+                {next ? <span className="authPlanHint"> (you’ll continue after onboarding)</span> : null}
+              </div>
+            ) : null}
           </div>
 
           {errors.form ? <div className="authFormError">{errors.form}</div> : null}
