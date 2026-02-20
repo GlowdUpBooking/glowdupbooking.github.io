@@ -15,3 +15,6 @@ app.json
 
 # supabase local
 supabase/.temp/
+
+# build output
+/dist/
