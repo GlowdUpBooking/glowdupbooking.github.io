@@ -57,11 +57,11 @@ export default function AppRouter() {
         />
 
         {/* Onboarding: allow all logged-in users (starter/free included) */}
-        <Route
-          path="/app/onboarding"
-          element={
-            <RequireAuth>
-              <Onboarding />
+      <Route
+        path="/app/onboarding/*"
+        element={
+          <RequireAuth>
+            <Onboarding />
             </RequireAuth>
           }
         />

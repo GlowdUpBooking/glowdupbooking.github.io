@@ -144,21 +144,39 @@ export default function Travel() {
 
           {travels ? (
             <div style={{ marginTop: 14 }}>
-              <input
-                className="input"
-                inputMode="decimal"
-                placeholder="Travel fee (USD) — e.g. 15"
-                value={travelFee}
-                onChange={(e) => setTravelFee(e.target.value)}
-              />
+              <label style={{ display: "grid", gap: 6 }}>
+                <span style={{ fontSize: 13, opacity: 0.9, fontWeight: 700 }}>
+                  Travel fee (USD)
+                </span>
+                <input
+                  className="input"
+                  inputMode="decimal"
+                  placeholder="Example: 15"
+                  value={travelFee}
+                  onChange={(e) => setTravelFee(e.target.value)}
+                />
+                <span className="heroMicro">
+                  Enter <strong>0</strong> if you don’t charge a travel fee.
+                </span>
+              </label>
+
               <div style={{ height: 10 }} />
-              <input
-                className="input"
-                inputMode="numeric"
-                placeholder="Max travel distance (miles) — e.g. 10"
-                value={travelRadiusMiles}
-                onChange={(e) => setTravelRadiusMiles(e.target.value)}
-              />
+
+              <label style={{ display: "grid", gap: 6 }}>
+                <span style={{ fontSize: 13, opacity: 0.9, fontWeight: 700 }}>
+                  Max travel distance (miles)
+                </span>
+                <input
+                  className="input"
+                  inputMode="numeric"
+                  placeholder="Example: 10"
+                  value={travelRadiusMiles}
+                  onChange={(e) => setTravelRadiusMiles(e.target.value)}
+                />
+                <span className="heroMicro">
+                  This sets how far clients can book mobile appointments.
+                </span>
+              </label>
 
               <p className="heroMicro" style={{ marginTop: 10 }}>
                 Tip: Use <strong>0</strong> travel fee if you don’t charge, and set a realistic mile radius.
