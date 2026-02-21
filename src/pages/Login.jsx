@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import "../styles/signup.css";
 
 export default function Login({ session }) {
   const nav = useNavigate();
@@ -33,40 +34,99 @@ export default function Login({ session }) {
 
   return (
     <div className="authPage">
-      <div className="bg" aria-hidden="true" />
-      <div className="authCard">
-        <img className="authLogo" src="/assets/logo-1.png" alt="Glow’d Up Booking" />
-        <h1>Sign in</h1>
-        <p className="muted">Access the platform.</p>
+      <header className="authTopNav">
+        <div className="authTopNavInner">
+          <Link className="authBrand" to="/">
+            <img className="authBrandLogo" src="/assets/logo.png" alt="Glow'd Up Booking logo" />
+            <span className="authBrandStrong">Glow’d Up</span>
+            <span className="authBrandLight"> Booking</span>
+          </Link>
 
-        <form onSubmit={onSubmit} className="authForm">
-          <label>
-            Email
-            <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
-          </label>
-
-          <label>
-            Password
-            <input
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              type="password"
-              required
-            />
-          </label>
-
-          {msg ? <div className="authMsg">{msg}</div> : null}
-
-          <button className="btn gold full" disabled={busy} type="submit">
-            {busy ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
-
-        <div className="authLinks">
-          <a href="/signup">Create account</a>
-          <a href="/">Back home</a>
+          <div className="authTopNavRight">
+            <Link className="authNavLink" to="/pricing#plans">
+              Pricing
+            </Link>
+            <Link className="authNavBtn authNavBtnGhost" to="/signup">
+              Create Account
+            </Link>
+            <Link className="authNavBtn" to="/signup">
+              Start Free <span className="authArrow">→</span>
+            </Link>
+          </div>
         </div>
-      </div>
+      </header>
+
+      <main className="authShell">
+        <section className="authPitch">
+          <div className="authKicker">WELCOME BACK</div>
+          <h2>Sign in to your dashboard</h2>
+          <p>
+            Manage your services, bookings, and growth tools in one place.
+            Pick up where you left off.
+          </p>
+          <div className="authTrustRow">
+            <span>Fast pro workflow</span>
+            <span>Secure account access</span>
+            <span>Built for independent pros</span>
+          </div>
+        </section>
+
+        <section className="authCard">
+          <div className="authHeader">
+            <h1 className="authTitle">Sign in</h1>
+            <p className="authSub">Access your account and continue managing bookings.</p>
+          </div>
+
+          <form onSubmit={onSubmit} className="authForm">
+            <div className="authGrid">
+              <div className="authFull uiField">
+                <label className="uiLabel">Email</label>
+                <div className="uiControl">
+                  <input
+                    className="uiInput"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    type="email"
+                    autoComplete="email"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="authFull uiField">
+                <label className="uiLabel">Password</label>
+                <div className="uiControl">
+                  <input
+                    className="uiInput"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {msg ? <div className="authFormError">{msg}</div> : null}
+
+            <div className="authActions">
+              <button className="authPrimaryBtn" disabled={busy} type="submit">
+                {busy ? "Signing in..." : "Sign in"}
+              </button>
+            </div>
+          </form>
+
+          <div className="authFooter">
+            <div className="authFooterLinks">
+              <span>Need an account?</span>
+              <Link to="/signup">Create account</Link>
+              <span className="authDot">·</span>
+              <Link to="/">Back home</Link>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

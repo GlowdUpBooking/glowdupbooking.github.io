@@ -5,6 +5,8 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import { supabase } from "../lib/supabase";
+import { trackEvent } from "../lib/analytics";
+import "../styles/signup.css";
 
 const CATEGORIES = [
   "Tattoo Artist",
@@ -141,12 +143,20 @@ export default function Signup({ session }) {
 
   async function onSubmit(e) {
     e.preventDefault();
+    trackEvent("signup_submit", {
+      page: "signup",
+      selected_plan: (qs.get("plan") || "free").toLowerCase(),
+    });
 
     const nextErrs = validate({ fullName, businessName, category, city, phone, email, password });
     setErrors(nextErrs);
 
     const first = firstErrorField(nextErrs);
     if (first) {
+      trackEvent("signup_validation_failed", {
+        page: "signup",
+        field: first,
+      });
       focusField(first);
       return;
     }
@@ -174,6 +184,7 @@ export default function Signup({ session }) {
         const mapped = { ...nextErrs, form: error.message || "Signup failed. Try again." };
 
         if (msg.includes("email") && (msg.includes("invalid") || msg.includes("format"))) {
+          trackEvent("signup_error", { page: "signup", type: "email_invalid" });
           mapped.email = "That email doesn’t look valid. Example: you@domain.com";
           mapped.form = "";
           setErrors(mapped);
@@ -182,6 +193,7 @@ export default function Signup({ session }) {
         }
 
         if (msg.includes("password") && (msg.includes("short") || msg.includes("least"))) {
+          trackEvent("signup_error", { page: "signup", type: "password_invalid" });
           mapped.password = "Password must be at least 8 characters.";
           mapped.form = "";
           setErrors(mapped);
@@ -190,6 +202,7 @@ export default function Signup({ session }) {
         }
 
         if (msg.includes("already registered") || msg.includes("already exists")) {
+          trackEvent("signup_error", { page: "signup", type: "email_exists" });
           mapped.email = "This email is already in use. Try signing in instead.";
           mapped.form = "";
           setErrors(mapped);
@@ -197,6 +210,7 @@ export default function Signup({ session }) {
           return;
         }
 
+        trackEvent("signup_error", { page: "signup", type: "auth_error" });
         setErrors(mapped);
         return;
       }
@@ -206,9 +220,14 @@ export default function Signup({ session }) {
         localStorage.setItem("gub_selected_plan", (qs.get("plan") || "free").toLowerCase());
       } catch {}
 
+      trackEvent("signup_success", {
+        page: "signup",
+        selected_plan: (qs.get("plan") || "free").toLowerCase(),
+      });
       // Default flow: after account creation -> onboarding (most apps do this)
       navigate("/app/onboarding", { replace: true });
     } catch (err) {
+      trackEvent("signup_error", { page: "signup", type: "exception", message: err?.message || "unknown_error" });
       setErrors((prev) => ({
         ...prev,
         form: err?.message || "Could not create account. Please try again.",
@@ -225,6 +244,7 @@ export default function Signup({ session }) {
         <header className="authTopNav">
           <div className="authTopNavInner">
             <Link className="authBrand" to="/">
+              <img className="authBrandLogo" src="/assets/logo.png" alt="Glow'd Up Booking logo" />
               <span className="authBrandStrong">Glow’d Up</span>
               <span className="authBrandLight"> Booking</span>
             </Link>
@@ -265,22 +285,40 @@ export default function Signup({ session }) {
       <header className="authTopNav">
         <div className="authTopNavInner">
           <Link className="authBrand" to="/">
+            <img className="authBrandLogo" src="/assets/logo.png" alt="Glow'd Up Booking logo" />
             <span className="authBrandStrong">Glow’d Up</span>
             <span className="authBrandLight"> Booking</span>
           </Link>
 
           <div className="authTopNavRight">
-            <Link className="authNavLink" to="/pricing">
-              Plans
+            <Link className="authNavLink" to="/pricing" onClick={() => trackEvent("nav_click", { page: "signup", cta: "pricing" })}>
+              Pricing
             </Link>
-            <Link className="authNavBtn" to="/login">
-              Sign In <span className="authArrow">→</span>
+            <Link className="authNavBtn authNavBtnGhost" to="/login" onClick={() => trackEvent("nav_click", { page: "signup", cta: "sign_in" })}>
+              Sign In
+            </Link>
+            <Link className="authNavBtn" to="/pricing#plans" onClick={() => trackEvent("cta_click", { page: "signup", cta: "view_plans" })}>
+              View Plans <span className="authArrow">→</span>
             </Link>
           </div>
         </div>
       </header>
 
       <main className="authShell">
+        <section className="authPitch">
+          <div className="authKicker">FOR BEAUTY PROS</div>
+          <h2>Create your Pro account</h2>
+          <p>
+            Start free. Set up your profile, then share your booking link. Designed for barbers,
+            stylists, tattoo artists, nail techs, and more.
+          </p>
+          <div className="authTrustRow">
+            <span>No booking fees</span>
+            <span>Stripe-secured payments</span>
+            <span>Upgrade anytime</span>
+          </div>
+        </section>
+
         <Card className="authCard">
           <div className="authHeader">
             <h1 className="authTitle">Create your Pro account</h1>

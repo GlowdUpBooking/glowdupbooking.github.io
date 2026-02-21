@@ -72,6 +72,11 @@
   100% { transform: translateX(100%); }
 }
 
+@keyframes lpPreviewShimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -120% 0; }
+}
+
 /* NAV */
 .lpNav {
   position: sticky;
@@ -551,8 +556,10 @@
 .lpTabs {
   display: flex;
   gap: 8px;
-  justify-content: center;
+  justify-content: flex-start;
   flex-wrap: wrap;
+  width: min(100%, 980px);
+  margin: 0 auto;
 }
 
 .lpTab {
@@ -573,6 +580,9 @@
 
 .lpPreviewCard {
   margin-top: 16px;
+  width: min(100%, 980px);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .lpPreviewHeader h3 {
@@ -597,35 +607,107 @@
   border-radius: 20px;
   padding: 14px;
   background: rgba(0, 0, 0, 0.44);
-}
-
-.lpPreviewTopBar,
-.lpPreviewLine,
-.lpPreviewPill {
-  background: rgba(255, 255, 255, 0.14);
-  border-radius: 8px;
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
 }
 
 .lpPreviewTopBar {
-  height: 14px;
-  width: 48%;
-  margin-bottom: 10px;
+  height: 30px;
+  border-radius: 999px;
+  width: fit-content;
+  padding: 0 12px;
+  margin-bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.15px;
+  color: rgba(255, 255, 255, 0.88);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.16));
 }
 
-.lpPreviewLine {
-  height: 11px;
-  margin-bottom: 8px;
+.lpPreviewScene {
+  display: grid;
+  gap: 10px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 14px;
+  animation: lpIn 0.28s ease;
 }
 
-.lpPreviewLine.lg {
-  height: 60px;
-  margin-bottom: 10px;
+.lpPreviewStep {
+  width: fit-content;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.lpPreviewSceneTitle {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.lpPreviewSceneDetail {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.45;
+}
+
+.lpPreviewTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lpPreviewTag {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.82);
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .lpPreviewPill {
-  margin-top: 10px;
-  height: 30px;
+  margin-top: 4px;
+  min-height: 34px;
   border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #070707;
+  background: linear-gradient(90deg, #f3f3f3, #ffffff);
+}
+
+.lpPreviewDots {
+  margin-top: 12px;
+  display: flex;
+  gap: 7px;
+}
+
+.lpPreviewDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  transition: all 0.22s ease;
+}
+
+.lpPreviewDot.is-active {
+  width: 18px;
+  border-radius: 999px;
+  background: #fff;
 }
 
 .lpPreviewList {

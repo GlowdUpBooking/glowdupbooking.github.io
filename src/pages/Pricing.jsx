@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import { trackEvent } from "../lib/analytics";
 
 const WHY_PROS = [
   "Keep more of what you earn with clear, transparent pricing",
@@ -194,6 +195,7 @@ export default function Pricing() {
   }
 
   async function startCheckout(tier) {
+    trackEvent("checkout_start", { page: "pricing", tier, billing_cycle: billingCycle });
     setToast("");
     setSessionLoading(true);
 
@@ -210,6 +212,7 @@ export default function Pricing() {
 
       const s = authData?.session;
       if (!s?.access_token) {
+        trackEvent("checkout_requires_auth", { page: "pricing", tier });
         nav("/signup", { replace: true });
         return;
       }
@@ -224,6 +227,7 @@ export default function Pricing() {
       });
 
       if (!error && data?.url) {
+        trackEvent("checkout_redirect", { page: "pricing", tier, source: "invoke" });
         window.location.assign(data.url);
         return;
       }
@@ -252,9 +256,11 @@ export default function Pricing() {
       }
       if (!json?.url) throw new Error(`No checkout URL returned. Response: ${text}`);
 
+      trackEvent("checkout_redirect", { page: "pricing", tier, source: "fetch" });
       window.location.assign(json.url);
     } catch (e) {
       console.error(e);
+      trackEvent("checkout_error", { page: "pricing", tier, message: e?.message || "unknown_error" });
       setToast(`Checkout failed: ${e?.message || "Please try again."}`);
       setSessionLoading(false);
     }
@@ -281,16 +287,22 @@ export default function Pricing() {
           </Link>
 
           <div className="lpNavRight">
-            <button className="lpNavBtn lpNavBtnSecondary" onClick={() => document.getElementById("plans")?.scrollIntoView({ behavior: "smooth" })}>
+            <button
+              className="lpNavBtn lpNavBtnSecondary"
+              onClick={() => {
+                trackEvent("cta_click", { page: "pricing", cta: "pricing_nav_scroll" });
+                document.getElementById("plans")?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
               Pricing
             </button>
 
             {!session ? (
               <>
-                <Link className="lpNavBtn lpNavBtnSecondary" to="/login">
+                <Link className="lpNavBtn lpNavBtnSecondary" to="/login" onClick={() => trackEvent("nav_click", { page: "pricing", cta: "sign_in" })}>
                   Sign In
                 </Link>
-                <Link className="lpNavBtn" to="/signup">
+                <Link className="lpNavBtn" to="/signup" onClick={() => trackEvent("cta_click", { page: "pricing", cta: "start_free_nav" })}>
                   Start Free <span className="lpArrow">→</span>
                 </Link>
               </>
@@ -318,8 +330,19 @@ export default function Pricing() {
           <p className="lpLead">Clients book free. Pros pay only for tools and growth.</p>
 
           <div className="lpHeroBtns">
-            <Link to="/signup"><Button variant="outline" className="lpBtn">Start Free</Button></Link>
-            <Button variant="outline" className="lpBtn" onClick={() => document.getElementById("plans")?.scrollIntoView({ behavior: "smooth" })}>View Plans</Button>
+            <Link to="/signup" onClick={() => trackEvent("cta_click", { page: "pricing", cta: "start_free_hero" })}>
+              <Button variant="outline" className="lpBtn">Start Free</Button>
+            </Link>
+            <Button
+              variant="outline"
+              className="lpBtn"
+              onClick={() => {
+                trackEvent("cta_click", { page: "pricing", cta: "view_plans_hero" });
+                document.getElementById("plans")?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              View Plans
+            </Button>
           </div>
 
           <div className="lpTrustRow">
@@ -359,7 +382,10 @@ export default function Pricing() {
             <div className="lpToggleWrap" role="radiogroup" aria-label="Billing cycle">
               <button
                 className={`lpToggleBtn ${billingCycle === "monthly" ? "is-active" : ""}`}
-                onClick={() => setBillingCycle("monthly")}
+                onClick={() => {
+                  setBillingCycle("monthly");
+                  trackEvent("billing_cycle_change", { page: "pricing", billing_cycle: "monthly" });
+                }}
                 role="radio"
                 aria-checked={billingCycle === "monthly"}
               >
@@ -367,7 +393,10 @@ export default function Pricing() {
               </button>
               <button
                 className={`lpToggleBtn ${billingCycle === "annual" ? "is-active" : ""}`}
-                onClick={() => setBillingCycle("annual")}
+                onClick={() => {
+                  setBillingCycle("annual");
+                  trackEvent("billing_cycle_change", { page: "pricing", billing_cycle: "annual" });
+                }}
                 role="radio"
                 aria-checked={billingCycle === "annual"}
               >
@@ -394,9 +423,19 @@ export default function Pricing() {
               </ul>
               <div className="lpChooseWrap">
                 {!session ? (
-                  <Link to="/signup"><Button variant="outline" className="lpChoose">Start Free</Button></Link>
+                  <Link
+                    to="/signup"
+                    onClick={() => trackEvent("plan_cta_click", { page: "pricing", plan: "free", cta: "start_free" })}
+                  >
+                    <Button variant="outline" className="lpChoose">Start Free</Button>
+                  </Link>
                 ) : (
-                  <Link to="/app"><Button variant="outline" className="lpChoose">Go to Dashboard</Button></Link>
+                  <Link
+                    to="/app"
+                    onClick={() => trackEvent("plan_cta_click", { page: "pricing", plan: "free", cta: "go_to_dashboard" })}
+                  >
+                    <Button variant="outline" className="lpChoose">Go to Dashboard</Button>
+                  </Link>
                 )}
               </div>
             </Card>
@@ -417,7 +456,15 @@ export default function Pricing() {
                 <li>✓ Faster setup + smoother workflow</li>
               </ul>
               <div className="lpChooseWrap">
-                <Button variant="outline" className="lpChoose" onClick={() => startCheckout("starter_monthly")} disabled={sessionLoading || pricesLoading}>
+                <Button
+                  variant="outline"
+                  className="lpChoose"
+                  onClick={() => {
+                    trackEvent("plan_cta_click", { page: "pricing", plan: "starter", cta: "choose_starter", billing_cycle: billingCycle });
+                    startCheckout("starter_monthly");
+                  }}
+                  disabled={sessionLoading || pricesLoading}
+                >
                   {sessionLoading ? "Redirecting..." : "Choose Starter"}
                 </Button>
               </div>
@@ -443,7 +490,15 @@ export default function Pricing() {
                 <li>✓ Instant payout option (fee applies)</li>
               </ul>
               <div className="lpChooseWrap">
-                <Button variant="outline" className="lpChoose" onClick={() => startCheckout("pro_monthly")} disabled={sessionLoading || pricesLoading}>
+                <Button
+                  variant="outline"
+                  className="lpChoose"
+                  onClick={() => {
+                    trackEvent("plan_cta_click", { page: "pricing", plan: "pro", cta: "choose_pro", billing_cycle: billingCycle });
+                    startCheckout("pro_monthly");
+                  }}
+                  disabled={sessionLoading || pricesLoading}
+                >
                   {sessionLoading ? "Redirecting..." : "Choose Pro"}
                 </Button>
               </div>
@@ -483,7 +538,10 @@ export default function Pricing() {
                 <Button
                   variant="outline"
                   className="lpChoose"
-                  onClick={() => startCheckout("founder_annual")}
+                  onClick={() => {
+                    trackEvent("plan_cta_click", { page: "pricing", plan: "founder", cta: "choose_founder", billing_cycle: "annual" });
+                    startCheckout("founder_annual");
+                  }}
                   disabled={sessionLoading || pricesLoading || founderSoldOut}
                 >
                   {founderSoldOut ? "Founder Sold Out" : sessionLoading ? "Redirecting..." : "Choose Founder"}
