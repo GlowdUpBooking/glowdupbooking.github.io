@@ -4,12 +4,31 @@ import { supabase } from "../lib/supabase";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 
-function formatMoneyFromStripe(priceObj) {
+const WHY_PROS = [
+  "Keep more of what you earn with clear, transparent pricing",
+  "Reduce no-shows with deposits and optional prepay",
+  "Get paid faster with reliable payout options",
+  "Build your brand with a premium booking experience",
+  "Grow with tools designed for independent pros",
+];
+
+const FAQ_ITEMS = [
+  { q: "Do clients pay to book?", a: "No. Booking is free for clients." },
+  { q: "When does the Free plan booking limit reset?", a: "On the 1st of every month." },
+  { q: "How do deposits and payments work?", a: "Deposits and payments are processed through Stripe when enabled." },
+  { q: "Can I change plans later?", a: "Yes. Upgrade or downgrade anytime." },
+  { q: "What is instant payout?", a: "An optional payout method with an additional fee for immediate access to funds." },
+];
+
+function formatMoneyFromStripe(priceObj, billingCycle = "monthly") {
   const cents = priceObj?.unit_amount;
   const currency = priceObj?.currency || "USD";
   if (typeof cents !== "number") return null;
 
-  const amount = cents / 100;
+  let amount = cents / 100;
+  if (billingCycle === "annual" && priceObj?.interval === "month") {
+    amount = amount * 12 * 0.85;
+  }
 
   try {
     return new Intl.NumberFormat(undefined, {
@@ -22,55 +41,37 @@ function formatMoneyFromStripe(priceObj) {
   }
 }
 
-function formatInterval(priceObj) {
+function formatTerm(priceObj, billingCycle = "monthly") {
+  if (!priceObj) return null;
+  if (billingCycle === "annual" && priceObj?.interval === "month") return "/year";
+
   const i = priceObj?.interval;
   const c = priceObj?.interval_count || 1;
   if (!i) return null;
-
   if (i === "month") return c === 1 ? "/month" : `/${c} months`;
   if (i === "year") return c === 1 ? "/year" : `/${c} years`;
   return null;
 }
 
-const WHY_PROS = [
-  "Keep more of what you earn with clear, transparent pricing",
-  "Reduce no-shows with deposits and optional prepay",
-  "Get paid faster with reliable payout options",
-  "Build your brand with a premium booking experience",
-  "Grow with tools designed for independent pros",
-];
-
-const FAQ_ITEMS = [
-  {
-    q: "Do clients pay to book?",
-    a: "No. Booking is free for clients.",
-  },
-  {
-    q: "When does the Free plan booking limit reset?",
-    a: "On the 1st of every month.",
-  },
-  {
-    q: "How do deposits and payments work?",
-    a: "Deposits and payments are processed through Stripe when enabled.",
-  },
-  {
-    q: "Can I change plans later?",
-    a: "Yes. Upgrade or downgrade anytime.",
-  },
-  {
-    q: "What is instant payout?",
-    a: "An optional payout method with an additional fee for immediate access to funds.",
-  },
-];
+function relativeUpdate(ts) {
+  if (!ts) return "Updated recently";
+  const mins = Math.max(0, Math.floor((Date.now() - ts) / 60000));
+  if (mins < 1) return "Updated just now";
+  if (mins === 1) return "Updated 1 min ago";
+  if (mins < 60) return `Updated ${mins} mins ago`;
+  return "Updated today";
+}
 
 export default function Pricing() {
   const nav = useNavigate();
 
   const [session, setSession] = useState(null);
+  const [billingCycle, setBillingCycle] = useState("monthly");
 
   const [loading, setLoading] = useState(true);
   const [maxSpots, setMaxSpots] = useState(1000);
   const [claimed, setClaimed] = useState(0);
+  const [updatedAt, setUpdatedAt] = useState(null);
   const [err, setErr] = useState("");
 
   const [sessionLoading, setSessionLoading] = useState(false);
@@ -136,6 +137,7 @@ export default function Pricing() {
         setErr("Availability counter unavailable (still fine to sign up).");
       } finally {
         if (!mounted) return;
+        setUpdatedAt(Date.now());
         setLoading(false);
       }
     }
@@ -182,12 +184,8 @@ export default function Pricing() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("checkout") === "success") {
-      setToast("Payment complete. Your access will update shortly.");
-    }
-    if (params.get("checkout") === "cancel") {
-      setToast("Payment canceled. You can try again anytime.");
-    }
+    if (params.get("checkout") === "success") setToast("Payment complete. Your access will update shortly.");
+    if (params.get("checkout") === "cancel") setToast("Payment canceled. You can try again anytime.");
   }, []);
 
   async function signOut() {
@@ -262,13 +260,13 @@ export default function Pricing() {
     }
   }
 
-  const starterPrice = prices ? formatMoneyFromStripe(prices.starter_monthly) : null;
-  const proPrice = prices ? formatMoneyFromStripe(prices.pro_monthly) : null;
-  const founderPrice = prices ? formatMoneyFromStripe(prices.founder_annual) : null;
+  const starterPrice = prices ? formatMoneyFromStripe(prices.starter_monthly, billingCycle) : null;
+  const proPrice = prices ? formatMoneyFromStripe(prices.pro_monthly, billingCycle) : null;
+  const founderPrice = prices ? formatMoneyFromStripe(prices.founder_annual, "annual") : null;
 
-  const starterTerm = prices ? formatInterval(prices.starter_monthly) : null;
-  const proTerm = prices ? formatInterval(prices.pro_monthly) : null;
-  const founderTerm = prices ? formatInterval(prices.founder_annual) : null;
+  const starterTerm = prices ? formatTerm(prices.starter_monthly, billingCycle) : null;
+  const proTerm = prices ? formatTerm(prices.pro_monthly, billingCycle) : null;
+  const founderTerm = prices ? formatTerm(prices.founder_annual, "annual") : null;
 
   const founderSoldOut = !loading && remaining <= 0;
 
@@ -283,34 +281,30 @@ export default function Pricing() {
           </Link>
 
           <div className="lpNavRight">
-            <Link className="lpNavBtn lpNavBtnSecondary" to="/pricing">
+            <button className="lpNavBtn lpNavBtnSecondary" onClick={() => document.getElementById("plans")?.scrollIntoView({ behavior: "smooth" })}>
               Pricing
-            </Link>
+            </button>
 
             {!session ? (
               <>
-                <Link className="lpNavBtn lpNavBtnSecondary" to="/signup">
-                  Create Account
+                <Link className="lpNavBtn lpNavBtnSecondary" to="/login">
+                  Sign In
                 </Link>
-                <Link className="lpNavBtn" to="/login">
-                  Sign In <span className="lpArrow">→</span>
+                <Link className="lpNavBtn" to="/signup">
+                  Start Free <span className="lpArrow">→</span>
                 </Link>
               </>
             ) : (
-              <button className="lpNavBtn lpNavBtnSecondary" onClick={() => nav("/app")}>
-                Dashboard
-              </button>
+              <>
+                <button className="lpNavBtn lpNavBtnSecondary" onClick={() => nav("/app")}>Dashboard</button>
+                <button className="lpNavBtn" onClick={signOut}>Sign out <span className="lpArrow">→</span></button>
+              </>
             )}
-            {session ? (
-              <button className="lpNavBtn" onClick={signOut}>
-                Sign out <span className="lpArrow">→</span>
-              </button>
-            ) : null}
           </div>
         </div>
       </header>
 
-      <section className="lpHero">
+      <section className="lpHero lpReveal">
         <div className="lpHeroStrip" aria-hidden="true">
           <div className="lpHeroImg lpHeroImg1" />
           <div className="lpHeroImg lpHeroImg2" />
@@ -320,35 +314,22 @@ export default function Pricing() {
 
         <div className="lpHeroInner">
           <h1 className="lpH1">Simple pricing for beauty professionals.</h1>
-          <p className="lpLead">
-            Built for barbers, stylists, tattoo artists, nail techs, and more. Start free and upgrade
-            when you are ready.
-          </p>
+          <p className="lpLead">Built for barbers, stylists, tattoo artists, nail techs, and more. Start free and scale with better tools.</p>
           <p className="lpLead">Clients book free. Pros pay only for tools and growth.</p>
 
           <div className="lpHeroBtns">
-            {!session ? (
-              <>
-                <Link to="/signup">
-                  <Button variant="outline" className="lpBtn">
-                    Start Free
-                  </Button>
-                </Link>
-                <Button
-                  variant="outline"
-                  className="lpBtn"
-                  onClick={() => document.getElementById("plans")?.scrollIntoView({ behavior: "smooth" })}
-                >
-                  View Plans
-                </Button>
-              </>
-            ) : (
-              <Link to="/app">
-                <Button variant="outline" className="lpBtn">
-                  Go to Dashboard
-                </Button>
-              </Link>
-            )}
+            <Link to="/signup"><Button variant="outline" className="lpBtn">Start Free</Button></Link>
+            <Button variant="outline" className="lpBtn" onClick={() => document.getElementById("plans")?.scrollIntoView({ behavior: "smooth" })}>View Plans</Button>
+          </div>
+
+          <div className="lpTrustRow">
+            <span>No booking fees</span>
+            <span>Stripe-secured payments</span>
+            <span>Cancel anytime</span>
+          </div>
+
+          <div className={`lpLiveChip ${loading ? "is-loading" : ""}`}>
+            {loading ? "Loading founder availability..." : `${remaining} Founder spots left`} · {relativeUpdate(updatedAt)}
           </div>
 
           {toast ? <div className="lpToast">{toast}</div> : null}
@@ -356,7 +337,7 @@ export default function Pricing() {
         </div>
       </section>
 
-      <section className="lpWhy">
+      <section className="lpWhy lpReveal lpSectionLazy">
         <div className="lpPricingInner">
           <div className="lpPricingHead">
             <h2 className="lpH2">Why Pros Choose Glow’d Up Booking</h2>
@@ -374,19 +355,35 @@ export default function Pricing() {
           <div className="lpPricingHead">
             <h2 className="lpH2">Plans</h2>
             <div className="lpSub">Choose what fits your workflow.</div>
-            <div className="lpCounter lpCounterTop">
+
+            <div className="lpToggleWrap" role="radiogroup" aria-label="Billing cycle">
+              <button
+                className={`lpToggleBtn ${billingCycle === "monthly" ? "is-active" : ""}`}
+                onClick={() => setBillingCycle("monthly")}
+                role="radio"
+                aria-checked={billingCycle === "monthly"}
+              >
+                Monthly
+              </button>
+              <button
+                className={`lpToggleBtn ${billingCycle === "annual" ? "is-active" : ""}`}
+                onClick={() => setBillingCycle("annual")}
+                role="radio"
+                aria-checked={billingCycle === "annual"}
+              >
+                Annual (save 15%)
+              </button>
+            </div>
+
+            <div className={`lpCounter lpCounterTop ${loading ? "lpSkeleton" : ""}`}>
               {loading ? "Founder spots left" : `${remaining} Founder spots left`}
             </div>
           </div>
 
           <div className="lpGrid lpGrid4">
-            <Card className="lpPriceCard lpPlanCard">
+            <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "0ms" }}>
               <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Free</div>
-
-              <div className="lpPriceLine">
-                <span className="lpPrice">$0</span>
-              </div>
-
+              <div className="lpPriceLine"><span className="lpPrice">$0</span></div>
               <ul className="lpList">
                 <li>✓ Pro profile + shareable booking link</li>
                 <li>✓ Unlimited booking requests</li>
@@ -395,32 +392,22 @@ export default function Pricing() {
                 <li>✓ Basic scheduling + booking management</li>
                 <li>✓ No full prepay (deposit-only payments if enabled)</li>
               </ul>
-
               <div className="lpChooseWrap">
                 {!session ? (
-                  <Link to="/signup">
-                    <Button variant="outline" className="lpChoose">
-                      Start Free
-                    </Button>
-                  </Link>
+                  <Link to="/signup"><Button variant="outline" className="lpChoose">Start Free</Button></Link>
                 ) : (
-                  <Link to="/app">
-                    <Button variant="outline" className="lpChoose">
-                      Go to Dashboard
-                    </Button>
-                  </Link>
+                  <Link to="/app"><Button variant="outline" className="lpChoose">Go to Dashboard</Button></Link>
                 )}
               </div>
             </Card>
 
-            <Card className="lpPriceCard lpPlanCard">
+            <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "70ms" }}>
               <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Starter</div>
-
               <div className="lpPriceLine">
-                <span className="lpPrice">{pricesLoading ? "-" : starterPrice || "-"}</span>
+                <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : starterPrice || "-"}</span>
                 <span className="lpTerm">{starterTerm || ""}</span>
               </div>
-
+              {billingCycle === "annual" ? <div className="lpTinyNote">Display estimate for annual billing</div> : null}
               <ul className="lpList">
                 <li>✓ Everything in Free</li>
                 <li>✓ Unlimited accepted bookings</li>
@@ -429,27 +416,23 @@ export default function Pricing() {
                 <li>✓ Client notes + simple organization</li>
                 <li>✓ Faster setup + smoother workflow</li>
               </ul>
-
               <div className="lpChooseWrap">
-                <Button
-                  variant="outline"
-                  className="lpChoose"
-                  onClick={() => startCheckout("starter_monthly")}
-                  disabled={sessionLoading || pricesLoading}
-                >
+                <Button variant="outline" className="lpChoose" onClick={() => startCheckout("starter_monthly")} disabled={sessionLoading || pricesLoading}>
                   {sessionLoading ? "Redirecting..." : "Choose Starter"}
                 </Button>
               </div>
             </Card>
 
-            <Card className="lpPriceCard lpPlanCard lpFeatured">
-              <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Pro</div>
-
+            <Card className="lpPriceCard lpPlanCard lpFeatured lpReveal" style={{ animationDelay: "140ms" }}>
+              <div className="lpTierRow">
+                <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Pro</div>
+                <div className="lpBadge">Most chosen</div>
+              </div>
               <div className="lpPriceLine">
-                <span className="lpPrice">{pricesLoading ? "-" : proPrice || "-"}</span>
+                <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : proPrice || "-"}</span>
                 <span className="lpTerm">{proTerm || ""}</span>
               </div>
-
+              {billingCycle === "annual" ? <div className="lpTinyNote">Display estimate for annual billing</div> : null}
               <ul className="lpList">
                 <li>✓ Everything in Starter</li>
                 <li>✓ Optional deposits and optional full prepay</li>
@@ -459,24 +442,17 @@ export default function Pricing() {
                 <li>✓ Priority placement (when marketplace launches)</li>
                 <li>✓ Instant payout option (fee applies)</li>
               </ul>
-
               <div className="lpChooseWrap">
-                <Button
-                  variant="outline"
-                  className="lpChoose"
-                  onClick={() => startCheckout("pro_monthly")}
-                  disabled={sessionLoading || pricesLoading}
-                >
+                <Button variant="outline" className="lpChoose" onClick={() => startCheckout("pro_monthly")} disabled={sessionLoading || pricesLoading}>
                   {sessionLoading ? "Redirecting..." : "Choose Pro"}
                 </Button>
               </div>
             </Card>
 
-            <Card className="lpPriceCard lpPlanCard">
+            <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "210ms" }}>
               <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Founder</div>
-
               <div className="lpPriceLine">
-                <span className="lpPrice">{pricesLoading ? "-" : founderPrice || "-"}</span>
+                <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : founderPrice || "-"}</span>
                 <span className="lpTerm">{founderTerm || ""}</span>
               </div>
 
@@ -487,18 +463,10 @@ export default function Pricing() {
                 </div>
               </div>
 
-              <div className="lpFounderText">
-                First 1,000 pros only. Lock in the best price while you stay active.
-              </div>
+              <div className="lpFounderText">First 1,000 pros only. Lock in the best price while you stay active.</div>
 
-              <div className="lpCounter">
-                {loading ? (
-                  "Checking founder spots..."
-                ) : (
-                  <>
-                    <strong>{remaining}</strong> Founder spots left
-                  </>
-                )}
+              <div className={`lpCounter ${loading ? "lpSkeleton" : ""}`}>
+                {loading ? "Checking founder spots..." : <><strong>{remaining}</strong> Founder spots left</>}
                 {err ? <div className="lpCounterErr">{err}</div> : null}
               </div>
 
@@ -525,17 +493,15 @@ export default function Pricing() {
           </div>
 
           <div className="lpFooterLine">
-            <div className="lpFooterBig">
-              {loading ? "Founder spots left" : `${remaining} Founder spots left`}
-            </div>
-            <div className="lpFooterSmall">
-              Active means your paid subscription is in good standing.
-            </div>
+            <div className="lpFooterSmall">Free plan accepted-booking limits reset on the 1st of each month.</div>
+            <div className="lpFooterSmall">Deposits and payments are processed via Stripe when enabled.</div>
+            <div className="lpFooterSmall">Instant payout is optional and includes an additional fee.</div>
+            <div className="lpFooterSmall">You can upgrade or downgrade at any time.</div>
           </div>
         </div>
       </section>
 
-      <section className="lpPricing">
+      <section className="lpPricing lpReveal lpSectionLazy">
         <div className="lpPricingInner">
           <div className="lpPricingHead">
             <h2 className="lpH2">FAQ</h2>
@@ -548,13 +514,6 @@ export default function Pricing() {
                 <div className="lpSub" style={{ marginTop: 8 }}>{item.a}</div>
               </Card>
             ))}
-          </div>
-
-          <div className="lpFooterLine">
-            <div className="lpFooterSmall">Free plan accepted-booking limits reset on the 1st of each month.</div>
-            <div className="lpFooterSmall">Deposits and payments are processed via Stripe when enabled.</div>
-            <div className="lpFooterSmall">Instant payout is optional and includes an additional fee.</div>
-            <div className="lpFooterSmall">You can upgrade or downgrade at any time.</div>
           </div>
         </div>
       </section>
