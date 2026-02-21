@@ -72,6 +72,8 @@ export default function App() {
   const [plan, setPlan] = useState(null);
   const [interval, setInterval] = useState(null);
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState(null);
+  const [billingLoading, setBillingLoading] = useState(false);
+  const [billingMsg, setBillingMsg] = useState("");
 
   // Profile + services
   const [profile, setProfile] = useState(null);
@@ -271,6 +273,97 @@ export default function App() {
     window.location.href = "/";
   }
 
+  async function openBillingPortal() {
+    if (billingLoading) return;
+
+    const likelyFreePlan = normalizePlanKey(plan) === "free" || !isActive;
+    if (likelyFreePlan) {
+      nav("/pricing?billing=setup");
+      return;
+    }
+
+    setBillingLoading(true);
+    setBillingMsg("");
+
+    try {
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+      const sbUrl = import.meta.env.VITE_SUPABASE_URL || "";
+
+      if (!anonKey || !sbUrl) {
+        throw new Error("Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY.");
+      }
+
+      const { data: authData, error: sessErr } = await supabase.auth.getSession();
+      if (sessErr) throw sessErr;
+
+      const s = authData?.session;
+      if (!s?.access_token) {
+        nav("/login", { replace: true });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("create-billing-portal-session", {
+        body: { return_path: "/app" },
+        headers: {
+          apikey: anonKey,
+          Authorization: `Bearer ${s.access_token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!error && data?.url) {
+        window.location.assign(data.url);
+        return;
+      }
+
+      try {
+        const invokePayload = error?.context ? await error.context.json() : null;
+        if (invokePayload?.error === "no_stripe_customer") {
+          nav("/pricing?billing=setup");
+          return;
+        }
+      } catch {
+        // Continue to explicit fetch fallback
+      }
+
+      const fnUrl = `${sbUrl}/functions/v1/create-billing-portal-session`;
+      const res = await fetch(fnUrl, {
+        method: "POST",
+        headers: {
+          apikey: anonKey,
+          Authorization: `Bearer ${s.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ return_path: "/app" }),
+      });
+
+      const text = await res.text();
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        json = { raw: text };
+      }
+
+      if (!res.ok) {
+        const code = json?.error || json?.code || "";
+        if (code === "no_stripe_customer") {
+          nav("/pricing?billing=setup");
+          return;
+        }
+        throw new Error(json?.message || json?.error || `Edge Function failed (${res.status})`);
+      }
+
+      if (!json?.url) throw new Error("No billing portal URL returned.");
+      window.location.assign(json.url);
+    } catch (e) {
+      console.error("[App] openBillingPortal failed:", e);
+      setBillingMsg("Couldn’t open billing right now. You can manage plans from Pricing.");
+    } finally {
+      setBillingLoading(false);
+    }
+  }
+
   const currentPlanKey = useMemo(() => {
     const fromDb = normalizePlanKey(plan);
     if (fromDb) return fromDb;
@@ -297,6 +390,11 @@ export default function App() {
     if (!isActive) return `${planLabel} plan`;
     return `${planLabel} plan active`;
   }, [isActive, planLabel]);
+
+  const billingCtaLabel = useMemo(() => {
+    if (!isActive || currentPlanKey === "free") return "Upgrade Plan";
+    return "Manage Subscription";
+  }, [isActive, currentPlanKey]);
 
   function formatDate(iso) {
     if (!iso) return null;
@@ -377,17 +475,22 @@ export default function App() {
                 <div className="g-badge">{planLabel}</div>
               </div>
 
-                <div className="g-planBottom">
-                  <div className="g-planMeta">
-                    <span className="g-dotIcon">👤</span>
-                    <span className="u-muted">{subscriptionLine}</span>
-                  </div>
-
-                  <a className="g-link" href="/pricing" onClick={(e) => e.preventDefault()}>
-                    {currentPeriodEnd ? `Renews on ${formatDate(currentPeriodEnd)}` : "Manage Subscription"} <span className="g-ext">↗</span>
-                  </a>
+              <div className="g-planBottom">
+                <div className="g-planMeta">
+                  <span className="g-dotIcon">👤</span>
+                  <span className="u-muted">
+                    {currentPeriodEnd ? `Renews on ${formatDate(currentPeriodEnd)}` : subscriptionLine}
+                  </span>
                 </div>
+
+                <button className="g-linkBtn" type="button" onClick={openBillingPortal}>
+                  {billingLoading ? "Opening billing..." : billingCtaLabel}
+                  {!billingLoading ? <span className="g-ext">↗</span> : null}
+                </button>
+              </div>
               </Card>
+
+            {billingMsg ? <div className="u-muted">{billingMsg}</div> : null}
 
             {/* Profile Card */}
             <Card className="g-profileCard">
@@ -681,10 +784,7 @@ export default function App() {
                       {hasPayoutStep ? "Connected to Stripe. Payout tools unlocked." : "Connect Stripe to unlock payout actions."}
                     </span>
                   </div>
-                  <button
-                    className="g-pillBtn"
-                    onClick={() => nav("/app/onboarding/payouts")}
-                  >
+                  <button className="g-pillBtn" onClick={() => (hasPayoutStep ? openBillingPortal() : nav("/app/onboarding/payouts"))}>
                     {hasPayoutStep ? "Manage" : "Connect"}
                   </button>
                 </div>

@@ -187,6 +187,9 @@ export default function Pricing() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("checkout") === "success") setToast("Payment complete. Your access will update shortly.");
     if (params.get("checkout") === "cancel") setToast("Payment canceled. You can try again anytime.");
+    if (params.get("billing") === "setup") {
+      setToast("You’re on Free. Choose a paid plan first, then billing management opens automatically.");
+    }
   }, []);
 
   async function signOut() {
