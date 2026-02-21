@@ -41,6 +41,8 @@ export default function App() {
   const [plan, setPlan] = useState(null);
   const [interval, setInterval] = useState(null);
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState(null);
+  const [billingLoading, setBillingLoading] = useState(false);
+  const [billingMsg, setBillingMsg] = useState("");
 
   // Profile + services
   const [profile, setProfile] = useState(null);
@@ -232,6 +234,81 @@ export default function App() {
     window.location.href = "/";
   }
 
+  async function openBillingPortal() {
+    if (billingLoading) return;
+
+    setBillingLoading(true);
+    setBillingMsg("");
+
+    try {
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+      const sbUrl = import.meta.env.VITE_SUPABASE_URL || "";
+
+      if (!anonKey || !sbUrl) {
+        throw new Error("Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY.");
+      }
+
+      const { data: authData, error: sessErr } = await supabase.auth.getSession();
+      if (sessErr) throw sessErr;
+
+      const s = authData?.session;
+      if (!s?.access_token) {
+        nav("/login", { replace: true });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("create-billing-portal-session", {
+        body: { return_path: "/app" },
+        headers: {
+          apikey: anonKey,
+          Authorization: `Bearer ${s.access_token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!error && data?.url) {
+        window.location.assign(data.url);
+        return;
+      }
+
+      const fnUrl = `${sbUrl}/functions/v1/create-billing-portal-session`;
+      const res = await fetch(fnUrl, {
+        method: "POST",
+        headers: {
+          apikey: anonKey,
+          Authorization: `Bearer ${s.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ return_path: "/app" }),
+      });
+
+      const text = await res.text();
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        json = { raw: text };
+      }
+
+      if (!res.ok) {
+        const code = json?.error || json?.code || "";
+        if (code === "no_stripe_customer") {
+          nav("/pricing");
+          return;
+        }
+        throw new Error(json?.message || json?.error || `Edge Function failed (${res.status})`);
+      }
+
+      if (!json?.url) throw new Error("No billing portal URL returned.");
+      window.location.assign(json.url);
+    } catch (e) {
+      console.error("[App] openBillingPortal failed:", e);
+      setBillingMsg("Couldn’t open billing right now. You can manage plans from Pricing.");
+    } finally {
+      setBillingLoading(false);
+    }
+  }
+
   const planLabel = useMemo(() => {
     if (plan === "starter") return "Starter";
     if (plan === "pro") return "Pro";
@@ -300,10 +377,16 @@ export default function App() {
             <Button variant="primary" onClick={() => nav("/pricing")}>
               View plans
             </Button>
-            <Button variant="outline" onClick={() => nav("/pricing")}>
-              Manage subscription
+            <Button variant="outline" onClick={openBillingPortal}>
+              {billingLoading ? "Opening billing..." : "Manage subscription"}
             </Button>
           </div>
+
+          {billingMsg ? (
+            <div className="u-muted" style={{ marginTop: 10 }}>
+              {billingMsg}
+            </div>
+          ) : null}
 
           <div className="u-muted2" style={{ marginTop: 12 }}>
             If you just paid, it may take a few seconds for access to update. Refresh in a moment.
@@ -346,11 +429,18 @@ export default function App() {
                   </span>
                 </div>
 
-                <a className="g-link" href="/pricing" onClick={(e) => e.preventDefault()}>
-                  Manage Subscription <span className="g-ext">↗</span>
-                </a>
+                <button className="g-linkBtn" type="button" onClick={openBillingPortal}>
+                  {billingLoading ? "Opening billing..." : "Manage Subscription"}
+                  {!billingLoading ? <span className="g-ext">↗</span> : null}
+                </button>
               </div>
             </Card>
+
+            {billingMsg ? (
+              <div className="u-muted" style={{ marginTop: -4 }}>
+                {billingMsg}
+              </div>
+            ) : null}
 
             {/* Profile Card */}
             <Card className="g-profileCard">
