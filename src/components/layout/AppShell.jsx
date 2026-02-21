@@ -1,4 +1,8 @@
+import { NavLink } from "react-router-dom";
+
 export default function AppShell({ title, onSignOut, children }) {
+  const navClass = ({ isActive }) => `navItem${isActive ? " navItemActive" : ""}`;
+
   return (
     <div className="shell">
       {/* Sidebar */}
@@ -12,48 +16,48 @@ export default function AppShell({ title, onSignOut, children }) {
         </div>
 
         <nav className="shellNav">
-          <div className="navItem navItemActive">
+          <NavLink to="/app" end className={navClass}>
             <div className="navIcon">▦</div>
             Dashboard
-          </div>
+          </NavLink>
 
-          <div className="navItem">
+          <div className="navItem" style={{ opacity: 0.5 }}>
             <div className="navIcon">🗓</div>
             Calendar
           </div>
 
-          <div className="navItem">
+          <NavLink to="/app/onboarding/services" className={navClass}>
             <div className="navIcon">🏷</div>
             Services
-          </div>
+          </NavLink>
 
-          <div className="navItem">
+          <div className="navItem" style={{ opacity: 0.5 }}>
             <div className="navIcon">👥</div>
             Clients
           </div>
 
-          <div className="navItem">
+          <NavLink to="/app/settings" className={navClass}>
             <div className="navIcon">✓</div>
             Availability
-          </div>
+          </NavLink>
 
-          <div className="navItem">
+          <NavLink to="/app/settings" className={navClass}>
             <div className="navIcon">⚙</div>
             Settings
-          </div>
+          </NavLink>
 
-          <div className="navItem">
+          <div className="navItem" style={{ opacity: 0.5 }}>
             <div className="navIcon">?</div>
             Support
           </div>
         </nav>
 
         <div className="shellFooter">
-          <div className="navItem">
+          <NavLink to="/app/settings" className={navClass}>
             <div className="navIcon">⚙</div>
             Settings
-          </div>
-          <div className="navItem">
+          </NavLink>
+          <div className="navItem" style={{ opacity: 0.5 }}>
             <div className="navIcon">?</div>
             Support
           </div>

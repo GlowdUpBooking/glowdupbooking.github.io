@@ -30,6 +30,17 @@ function safeFirstName(fullName, fallback = "there") {
   return first || fallback;
 }
 
+function normalizePlanKey(raw) {
+  const v = String(raw || "").trim().toLowerCase();
+  if (!v) return null;
+  if (v === "free") return "free";
+  if (v === "starter" || v === "starter_monthly") return "starter";
+  if (v === "pro" || v === "pro_monthly") return "pro";
+  if (v === "founder" || v === "founder_annual") return "founder";
+  if (v === "studio" || v === "studio_monthly") return "studio";
+  return null;
+}
+
 export default function App() {
   const nav = useNavigate();
 
@@ -226,12 +237,32 @@ export default function App() {
     window.location.href = "/";
   }
 
+  const currentPlanKey = useMemo(() => {
+    const fromDb = normalizePlanKey(plan);
+    if (fromDb) return fromDb;
+
+    const fromMeta = normalizePlanKey(user?.user_metadata?.selected_plan);
+    if (fromMeta) return fromMeta;
+
+    if (isActive && interval === "annual") return "founder";
+    if (!isActive) return "free";
+    return "paid";
+  }, [plan, user, isActive, interval]);
+
   const planLabel = useMemo(() => {
-    if (plan === "starter") return "Starter";
-    if (plan === "pro") return "Pro";
-    if (plan === "founder") return "Founder";
-    return "Plan";
-  }, [plan]);
+    if (currentPlanKey === "free") return "Free";
+    if (currentPlanKey === "starter") return "Starter";
+    if (currentPlanKey === "pro") return "Pro";
+    if (currentPlanKey === "founder") return "Founder";
+    if (currentPlanKey === "studio") return "Studio";
+    if (currentPlanKey === "paid") return "Paid";
+    return "Free";
+  }, [currentPlanKey]);
+
+  const subscriptionLine = useMemo(() => {
+    if (!isActive) return `${planLabel} plan`;
+    return `${planLabel} plan active`;
+  }, [isActive, planLabel]);
 
   function formatDate(iso) {
     if (!iso) return null;
@@ -309,19 +340,17 @@ export default function App() {
                 <div className="g-badge">{planLabel}</div>
               </div>
 
-              <div className="g-planBottom">
-                <div className="g-planMeta">
-                  <span className="g-dotIcon">👤</span>
-                  <span className="u-muted">
-                    {currentPeriodEnd ? `Renews on ${formatDate(currentPeriodEnd)}` : "Subscription active"}
-                  </span>
-                </div>
+                <div className="g-planBottom">
+                  <div className="g-planMeta">
+                    <span className="g-dotIcon">👤</span>
+                    <span className="u-muted">{subscriptionLine}</span>
+                  </div>
 
-                <a className="g-link" href="/pricing" onClick={(e) => e.preventDefault()}>
-                  Manage Subscription <span className="g-ext">↗</span>
-                </a>
-              </div>
-            </Card>
+                  <a className="g-link" href="/pricing" onClick={(e) => e.preventDefault()}>
+                    {currentPeriodEnd ? `Renews on ${formatDate(currentPeriodEnd)}` : "Manage Subscription"} <span className="g-ext">↗</span>
+                  </a>
+                </div>
+              </Card>
 
             {/* Profile Card */}
             <Card className="g-profileCard">
@@ -375,11 +404,11 @@ export default function App() {
                 </div>
 
                 <div className="g-profileCtas">
-                  <Button variant="primary" className="g-ctaWide" onClick={() => nav("/app/onboarding/basics")}>
+                  <Button variant="primary" className="g-ctaWide" onClick={() => nav("/app/profile")}>
                     Edit Profile
                   </Button>
 
-                  <Button variant="outline" className="g-ctaWide" onClick={() => nav("/app/services")}>
+                  <Button variant="outline" className="g-ctaWide" onClick={() => nav("/app/onboarding/services")}>
                     Manage Services
                   </Button>
                 </div>
@@ -517,7 +546,7 @@ export default function App() {
                       <span>Business name and business type</span>
                     </div>
                     {!hasProfileStep ? (
-                      <button className="g-pillBtn" onClick={() => nav("/app/onboarding/basics")}>Fix</button>
+                      <button className="g-pillBtn" onClick={() => nav("/app/profile")}>Fix</button>
                     ) : <span>✓</span>}
                   </div>
 
@@ -557,7 +586,7 @@ export default function App() {
                       <span>Define where/when clients can book</span>
                     </div>
                     {!hasAvailabilityStep ? (
-                      <button className="g-pillBtn" onClick={() => nav("/app/onboarding/location")}>Set</button>
+                      <button className="g-pillBtn" onClick={() => nav("/app/settings")}>Set</button>
                     ) : <span>✓</span>}
                   </div>
 

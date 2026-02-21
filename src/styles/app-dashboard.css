@@ -57,6 +57,12 @@
   padding: 9px 10px;
   color: #f3f3f3;
   opacity: 0.86;
+  text-decoration: none;
+}
+
+.shellNav a,
+.shellFooter a {
+  color: inherit;
 }
 
 .navItemActive {
