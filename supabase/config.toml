@@ -3,3 +3,6 @@ verify_jwt = false
 
 [functions.stripe-connect]
 verify_jwt = true
+
+[functions.get-prices]
+verify_jwt = false
