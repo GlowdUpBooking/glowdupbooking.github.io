@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import OnboardingProgress from "../../components/onboarding/OnboardingProgress";
+import { fetchStripeConnectStatus } from "../../lib/stripeConnect";
 
 const BUCKET = "service-photos";
 
@@ -56,6 +57,7 @@ export default function OnboardingServices() {
   const [photos, setPhotos] = useState([]); // service_photos for selected service
   const [newFiles, setNewFiles] = useState([]); // File[]
   const [err, setErr] = useState("");
+  const [okMsg, setOkMsg] = useState("");
   const [autosaveStatus, setAutosaveStatus] = useState("Ready");
 
   // ---------- Load ----------
@@ -215,9 +217,10 @@ export default function OnboardingServices() {
 
     setSaving(true);
     setErr("");
+    setOkMsg("");
 
     try {
-      const payload = {
+      const fullPayload = {
         stylist_id: user.id,
         description: description.trim(),
         price: moneyToNumber(price),
@@ -227,42 +230,71 @@ export default function OnboardingServices() {
         image_url: coverUrl?.trim() || null,
       };
 
-      if (!payload.description) {
+      if (!fullPayload.description) {
         setErr("Service name/description is required.");
         setSaving(false);
         return;
       }
-      if (payload.price == null || payload.price < 0) {
+      if (fullPayload.price == null || fullPayload.price < 0) {
         setErr("Price must be a valid number.");
         setSaving(false);
         return;
       }
-      if (payload.duration_minutes == null || payload.duration_minutes <= 0) {
+      if (fullPayload.duration_minutes == null || fullPayload.duration_minutes <= 0) {
         setErr("Duration must be a valid number of minutes.");
         setSaving(false);
         return;
       }
 
-      // Upsert service
-      let saved;
-      if (selectedId) {
-        const { data, error } = await supabase
-          .from("services")
-          .update(payload)
-          .eq("id", selectedId)
-          .eq("stylist_id", user.id)
-          .select()
-          .single();
-        if (error) throw error;
-        saved = data;
-      } else {
+      // Schema-compatible payloads:
+      // 1) full payload (new schema)
+      // 2) no optional fields (older schema)
+      // 3) include safe defaults for legacy NOT NULL columns
+      const payloadNoOptional = {
+        stylist_id: user.id,
+        description: fullPayload.description,
+        price: fullPayload.price,
+        duration_minutes: fullPayload.duration_minutes,
+      };
+      const payloadLegacySafe = {
+        ...payloadNoOptional,
+        image_url: fullPayload.image_url || "/assets/cover.png",
+        deposit_amount: fullPayload.deposit_amount ?? 0,
+      };
+
+      async function persistService(payload) {
+        if (selectedId) {
+          const { data, error } = await supabase
+            .from("services")
+            .update(payload)
+            .eq("id", selectedId)
+            .eq("stylist_id", user.id)
+            .select()
+            .single();
+          if (error) throw error;
+          return data;
+        }
+
         const { data, error } = await supabase
           .from("services")
           .insert(payload)
           .select()
           .single();
         if (error) throw error;
-        saved = data;
+        return data;
+      }
+
+      let saved;
+      try {
+        saved = await persistService(fullPayload);
+      } catch (firstErr) {
+        console.warn("[OnboardingServices] full payload save failed, retrying with compatibility payload", firstErr);
+        try {
+          saved = await persistService(payloadNoOptional);
+        } catch (secondErr) {
+          console.warn("[OnboardingServices] compatibility payload save failed, retrying with legacy-safe payload", secondErr);
+          saved = await persistService(payloadLegacySafe);
+        }
       }
 
       // Refresh list (keep selected)
@@ -338,6 +370,9 @@ export default function OnboardingServices() {
         if (!phErr) setPhotos(ph ?? []);
         setNewFiles([]);
       }
+
+      setOkMsg(selectedId ? "Service updated." : "Service added.");
+      setAutosaveStatus("Saved");
     } catch (e) {
       console.error("[OnboardingServices] save error:", e);
       setErr(e?.message || "Something went wrong saving this service.");
@@ -350,6 +385,7 @@ export default function OnboardingServices() {
     if (!user) return;
     setSaving(true);
     setErr("");
+    setOkMsg("");
 
     try {
       // Require at least 1 service
@@ -359,7 +395,19 @@ export default function OnboardingServices() {
         return;
       }
 
-      // Move into payout onboarding step before dashboard completion.
+      // If Stripe is already connected, finish onboarding now.
+      const connect = await fetchStripeConnectStatus();
+      if (connect?.connected) {
+        const { error: doneErr } = await supabase
+          .from("profiles")
+          .update({ onboarding_step: "complete" })
+          .eq("id", user.id);
+        if (doneErr) throw doneErr;
+        nav("/app", { replace: true });
+        return;
+      }
+
+      // Otherwise move to payout onboarding step.
       const { error } = await supabase
         .from("profiles")
         .update({ onboarding_step: "payouts" })
@@ -394,7 +442,7 @@ export default function OnboardingServices() {
   if (loading) return null;
 
   return (
-    <div className="page">
+    <div className="obPage page">
       <div className="bg" aria-hidden="true" />
 
       <header className="nav">
@@ -424,6 +472,7 @@ export default function OnboardingServices() {
           <OnboardingProgress active="services" autosaveStatus={autosaveStatus} />
 
           {err ? <div style={{ marginTop: 12, opacity: 0.95 }}>{err}</div> : null}
+          {okMsg ? <div style={{ marginTop: 12, opacity: 0.95 }}>{okMsg}</div> : null}
 
           <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 18, marginTop: 18 }}>
             {/* Left: list */}

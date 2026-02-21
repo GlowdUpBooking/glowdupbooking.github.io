@@ -11,6 +11,7 @@ import "./index.css";
 import "./styles/landing.css";
 import "./styles/onboarding.css";
 import "./styles/onboarding-dashboard.css";
+import "./styles/app-dashboard.css";
 
 initAnalytics();
 

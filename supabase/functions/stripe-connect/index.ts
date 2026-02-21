@@ -122,8 +122,17 @@ serve(async (req) => {
   const serviceRole = getEnv("SUPABASE_SERVICE_ROLE_KEY");
 
   if (!stripeKey) return json(req, 500, { error: "missing_stripe_key" });
-  if (!siteUrl) return json(req, 500, { error: "missing_site_url" });
-  if (!supabaseUrl || !serviceRole) return json(req, 500, { error: "missing_supabase_admin_env" });
+  if (!siteUrl) {
+    console.error("[stripe-connect] missing_site_url");
+    return json(req, 500, { error: "missing_site_url" });
+  }
+  if (!supabaseUrl || !serviceRole) {
+    console.error("[stripe-connect] missing_supabase_admin_env", {
+      hasSupabaseUrl: Boolean(supabaseUrl),
+      hasServiceRole: Boolean(serviceRole),
+    });
+    return json(req, 500, { error: "missing_supabase_admin_env" });
+  }
 
   let payload: any = {};
   try {
@@ -143,6 +152,7 @@ serve(async (req) => {
 
   const userRes = await admin.auth.admin.getUserById(userId);
   if (userRes.error || !userRes.data?.user) {
+    console.error("[stripe-connect] user_lookup_failed", userRes.error);
     return json(req, 500, { error: "user_lookup_failed", details: userRes.error?.message || null });
   }
 
@@ -166,6 +176,7 @@ serve(async (req) => {
 
     const accountRes = await stripeGet(`accounts/${accountId}`, stripeKey);
     if (!accountRes.ok) {
+      console.error("[stripe-connect] stripe_account_fetch_failed", accountRes.data ?? accountRes.text);
       return json(req, 500, {
         error: "stripe_account_fetch_failed",
         status_code: accountRes.status,
@@ -200,6 +211,7 @@ serve(async (req) => {
 
     const createRes = await stripePost("accounts", createForm, stripeKey);
     if (!createRes.ok) {
+      console.error("[stripe-connect] stripe_account_create_failed", createRes.data ?? createRes.text);
       return json(req, 500, {
         error: "stripe_account_create_failed",
         status_code: createRes.status,
@@ -222,6 +234,7 @@ serve(async (req) => {
 
   const linkRes = await stripePost("account_links", linkForm, stripeKey);
   if (!linkRes.ok) {
+    console.error("[stripe-connect] stripe_account_link_failed", linkRes.data ?? linkRes.text);
     return json(req, 500, {
       error: "stripe_account_link_failed",
       status_code: linkRes.status,

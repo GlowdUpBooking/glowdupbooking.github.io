@@ -106,40 +106,19 @@ export default function App() {
         setInterval(subRow?.interval ?? null);
         setCurrentPeriodEnd(subRow?.current_period_end ?? null);
 
-        // If not active, stop here (they'll see upgrade screen)
-        if (subRow?.status !== "active") {
-          setLoading(false);
-          return;
-        }
+        // Do not stop dashboard data loading for non-active plans.
+        // We still fetch profile/services and show upgrade state in UI.
 
         // 3) Profile
         const { data: prof, error: profErr } = await supabase
           .from("profiles")
-          .select(
-            `
-            id,
-            role,
-            onboarding_step,
-            business_name,
-            full_name,
-            business_type,
-            has_location,
-            avatar_url,
-            display_location,
-            travels_to_clients,
-            travel_radius_miles,
-            instagram_handle,
-            website_url
-          `
-          )
+          .select("*")
           .eq("id", u.id)
           .maybeSingle();
 
         if (profErr) {
           console.error("[App] profiles error:", profErr);
-          setErr("Couldn’t load your profile yet. Please refresh.");
-          setLoading(false);
-          return;
+          setErr("Couldn’t load all profile details yet. Showing what we can.");
         }
 
         // If missing, create a forgiving default then send to onboarding
@@ -153,18 +132,18 @@ export default function App() {
         }
 
         // Gate: pros must finish onboarding
-        if (prof.role === "professional" && prof.onboarding_step !== "complete") {
+        if (prof?.role === "professional" && prof?.onboarding_step !== "complete") {
           nav("/app/onboarding", { replace: true });
           return;
         }
 
         if (!mounted) return;
-        setProfile(prof);
+        setProfile(prof || {});
 
         // 4) Services
         const { data: svcs, error: svcErr } = await supabase
           .from("services")
-          .select("id, stylist_id, description, duration_minutes, price, image_url, deposit_amount, created_at")
+          .select("*")
           .eq("stylist_id", u.id)
           .order("created_at", { ascending: false });
 
@@ -297,18 +276,10 @@ export default function App() {
       ? `${profile.travel_radius_miles} miles`
       : "—";
 
-  const bookingLink = useMemo(() => {
-    if (!user?.id) return "";
-    return `${window.location.origin}/book/${user.id.slice(0, 8)}`;
-  }, [user?.id]);
+  const bookingLink = user?.id ? `${window.location.origin}/book/${user.id.slice(0, 8)}` : "";
+  const activationText = `Hey! You can book me here: ${bookingLink}. Pick your service + time and I will confirm right away.`;
 
-  const activationText = useMemo(
-    () =>
-      `Hey! You can book me here: ${bookingLink}. Pick your service + time and I will confirm right away.`,
-    [bookingLink]
-  );
-
-  const hasProfileStep = Boolean(profile?.business_name && profile?.business_type && profile?.display_location);
+  const hasProfileStep = Boolean(profile?.business_name && profile?.business_type);
   const hasServicesStep = services.length > 0;
   const hasPhotosStep = services.some((s) => s.thumb && !String(s.thumb).includes("/assets/cover.png"));
   const hasDepositStep = services.some((s) => Number(s.deposit_amount ?? 0) > 0);
@@ -542,7 +513,7 @@ export default function App() {
                 <div className={`g-checkItem ${hasProfileStep ? "g-checkItemDone" : ""}`}>
                   <div className="g-checkMeta">
                     <strong>{hasProfileStep ? "Done" : "Complete profile basics"}</strong>
-                    <span>Business name, type, and display location</span>
+                    <span>Business name and business type</span>
                   </div>
                   {!hasProfileStep ? (
                     <button className="g-pillBtn" onClick={() => nav("/app/onboarding/basics")}>Fix</button>

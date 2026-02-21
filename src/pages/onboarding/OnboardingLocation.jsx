@@ -203,7 +203,7 @@ export default function Location() {
   if (loading) return null;
 
   return (
-    <div className="page">
+    <div className="obPage page">
       <div className="bg" aria-hidden="true" />
       <main className="container">
         <section className="heroPanel">

@@ -84,7 +84,7 @@ export default function OnboardingSocial() {
   }
 
   return (
-    <div className="page">
+    <div className="obPage page">
       <div className="bg" aria-hidden="true" />
       <main className="container">
         <section className="heroPanel">

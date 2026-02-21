@@ -1,11 +1,11 @@
-.page {
+.obPage {
   position: relative;
   min-height: 100vh;
   background: #070707;
   color: #f3f3f3;
 }
 
-.bg {
+.obPage .bg {
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -16,7 +16,7 @@
   z-index: 0;
 }
 
-.container {
+.obPage .container {
   position: relative;
   z-index: 1;
   width: min(1120px, 94vw);
@@ -24,7 +24,7 @@
   padding: 28px 0 56px;
 }
 
-.heroPanel {
+.obPage .heroPanel {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.04);
@@ -32,32 +32,32 @@
   padding: 22px;
 }
 
-.heroPanel h1 {
+.obPage .heroPanel h1 {
   margin: 0;
   font-size: clamp(34px, 4.4vw, 54px);
   line-height: 1.03;
 }
 
-.heroPanel p {
+.obPage .heroPanel p {
   margin: 10px 0 0;
   font-size: 16px;
   line-height: 1.55;
   opacity: 0.86;
 }
 
-.heroMicro {
+.obPage .heroMicro {
   font-size: 14px;
   opacity: 0.78;
 }
 
-.heroBtns {
+.obPage .heroBtns {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
 
-.input {
+.obPage .input {
   width: 100%;
   height: 48px;
   border-radius: 12px;
@@ -69,12 +69,12 @@
   font-size: 15px;
 }
 
-.input:focus {
+.obPage .input:focus {
   border-color: rgba(255, 255, 255, 0.46);
   box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
 }
 
-.btn {
+.obPage .btn {
   border-radius: 999px;
   min-height: 40px;
   padding: 8px 14px;
@@ -84,37 +84,37 @@
   transition: transform 120ms ease, opacity 120ms ease, background-color 120ms ease, color 120ms ease;
 }
 
-.btn:hover {
+.obPage .btn:hover {
   transform: translateY(-1px);
 }
 
-.btn:disabled {
+.obPage .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
-.btn.gold {
+.obPage .btn.gold {
   border: 1px solid #fff;
   background: #fff;
   color: #070707;
 }
 
-.btn.gold:hover {
+.obPage .btn.gold:hover {
   background: #ededed;
 }
 
-.btn.ghost {
+.obPage .btn.ghost {
   border: 1px solid rgba(255, 255, 255, 0.35);
   background: rgba(255, 255, 255, 0.04);
   color: #fff;
 }
 
-.btn.ghost:hover {
+.obPage .btn.ghost:hover {
   background: rgba(255, 255, 255, 0.12);
 }
 
-.nav {
+.obPage .nav {
   position: sticky;
   top: 0;
   z-index: 5;
@@ -123,7 +123,7 @@
   backdrop-filter: blur(10px);
 }
 
-.navInner {
+.obPage .navInner {
   width: min(1120px, 94vw);
   margin: 0 auto;
   min-height: 72px;
@@ -132,7 +132,7 @@
   justify-content: space-between;
 }
 
-.brand {
+.obPage .brand {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -140,48 +140,48 @@
   text-decoration: none;
 }
 
-.logo {
+.obPage .logo {
   width: 38px;
   height: 38px;
   border-radius: 50%;
   object-fit: contain;
 }
 
-.brandText {
+.obPage .brandText {
   display: grid;
   gap: 2px;
 }
 
-.brandName {
+.obPage .brandName {
   font-size: 18px;
   font-weight: 800;
   line-height: 1;
 }
 
-.brandTag {
+.obPage .brandTag {
   font-size: 12px;
   opacity: 0.72;
   line-height: 1;
 }
 
-.navCta {
+.obPage .navCta {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 @media (max-width: 760px) {
-  .container {
+  .obPage .container {
     width: min(1120px, 96vw);
     padding-top: 18px;
   }
 
-  .heroPanel {
+  .obPage .heroPanel {
     padding: 16px;
     border-radius: 16px;
   }
 
-  .navInner {
+  .obPage .navInner {
     width: min(1120px, 96vw);
   }
 }
