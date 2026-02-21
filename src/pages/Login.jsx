@@ -33,7 +33,9 @@ export default function Login() {
     if (error) {
       const lower = String(error.message || "").toLowerCase();
       if (lower.includes("email not confirmed") || lower.includes("not confirmed")) {
-        setMsg("Email not verified yet. Check your inbox, then sign in. Need another email? Use Resend.");
+        setMsg("Email not verified yet. Redirecting to verification help…");
+        const target = `/verify-email?email=${encodeURIComponent(email.trim())}`;
+        window.setTimeout(() => nav(target), 450);
         return;
       }
       setMsg(error.message);
