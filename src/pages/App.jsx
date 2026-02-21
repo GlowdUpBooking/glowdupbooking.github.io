@@ -503,78 +503,80 @@ export default function App() {
             </Card>
 
             {/* Get Started */}
-            <Card className="g-startCard">
-              <div className="g-cardTitle">Publish Readiness</div>
-              <div className="u-muted" style={{ marginTop: 4, marginBottom: 10 }}>
-                {publishDone}/6 complete before your best booking conversion.
-              </div>
-
-              <div className="g-checklist">
-                <div className={`g-checkItem ${hasProfileStep ? "g-checkItemDone" : ""}`}>
-                  <div className="g-checkMeta">
-                    <strong>{hasProfileStep ? "Done" : "Complete profile basics"}</strong>
-                    <span>Business name and business type</span>
-                  </div>
-                  {!hasProfileStep ? (
-                    <button className="g-pillBtn" onClick={() => nav("/app/onboarding/basics")}>Fix</button>
-                  ) : <span>✓</span>}
+            {publishDone < 6 ? (
+              <Card className="g-startCard">
+                <div className="g-cardTitle">Publish Readiness</div>
+                <div className="u-muted" style={{ marginTop: 4, marginBottom: 10 }}>
+                  {publishDone}/6 complete before your best booking conversion.
                 </div>
 
-                <div className={`g-checkItem ${hasServicesStep ? "g-checkItemDone" : ""}`}>
-                  <div className="g-checkMeta">
-                    <strong>{hasServicesStep ? "Done" : "Add at least one service"}</strong>
-                    <span>Clients need bookable options</span>
+                <div className="g-checklist">
+                  <div className={`g-checkItem ${hasProfileStep ? "g-checkItemDone" : ""}`}>
+                    <div className="g-checkMeta">
+                      <strong>{hasProfileStep ? "Done" : "Complete profile basics"}</strong>
+                      <span>Business name and business type</span>
+                    </div>
+                    {!hasProfileStep ? (
+                      <button className="g-pillBtn" onClick={() => nav("/app/onboarding/basics")}>Fix</button>
+                    ) : <span>✓</span>}
                   </div>
-                  {!hasServicesStep ? (
-                    <button className="g-pillBtn" onClick={() => nav("/app/onboarding/services")}>Add</button>
-                  ) : <span>✓</span>}
-                </div>
 
-                <div className={`g-checkItem ${hasPhotosStep ? "g-checkItemDone" : ""}`}>
-                  <div className="g-checkMeta">
-                    <strong>{hasPhotosStep ? "Done" : "Upload service photos"}</strong>
-                    <span>Portfolio photos improve trust and conversion</span>
+                  <div className={`g-checkItem ${hasServicesStep ? "g-checkItemDone" : ""}`}>
+                    <div className="g-checkMeta">
+                      <strong>{hasServicesStep ? "Done" : "Add at least one service"}</strong>
+                      <span>Clients need bookable options</span>
+                    </div>
+                    {!hasServicesStep ? (
+                      <button className="g-pillBtn" onClick={() => nav("/app/onboarding/services")}>Add</button>
+                    ) : <span>✓</span>}
                   </div>
-                  {!hasPhotosStep ? (
-                    <button className="g-pillBtn" onClick={() => nav("/app/onboarding/services")}>Upload</button>
-                  ) : <span>✓</span>}
-                </div>
 
-                <div className={`g-checkItem ${hasDepositStep ? "g-checkItemDone" : ""}`}>
-                  <div className="g-checkMeta">
-                    <strong>{hasDepositStep ? "Done" : "Enable a deposit"}</strong>
-                    <span>Deposits reduce no-shows and lock intent</span>
+                  <div className={`g-checkItem ${hasPhotosStep ? "g-checkItemDone" : ""}`}>
+                    <div className="g-checkMeta">
+                      <strong>{hasPhotosStep ? "Done" : "Upload service photos"}</strong>
+                      <span>Portfolio photos improve trust and conversion</span>
+                    </div>
+                    {!hasPhotosStep ? (
+                      <button className="g-pillBtn" onClick={() => nav("/app/onboarding/services")}>Upload</button>
+                    ) : <span>✓</span>}
                   </div>
-                  {!hasDepositStep ? (
-                    <button className="g-pillBtn" onClick={() => nav("/app/onboarding/services")}>Enable</button>
-                  ) : <span>✓</span>}
-                </div>
 
-                <div className={`g-checkItem ${hasAvailabilityStep ? "g-checkItemDone" : ""}`}>
-                  <div className="g-checkMeta">
-                    <strong>{hasAvailabilityStep ? "Done" : "Set availability"} </strong>
-                    <span>Define where/when clients can book</span>
+                  <div className={`g-checkItem ${hasDepositStep ? "g-checkItemDone" : ""}`}>
+                    <div className="g-checkMeta">
+                      <strong>{hasDepositStep ? "Done" : "Enable a deposit"}</strong>
+                      <span>Deposits reduce no-shows and lock intent</span>
+                    </div>
+                    {!hasDepositStep ? (
+                      <button className="g-pillBtn" onClick={() => nav("/app/onboarding/services")}>Enable</button>
+                    ) : <span>✓</span>}
                   </div>
-                  {!hasAvailabilityStep ? (
-                    <button className="g-pillBtn" onClick={() => nav("/app/onboarding/location")}>Set</button>
-                  ) : <span>✓</span>}
-                </div>
 
-                <div className={`g-checkItem ${hasPayoutStep ? "g-checkItemDone" : ""}`}>
-                  <div className="g-checkMeta">
-                    <strong>{hasPayoutStep ? "Done" : "Connect Stripe payouts"}</strong>
-                    <span>
-                      {hasPayoutStep
-                        ? "Deposits and payouts are unlocked."
-                        : "Required for payout features and instant payout."}
-                    </span>
+                  <div className={`g-checkItem ${hasAvailabilityStep ? "g-checkItemDone" : ""}`}>
+                    <div className="g-checkMeta">
+                      <strong>{hasAvailabilityStep ? "Done" : "Set availability"} </strong>
+                      <span>Define where/when clients can book</span>
+                    </div>
+                    {!hasAvailabilityStep ? (
+                      <button className="g-pillBtn" onClick={() => nav("/app/onboarding/location")}>Set</button>
+                    ) : <span>✓</span>}
                   </div>
-                  {!hasPayoutStep ? (
-                    <button className="g-pillBtn" onClick={() => nav("/app/onboarding/payouts")}>Connect</button>
-                  ) : <span>✓</span>}
+
+                  <div className={`g-checkItem ${hasPayoutStep ? "g-checkItemDone" : ""}`}>
+                    <div className="g-checkMeta">
+                      <strong>{hasPayoutStep ? "Done" : "Connect Stripe payouts"}</strong>
+                      <span>
+                        {hasPayoutStep
+                          ? "Deposits and payouts are unlocked."
+                          : "Required for payout features and instant payout."}
+                      </span>
+                    </div>
+                    {!hasPayoutStep ? (
+                      <button className="g-pillBtn" onClick={() => nav("/app/onboarding/payouts")}>Connect</button>
+                    ) : <span>✓</span>}
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            ) : null}
 
             <Card className="g-nudgeCard">
               <div className="g-cardTitle">First Booking Activation</div>
