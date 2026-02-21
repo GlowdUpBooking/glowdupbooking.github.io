@@ -346,7 +346,7 @@ export default function OnboardingServices() {
     }
   }
 
-  async function markComplete() {
+  async function continueToPayouts() {
     if (!user) return;
     setSaving(true);
     setErr("");
@@ -359,18 +359,18 @@ export default function OnboardingServices() {
         return;
       }
 
-      // Ensure onboarding step complete
+      // Move into payout onboarding step before dashboard completion.
       const { error } = await supabase
         .from("profiles")
-        .update({ onboarding_step: "complete" })
+        .update({ onboarding_step: "payouts" })
         .eq("id", user.id);
 
       if (error) throw error;
 
-      nav("/app", { replace: true });
+      nav("/app/onboarding/payouts", { replace: true });
     } catch (e) {
-      console.error("[OnboardingServices] complete error:", e);
-      setErr("Couldn’t finish onboarding. Try again.");
+      console.error("[OnboardingServices] payouts step error:", e);
+      setErr("Couldn’t continue to payout setup. Try again.");
     } finally {
       setSaving(false);
     }
@@ -581,8 +581,8 @@ export default function OnboardingServices() {
                   <button className="btn ghost" onClick={() => nav("/app")}>
                     Skip for now
                   </button>
-                  <button className="btn gold" onClick={markComplete} disabled={saving}>
-                    Finish onboarding
+                  <button className="btn gold" onClick={continueToPayouts} disabled={saving}>
+                    Continue to payouts
                   </button>
                 </div>
               </div>

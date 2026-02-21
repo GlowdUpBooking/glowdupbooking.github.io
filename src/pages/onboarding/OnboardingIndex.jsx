@@ -9,6 +9,7 @@ const STEP_TO_ROUTE = {
   travel: "/app/onboarding/travel",
   social: "/app/onboarding/social",
   services: "/app/onboarding/services",
+  payouts: "/app/onboarding/payouts",
   complete: "/app",
 };
 

@@ -3,7 +3,8 @@ import { useMemo } from "react";
 const STEPS = [
   { id: "profile", label: "Profile" },
   { id: "services", label: "Services" },
-  { id: "availability", label: "Availability" },
+  { id: "payouts", label: "Payouts" },
+  { id: "availability", label: "Publish" },
 ];
 
 export default function OnboardingProgress({ active = "profile", autosaveStatus = "" }) {
@@ -23,8 +24,14 @@ export default function OnboardingProgress({ active = "profile", autosaveStatus 
         })}
       </div>
 
-      <div className="obProgressBar" role="progressbar" aria-valuemin={0} aria-valuemax={3} aria-valuenow={Math.max(1, activeIndex + 1)}>
-        <div className="obProgressFill" style={{ width: `${((Math.max(1, activeIndex + 1)) / 3) * 100}%` }} />
+      <div
+        className="obProgressBar"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={STEPS.length}
+        aria-valuenow={Math.max(1, activeIndex + 1)}
+      >
+        <div className="obProgressFill" style={{ width: `${((Math.max(1, activeIndex + 1)) / STEPS.length) * 100}%` }} />
       </div>
 
       <div className="obStatusRow">

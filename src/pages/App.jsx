@@ -4,6 +4,7 @@ import AppShell from "../components/layout/AppShell";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
+import { fetchStripeConnectStatus } from "../lib/stripeConnect";
 
 function money(n) {
   const num = Number(n ?? 0);
@@ -52,6 +53,14 @@ export default function App() {
     inquiries: 0,
   });
   const [nudgeMsg, setNudgeMsg] = useState("");
+  const [payoutStatus, setPayoutStatus] = useState({
+    connected: false,
+    account_id: null,
+    charges_enabled: false,
+    payouts_enabled: false,
+    details_submitted: false,
+    status: "not_started",
+  });
 
   const isActive = subStatus === "active";
 
@@ -75,6 +84,9 @@ export default function App() {
           nav("/login", { replace: true });
           return;
         }
+
+        const connect = await fetchStripeConnectStatus();
+        if (mounted) setPayoutStatus(connect);
 
         // 2) Subscription
         const { data: subRow, error: subErr } = await supabase
@@ -301,7 +313,15 @@ export default function App() {
   const hasPhotosStep = services.some((s) => s.thumb && !String(s.thumb).includes("/assets/cover.png"));
   const hasDepositStep = services.some((s) => Number(s.deposit_amount ?? 0) > 0);
   const hasAvailabilityStep = Boolean(profile?.has_location || profile?.travels_to_clients);
-  const publishDone = [hasProfileStep, hasServicesStep, hasPhotosStep, hasDepositStep, hasAvailabilityStep].filter(Boolean).length;
+  const hasPayoutStep = Boolean(payoutStatus.connected);
+  const publishDone = [
+    hasProfileStep,
+    hasServicesStep,
+    hasPhotosStep,
+    hasDepositStep,
+    hasAvailabilityStep,
+    hasPayoutStep,
+  ].filter(Boolean).length;
 
   return (
     <AppShell title="Dashboard" onSignOut={signOut}>
@@ -491,6 +511,19 @@ export default function App() {
                 + New Booking
               </Button>
 
+              <Button
+                variant="outline"
+                className="btnFull"
+                disabled={!hasPayoutStep}
+                onClick={() =>
+                  hasPayoutStep
+                    ? setNudgeMsg("Instant payout actions will appear here.")
+                    : nav("/app/onboarding/payouts")
+                }
+              >
+                {hasPayoutStep ? "Instant Payout" : "Instant Payout (Locked)"}
+              </Button>
+
               {err ? (
                 <div className="u-muted" style={{ marginTop: 12 }}>
                   {err}
@@ -502,7 +535,7 @@ export default function App() {
             <Card className="g-startCard">
               <div className="g-cardTitle">Publish Readiness</div>
               <div className="u-muted" style={{ marginTop: 4, marginBottom: 10 }}>
-                {publishDone}/5 complete before your best booking conversion.
+                {publishDone}/6 complete before your best booking conversion.
               </div>
 
               <div className="g-checklist">
@@ -555,6 +588,20 @@ export default function App() {
                     <button className="g-pillBtn" onClick={() => nav("/app/onboarding/location")}>Set</button>
                   ) : <span>✓</span>}
                 </div>
+
+                <div className={`g-checkItem ${hasPayoutStep ? "g-checkItemDone" : ""}`}>
+                  <div className="g-checkMeta">
+                    <strong>{hasPayoutStep ? "Done" : "Connect Stripe payouts"}</strong>
+                    <span>
+                      {hasPayoutStep
+                        ? "Deposits and payouts are unlocked."
+                        : "Required for payout features and instant payout."}
+                    </span>
+                  </div>
+                  {!hasPayoutStep ? (
+                    <button className="g-pillBtn" onClick={() => nav("/app/onboarding/payouts")}>Connect</button>
+                  ) : <span>✓</span>}
+                </div>
               </div>
             </Card>
 
@@ -586,6 +633,20 @@ export default function App() {
                   </div>
                   <button className="g-pillBtn" onClick={() => nav("/app/onboarding/services")}>
                     Open
+                  </button>
+                </div>
+                <div className="g-nudgeRow">
+                  <div>
+                    <strong>Payout features</strong>
+                    <span>
+                      {hasPayoutStep ? "Connected to Stripe. Payout tools unlocked." : "Connect Stripe to unlock payout actions."}
+                    </span>
+                  </div>
+                  <button
+                    className="g-pillBtn"
+                    onClick={() => nav("/app/onboarding/payouts")}
+                  >
+                    {hasPayoutStep ? "Manage" : "Connect"}
                   </button>
                 </div>
               </div>

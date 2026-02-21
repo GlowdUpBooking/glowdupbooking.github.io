@@ -11,6 +11,7 @@ const STEP_TO_PATH = {
   travel: "/app/onboarding/travel",
   social: "/app/onboarding/social",
   services: "/app/onboarding/services",
+  payouts: "/app/onboarding/payouts",
   complete: "/app",
 };
 
