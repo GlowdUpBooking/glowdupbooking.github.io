@@ -51,6 +51,7 @@ export default function App() {
     services: 0,
     inquiries: 0,
   });
+  const [nudgeMsg, setNudgeMsg] = useState("");
 
   const isActive = subStatus === "active";
 
@@ -110,6 +111,7 @@ export default function App() {
             business_name,
             full_name,
             business_type,
+            has_location,
             avatar_url,
             display_location,
             travels_to_clients,
@@ -150,7 +152,7 @@ export default function App() {
         // 4) Services
         const { data: svcs, error: svcErr } = await supabase
           .from("services")
-          .select("id, stylist_id, description, duration_minutes, price, image_url, created_at")
+          .select("id, stylist_id, description, duration_minutes, price, image_url, deposit_amount, created_at")
           .eq("stylist_id", u.id)
           .order("created_at", { ascending: false });
 
@@ -192,6 +194,7 @@ export default function App() {
               title: s.description || "Service",
               duration_minutes: s.duration_minutes ?? 0,
               price: s.price ?? 0,
+              deposit_amount: s.deposit_amount ?? null,
               thumb,
             };
           }) ?? [];
@@ -246,6 +249,15 @@ export default function App() {
     return d.toLocaleDateString();
   }
 
+  async function copyText(value, success) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setNudgeMsg(success);
+    } catch {
+      setNudgeMsg("Could not copy. Please copy manually.");
+    }
+  }
+
   // Loading screen
   if (loading) {
     return (
@@ -272,6 +284,24 @@ export default function App() {
     profile?.travels_to_clients && (profile?.travel_radius_miles ?? null) !== null
       ? `${profile.travel_radius_miles} miles`
       : "—";
+
+  const bookingLink = useMemo(() => {
+    if (!user?.id) return "";
+    return `${window.location.origin}/book/${user.id.slice(0, 8)}`;
+  }, [user?.id]);
+
+  const activationText = useMemo(
+    () =>
+      `Hey! You can book me here: ${bookingLink}. Pick your service + time and I will confirm right away.`,
+    [bookingLink]
+  );
+
+  const hasProfileStep = Boolean(profile?.business_name && profile?.business_type && profile?.display_location);
+  const hasServicesStep = services.length > 0;
+  const hasPhotosStep = services.some((s) => s.thumb && !String(s.thumb).includes("/assets/cover.png"));
+  const hasDepositStep = services.some((s) => Number(s.deposit_amount ?? 0) > 0);
+  const hasAvailabilityStep = Boolean(profile?.has_location || profile?.travels_to_clients);
+  const publishDone = [hasProfileStep, hasServicesStep, hasPhotosStep, hasDepositStep, hasAvailabilityStep].filter(Boolean).length;
 
   return (
     <AppShell title="Dashboard" onSignOut={signOut}>
@@ -470,39 +500,96 @@ export default function App() {
 
             {/* Get Started */}
             <Card className="g-startCard">
-              <div className="g-cardTitle">Get Started</div>
-
-              <div className="g-checkList">
-                <div className="g-checkRow">
-                  <div className="g-checkIcon">⬆</div>
-                  <div className="g-checkBody">
-                    <div className="g-checkTitle">Upload portfolio photos</div>
-                    <div className="g-checkDesc">Showcase your work by adding photos to your services.</div>
-                  </div>
-                </div>
-
-                <div className="g-checkRow">
-                  <div className="g-checkIcon">🗓</div>
-                  <div className="g-checkBody">
-                    <div className="g-checkTitle">Set your availability</div>
-                    <div className="g-checkDesc">Set your available hours so clients know when they can book you.</div>
-                  </div>
-                </div>
-
-                <div className="g-checkRow">
-                  <div className="g-checkIcon">☑</div>
-                  <div className="g-checkBody">
-                    <div className="g-checkTitle">Accept client bookings</div>
-                    <div className="g-checkDesc">Start accepting bookings and managing your schedule.</div>
-                  </div>
-                </div>
+              <div className="g-cardTitle">Publish Readiness</div>
+              <div className="u-muted" style={{ marginTop: 4, marginBottom: 10 }}>
+                {publishDone}/5 complete before your best booking conversion.
               </div>
 
-              <div className="g-guideRow">
-                <button className="g-linkBtn" onClick={() => nav("/app/onboarding")}>
-                  View Guide →
-                </button>
+              <div className="g-checklist">
+                <div className={`g-checkItem ${hasProfileStep ? "g-checkItemDone" : ""}`}>
+                  <div className="g-checkMeta">
+                    <strong>{hasProfileStep ? "Done" : "Complete profile basics"}</strong>
+                    <span>Business name, type, and display location</span>
+                  </div>
+                  {!hasProfileStep ? (
+                    <button className="g-pillBtn" onClick={() => nav("/app/onboarding/basics")}>Fix</button>
+                  ) : <span>✓</span>}
+                </div>
+
+                <div className={`g-checkItem ${hasServicesStep ? "g-checkItemDone" : ""}`}>
+                  <div className="g-checkMeta">
+                    <strong>{hasServicesStep ? "Done" : "Add at least one service"}</strong>
+                    <span>Clients need bookable options</span>
+                  </div>
+                  {!hasServicesStep ? (
+                    <button className="g-pillBtn" onClick={() => nav("/app/onboarding/services")}>Add</button>
+                  ) : <span>✓</span>}
+                </div>
+
+                <div className={`g-checkItem ${hasPhotosStep ? "g-checkItemDone" : ""}`}>
+                  <div className="g-checkMeta">
+                    <strong>{hasPhotosStep ? "Done" : "Upload service photos"}</strong>
+                    <span>Portfolio photos improve trust and conversion</span>
+                  </div>
+                  {!hasPhotosStep ? (
+                    <button className="g-pillBtn" onClick={() => nav("/app/onboarding/services")}>Upload</button>
+                  ) : <span>✓</span>}
+                </div>
+
+                <div className={`g-checkItem ${hasDepositStep ? "g-checkItemDone" : ""}`}>
+                  <div className="g-checkMeta">
+                    <strong>{hasDepositStep ? "Done" : "Enable a deposit"}</strong>
+                    <span>Deposits reduce no-shows and lock intent</span>
+                  </div>
+                  {!hasDepositStep ? (
+                    <button className="g-pillBtn" onClick={() => nav("/app/onboarding/services")}>Enable</button>
+                  ) : <span>✓</span>}
+                </div>
+
+                <div className={`g-checkItem ${hasAvailabilityStep ? "g-checkItemDone" : ""}`}>
+                  <div className="g-checkMeta">
+                    <strong>{hasAvailabilityStep ? "Done" : "Set availability"} </strong>
+                    <span>Define where/when clients can book</span>
+                  </div>
+                  {!hasAvailabilityStep ? (
+                    <button className="g-pillBtn" onClick={() => nav("/app/onboarding/location")}>Set</button>
+                  ) : <span>✓</span>}
+                </div>
               </div>
+            </Card>
+
+            <Card className="g-nudgeCard">
+              <div className="g-cardTitle">First Booking Activation</div>
+              <div className="g-nudgeList">
+                <div className="g-nudgeRow">
+                  <div>
+                    <strong>Copy booking link</strong>
+                    <span>{bookingLink || "Link unavailable"}</span>
+                  </div>
+                  <button className="g-pillBtn" onClick={() => copyText(bookingLink, "Booking link copied.")}>
+                    Copy
+                  </button>
+                </div>
+                <div className="g-nudgeRow">
+                  <div>
+                    <strong>Share SMS template</strong>
+                    <span>Quick client text with your booking link</span>
+                  </div>
+                  <button className="g-pillBtn" onClick={() => copyText(activationText, "SMS template copied.")}>
+                    Copy
+                  </button>
+                </div>
+                <div className="g-nudgeRow">
+                  <div>
+                    <strong>Deposit toggle</strong>
+                    <span>Set a deposit on your top services</span>
+                  </div>
+                  <button className="g-pillBtn" onClick={() => nav("/app/onboarding/services")}>
+                    Open
+                  </button>
+                </div>
+              </div>
+              {nudgeMsg ? <div className="g-smallMsg">{nudgeMsg}</div> : null}
             </Card>
           </div>
         </div>

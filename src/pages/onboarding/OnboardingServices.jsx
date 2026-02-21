@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import OnboardingProgress from "../../components/onboarding/OnboardingProgress";
 
 const BUCKET = "service-photos";
 
@@ -55,6 +56,7 @@ export default function OnboardingServices() {
   const [photos, setPhotos] = useState([]); // service_photos for selected service
   const [newFiles, setNewFiles] = useState([]); // File[]
   const [err, setErr] = useState("");
+  const [autosaveStatus, setAutosaveStatus] = useState("Ready");
 
   // ---------- Load ----------
   useEffect(() => {
@@ -168,6 +170,31 @@ export default function OnboardingServices() {
       mounted = false;
     };
   }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (loading) return;
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(
+          "gub_service_draft",
+          JSON.stringify({
+            selectedId,
+            description,
+            price,
+            durationMinutes,
+            category,
+            depositAmount,
+            coverUrl,
+            ts: Date.now(),
+          })
+        );
+        setAutosaveStatus("Draft saved");
+      } catch {
+        setAutosaveStatus("Draft save failed");
+      }
+    }, 500);
+    return () => clearTimeout(t);
+  }, [loading, selectedId, description, price, durationMinutes, category, depositAmount, coverUrl]);
 
   // ---------- Actions ----------
   function startNewService() {
@@ -394,6 +421,7 @@ export default function OnboardingServices() {
           <p className="heroMicro" style={{ marginTop: 6 }}>
             Add services clients can book. Upload photos for each service (these will display on your pro page).
           </p>
+          <OnboardingProgress active="services" autosaveStatus={autosaveStatus} />
 
           {err ? <div style={{ marginTop: 12, opacity: 0.95 }}>{err}</div> : null}
 

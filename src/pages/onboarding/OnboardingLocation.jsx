@@ -1,7 +1,8 @@
 // src/pages/onboarding/Location.jsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import OnboardingProgress from "../../components/onboarding/OnboardingProgress";
 
 export default function Location() {
   const nav = useNavigate();
@@ -9,6 +10,8 @@ export default function Location() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
+  const [autosaveStatus, setAutosaveStatus] = useState("Loading...");
+  const hydrated = useRef(false);
 
   const [userId, setUserId] = useState(null);
 
@@ -62,6 +65,8 @@ export default function Location() {
         setCountry(profile.country ?? "US");
       }
 
+      hydrated.current = true;
+      setAutosaveStatus("Ready");
       setLoading(false);
     })();
 
@@ -160,6 +165,41 @@ export default function Location() {
     }
   }
 
+  useEffect(() => {
+    if (!hydrated.current || !userId) return;
+    const t = setTimeout(async () => {
+      setAutosaveStatus("Saving...");
+      const travelsToClients = hasLocation ? !!mobile : mobileChoice === true;
+      const payload = {
+        id: userId,
+        has_location: hasLocation,
+        travels_to_clients: travelsToClients,
+        address_line1: hasLocation ? address1.trim() : null,
+        address_line2: hasLocation ? (address2.trim() || null) : null,
+        city: hasLocation ? city.trim() : null,
+        state: hasLocation ? stateProv.trim() : null,
+        postal_code: hasLocation ? postal.trim() : null,
+        country: hasLocation ? (country.trim() || "US") : "US",
+        display_location: buildDisplayLocation(),
+      };
+      const { error } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
+      setAutosaveStatus(error ? "Autosave failed" : "Saved");
+    }, 600);
+
+    return () => clearTimeout(t);
+  }, [
+    userId,
+    hasLocation,
+    mobile,
+    mobileChoice,
+    address1,
+    address2,
+    city,
+    stateProv,
+    postal,
+    country,
+  ]);
+
   if (loading) return null;
 
   return (
@@ -171,6 +211,7 @@ export default function Location() {
           <p style={{ maxWidth: 720 }}>
             Do you have a business location clients can visit? If not, tell us if you’re mobile.
           </p>
+          <OnboardingProgress active="profile" autosaveStatus={autosaveStatus} />
 
           {/* Step 1: Has location */}
           <label style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 18 }}>

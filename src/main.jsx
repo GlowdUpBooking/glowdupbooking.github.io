@@ -8,6 +8,7 @@ import "./index.css";
 // IMPORTANT: app.css contains global .card styles that break the home pricing grid
 // import "./styles/app.css";
 import "./styles/landing.css";
+import "./styles/onboarding-dashboard.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

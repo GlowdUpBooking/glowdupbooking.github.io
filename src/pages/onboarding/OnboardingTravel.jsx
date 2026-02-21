@@ -1,7 +1,8 @@
 // src/pages/onboarding/Travel.jsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import OnboardingProgress from "../../components/onboarding/OnboardingProgress";
 
 export default function Travel() {
   const nav = useNavigate();
@@ -9,6 +10,8 @@ export default function Travel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
+  const [autosaveStatus, setAutosaveStatus] = useState("Loading...");
+  const hydrated = useRef(false);
 
   const [userId, setUserId] = useState(null);
 
@@ -46,6 +49,8 @@ export default function Travel() {
         setTravelRadiusMiles(profile.travel_radius_miles != null ? String(profile.travel_radius_miles) : "");
       }
 
+      hydrated.current = true;
+      setAutosaveStatus("Ready");
       setLoading(false);
     })();
 
@@ -99,6 +104,22 @@ export default function Travel() {
     }
   }
 
+  useEffect(() => {
+    if (!hydrated.current || !userId) return;
+    const t = setTimeout(async () => {
+      setAutosaveStatus("Saving...");
+      const payload = {
+        id: userId,
+        travels_to_clients: travels,
+        travel_fee: travels ? feeNum : 0,
+        travel_radius_miles: travels ? Math.trunc(radiusNum ?? 0) : 0,
+      };
+      const { error } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
+      setAutosaveStatus(error ? "Autosave failed" : "Saved");
+    }, 600);
+    return () => clearTimeout(t);
+  }, [userId, travels, feeNum, radiusNum]);
+
   if (loading) return null;
 
   return (
@@ -110,6 +131,7 @@ export default function Travel() {
           <p style={{ maxWidth: 720 }}>
             Set your travel details so clients know what to expect.
           </p>
+          <OnboardingProgress active="profile" autosaveStatus={autosaveStatus} />
 
           <label style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 18 }}>
             <input

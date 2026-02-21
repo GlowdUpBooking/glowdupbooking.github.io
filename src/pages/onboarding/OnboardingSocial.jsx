@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import OnboardingProgress from "../../components/onboarding/OnboardingProgress";
 
 export default function OnboardingSocial() {
   const nav = useNavigate();
   const [saving, setSaving] = useState(false);
+  const [autosaveStatus, setAutosaveStatus] = useState("Loading...");
+  const [userId, setUserId] = useState(null);
+  const hydrated = useRef(false);
 
   const [instagram, setInstagram] = useState("");
   const [tiktok, setTiktok] = useState("");
@@ -17,6 +21,7 @@ export default function OnboardingSocial() {
       const { data } = await supabase.auth.getUser();
       const user = data?.user;
       if (!user) return;
+      setUserId(user.id);
 
       const { data: p } = await supabase
         .from("profiles")
@@ -29,8 +34,32 @@ export default function OnboardingSocial() {
       setFacebookUrl(p?.facebook_url ?? "");
       setYoutubeUrl(p?.youtube_url ?? "");
       setWebsiteUrl(p?.website_url ?? "");
+      hydrated.current = true;
+      setAutosaveStatus("Ready");
     })();
   }, []);
+
+  useEffect(() => {
+    if (!hydrated.current || !userId) return;
+    const t = setTimeout(async () => {
+      setAutosaveStatus("Saving...");
+      const { error } = await supabase
+        .from("profiles")
+        .upsert(
+          {
+            id: userId,
+            instagram_handle: instagram || null,
+            tiktok_handle: tiktok || null,
+            facebook_url: facebookUrl || null,
+            youtube_url: youtubeUrl || null,
+            website_url: websiteUrl || null,
+          },
+          { onConflict: "id" }
+        );
+      setAutosaveStatus(error ? "Autosave failed" : "Saved");
+    }, 500);
+    return () => clearTimeout(t);
+  }, [userId, instagram, tiktok, facebookUrl, youtubeUrl, websiteUrl]);
 
   async function next() {
     setSaving(true);
@@ -61,6 +90,7 @@ export default function OnboardingSocial() {
         <section className="heroPanel">
           <h1>Social</h1>
           <p className="heroMicro">Add your social handles/links (optional).</p>
+          <OnboardingProgress active="profile" autosaveStatus={autosaveStatus} />
 
           <div style={{ display: "grid", gap: 12, marginTop: 16, maxWidth: 520 }}>
             <input

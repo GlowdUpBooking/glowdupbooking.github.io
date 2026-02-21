@@ -1,1 +1,1 @@
-export { default } from "./onboarding/OnboardingIndex";
+export { default } from "../routes/OnboardingRoutes";
