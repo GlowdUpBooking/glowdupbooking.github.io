@@ -249,6 +249,103 @@
   border-radius: 999px;
 }
 
+.sv-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.sv-panel {
+  border-radius: 16px;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sv-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sv-list {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.sv-item {
+  text-align: left;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f3f3f3;
+  cursor: pointer;
+}
+
+.sv-itemActive {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sv-formGrid {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.sv-twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.sv-label {
+  display: grid;
+  gap: 6px;
+}
+
+.sv-input {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.35);
+  color: #f3f3f3;
+  padding: 10px 12px;
+}
+
+.sv-photoGrid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.sv-photoCard {
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sv-photoImg {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+.sv-photoActions {
+  padding: 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 @media (max-width: 1100px) {
   .shell {
     grid-template-columns: 1fr;
@@ -262,5 +359,14 @@
 @media (max-width: 860px) {
   .g-grid {
     grid-template-columns: 1fr;
+  }
+
+  .sv-grid,
+  .sv-twoCol {
+    grid-template-columns: 1fr;
+  }
+
+  .sv-photoGrid {
+    grid-template-columns: 1fr 1fr;
   }
 }

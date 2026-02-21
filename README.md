@@ -29,3 +29,10 @@ Required env vars for this function:
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `ALLOWED_ORIGINS` (recommended)
+
+## Availability Cloud Sync (Supabase)
+To sync pro availability across devices, run this SQL once in Supabase SQL Editor:
+
+- `supabase/sql/2026-02-21_pro_availability.sql`
+
+After this table is created, `/app/settings` will save schedule data to cloud (`pro_availability`) instead of local-only fallback.

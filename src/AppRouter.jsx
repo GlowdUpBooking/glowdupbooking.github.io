@@ -8,6 +8,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import App from "./pages/App";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import Services from "./pages/Services";
 
 // Pricing / Paywall
 import Pricing from "./pages/Pricing";
@@ -97,6 +98,17 @@ export default function AppRouter() {
             <RequireAuth>
               <RequireOnboarding>
                 <Settings />
+              </RequireOnboarding>
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/app/services"
+          element={
+            <RequireAuth>
+              <RequireOnboarding>
+                <Services />
               </RequireOnboarding>
             </RequireAuth>
           }

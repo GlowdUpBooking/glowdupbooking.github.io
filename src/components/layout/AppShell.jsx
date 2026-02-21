@@ -26,7 +26,7 @@ export default function AppShell({ title, onSignOut, children }) {
             Calendar
           </div>
 
-          <NavLink to="/app/onboarding/services" className={navClass}>
+          <NavLink to="/app/services" className={navClass}>
             <div className="navIcon">🏷</div>
             Services
           </NavLink>

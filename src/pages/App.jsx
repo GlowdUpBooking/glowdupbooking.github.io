@@ -41,6 +41,25 @@ function normalizePlanKey(raw) {
   return null;
 }
 
+function extractAvailabilityRaw(profile) {
+  if (!profile || typeof profile !== "object") return null;
+  const keys = ["availability_schedule", "weekly_availability", "availability", "availability_json"];
+  for (const k of keys) {
+    if (profile[k]) return profile[k];
+  }
+  return null;
+}
+
+function countEnabledAvailabilityDays(raw) {
+  if (!raw || typeof raw !== "object") return 0;
+  const source = raw.week && typeof raw.week === "object" ? raw.week : raw;
+  let count = 0;
+  for (const key of ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]) {
+    if (source[key] && source[key].enabled) count += 1;
+  }
+  return count;
+}
+
 export default function App() {
   const nav = useNavigate();
 
@@ -57,6 +76,7 @@ export default function App() {
   // Profile + services
   const [profile, setProfile] = useState(null);
   const [services, setServices] = useState([]);
+  const [availabilityDays, setAvailabilityDays] = useState(0);
   const [stats, setStats] = useState({
     bookings: 0,
     nextAppointment: "n/a",
@@ -151,7 +171,21 @@ export default function App() {
         if (!mounted) return;
         setProfile(prof || {});
 
-        // 4) Services
+        // 4) Availability (cloud table; optional while migrating)
+        const { data: availabilityRow, error: availabilityErr } = await supabase
+          .from("pro_availability")
+          .select("week")
+          .eq("user_id", u.id)
+          .maybeSingle();
+
+        if (availabilityErr) {
+          console.warn("[App] pro_availability read warning:", availabilityErr);
+          setAvailabilityDays(0);
+        } else {
+          setAvailabilityDays(countEnabledAvailabilityDays(availabilityRow?.week));
+        }
+
+        // 5) Services
         const { data: svcs, error: svcErr } = await supabase
           .from("services")
           .select("*")
@@ -167,7 +201,7 @@ export default function App() {
 
         const serviceIds = (svcs || []).map((s) => s.id);
 
-        // 5) Service Photos (pick first photo per service by sort_order)
+        // 6) Service Photos (pick first photo per service by sort_order)
         let photosByService = {};
         if (serviceIds.length) {
           const { data: photos, error: photoErr } = await supabase
@@ -204,7 +238,7 @@ export default function App() {
         if (!mounted) return;
         setServices(mappedServices);
 
-        // 6) Stats (simple for now)
+        // 7) Stats (simple for now)
         setStats((prev) => ({
           ...prev,
           services: mappedServices.length,
@@ -314,7 +348,10 @@ export default function App() {
   const hasServicesStep = services.length > 0;
   const hasPhotosStep = services.some((s) => s.thumb && !String(s.thumb).includes("/assets/cover.png"));
   const hasDepositStep = services.some((s) => Number(s.deposit_amount ?? 0) > 0);
-  const hasAvailabilityStep = Boolean(profile?.has_location || profile?.travels_to_clients);
+  const profileEnabledDays = countEnabledAvailabilityDays(extractAvailabilityRaw(profile));
+  const hasAvailabilityStep = Boolean(
+    profile?.has_location || profile?.travels_to_clients || profileEnabledDays > 0 || availabilityDays > 0
+  );
   const hasPayoutStep = Boolean(payoutStatus.connected);
   const publishDone = [
     hasProfileStep,
@@ -408,7 +445,7 @@ export default function App() {
                     Edit Profile
                   </Button>
 
-                  <Button variant="outline" className="g-ctaWide" onClick={() => nav("/app/onboarding/services")}>
+                  <Button variant="outline" className="g-ctaWide" onClick={() => nav("/app/services")}>
                     Manage Services
                   </Button>
                 </div>
@@ -417,12 +454,12 @@ export default function App() {
 
             {/* Services List */}
             <Card className="g-servicesCard">
-              <div className="g-cardHeader">
-                <div className="g-cardTitle">Your Services</div>
-                <Button variant="outline" onClick={() => nav("/app/onboarding/services")}>
-                  + Add Service
-                </Button>
-              </div>
+                <div className="g-cardHeader">
+                  <div className="g-cardTitle">Your Services</div>
+                <Button variant="outline" onClick={() => nav("/app/services")}>
+                    + Add Service
+                  </Button>
+                </div>
 
               {services.length ? (
                 <div className="g-serviceList">
@@ -452,7 +489,7 @@ export default function App() {
                         <Button
                           variant="outline"
                           className="g-editPill"
-                          onClick={() => nav(`/app/services/${s.id}`)}
+                          onClick={() => nav("/app/services")}
                         >
                           Edit
                         </Button>
@@ -556,7 +593,7 @@ export default function App() {
                       <span>Clients need bookable options</span>
                     </div>
                     {!hasServicesStep ? (
-                      <button className="g-pillBtn" onClick={() => nav("/app/onboarding/services")}>Add</button>
+                      <button className="g-pillBtn" onClick={() => nav("/app/services")}>Add</button>
                     ) : <span>✓</span>}
                   </div>
 
@@ -566,7 +603,7 @@ export default function App() {
                       <span>Portfolio photos improve trust and conversion</span>
                     </div>
                     {!hasPhotosStep ? (
-                      <button className="g-pillBtn" onClick={() => nav("/app/onboarding/services")}>Upload</button>
+                      <button className="g-pillBtn" onClick={() => nav("/app/services")}>Upload</button>
                     ) : <span>✓</span>}
                   </div>
 
@@ -576,7 +613,7 @@ export default function App() {
                       <span>Deposits reduce no-shows and lock intent</span>
                     </div>
                     {!hasDepositStep ? (
-                      <button className="g-pillBtn" onClick={() => nav("/app/onboarding/services")}>Enable</button>
+                      <button className="g-pillBtn" onClick={() => nav("/app/services")}>Enable</button>
                     ) : <span>✓</span>}
                   </div>
 
@@ -633,7 +670,7 @@ export default function App() {
                     <strong>Deposit toggle</strong>
                     <span>Set a deposit on your top services</span>
                   </div>
-                  <button className="g-pillBtn" onClick={() => nav("/app/onboarding/services")}>
+                  <button className="g-pillBtn" onClick={() => nav("/app/services")}>
                     Open
                   </button>
                 </div>
