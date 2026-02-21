@@ -6,6 +6,7 @@ import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import { supabase } from "../lib/supabase";
 import { trackEvent } from "../lib/analytics";
+import { useAuth } from "../components/auth/AuthProvider";
 import "../styles/signup.css";
 
 const CATEGORIES = [
@@ -45,9 +46,10 @@ function planLabel(p) {
   return null;
 }
 
-export default function Signup({ session }) {
+export default function Signup() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { session: liveSession } = useAuth();
 
   const qs = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const pickedPlan = planLabel(qs.get("plan"));
@@ -164,7 +166,7 @@ export default function Signup({ session }) {
     try {
       setLoading(true);
 
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
@@ -224,7 +226,15 @@ export default function Signup({ session }) {
         page: "signup",
         selected_plan: (qs.get("plan") || "free").toLowerCase(),
       });
-      // Default flow: after account creation -> onboarding (most apps do this)
+
+      // If email confirmation is required, Supabase returns no session.
+      if (!data?.session) {
+        trackEvent("signup_pending_verification", { page: "signup" });
+        navigate(`/verify-email?email=${encodeURIComponent(email.trim())}`, { replace: true });
+        return;
+      }
+
+      // Session exists: continue immediately.
       navigate("/app/onboarding", { replace: true });
     } catch (err) {
       trackEvent("signup_error", { page: "signup", type: "exception", message: err?.message || "unknown_error" });
@@ -238,7 +248,7 @@ export default function Signup({ session }) {
   }
 
   // Already logged in
-  if (session) {
+  if (liveSession) {
     return (
       <div className="authPage">
         <header className="authTopNav">

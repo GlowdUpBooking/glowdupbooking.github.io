@@ -1,18 +1,25 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { useAuth } from "../components/auth/AuthProvider";
 import "../styles/signup.css";
 
-export default function Login({ session }) {
+export default function Login() {
   const nav = useNavigate();
+  const location = useLocation();
+  const { session } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const nextPath = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get("next") || "/app";
+  }, [location.search]);
 
   useEffect(() => {
-    if (session?.access_token) nav("/app", { replace: true });
-  }, [session?.access_token, nav]);
+    if (session?.access_token) nav(nextPath, { replace: true });
+  }, [session?.access_token, nav, nextPath]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -24,12 +31,16 @@ export default function Login({ session }) {
     setBusy(false);
 
     if (error) {
+      const lower = String(error.message || "").toLowerCase();
+      if (lower.includes("email not confirmed") || lower.includes("not confirmed")) {
+        setMsg("Email not verified yet. Check your inbox, then sign in. Need another email? Use Resend.");
+        return;
+      }
       setMsg(error.message);
       return;
     }
 
-    // Let AppRouter's onAuthStateChange set session, but this is fine too:
-    nav("/app", { replace: true });
+    nav(nextPath, { replace: true });
   }
 
   return (
@@ -121,6 +132,8 @@ export default function Login({ session }) {
             <div className="authFooterLinks">
               <span>Need an account?</span>
               <Link to="/signup">Create account</Link>
+              <span className="authDot">·</span>
+              <Link to={`/verify-email?email=${encodeURIComponent(email)}`}>Resend email</Link>
               <span className="authDot">·</span>
               <Link to="/">Back home</Link>
             </div>
