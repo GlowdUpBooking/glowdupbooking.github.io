@@ -2,15 +2,19 @@
 import Stripe from "https://esm.sh/stripe@14.25.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY")!;
-const STRIPE_WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET")!;
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY");
+const STRIPE_WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" });
-const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false },
-});
+const stripe = STRIPE_SECRET_KEY
+  ? new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" })
+  : null;
+const admin = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false },
+    })
+  : null;
 
 function json(status: number, body: Record<string, unknown>) {
   return new Response(JSON.stringify(body), {
@@ -52,6 +56,37 @@ function readMeta(obj: any) {
   return { userId, tier, plan, interval };
 }
 
+function periodEndIso(unixSeconds: number | null | undefined) {
+  if (!unixSeconds || Number.isNaN(unixSeconds)) return null;
+  return new Date(unixSeconds * 1000).toISOString();
+}
+
+async function findUserIdByStripeRefs(params: {
+  stripeSubscriptionId?: string | null;
+  stripeCustomerId?: string | null;
+}) {
+  if (!admin) return null;
+  const filters: string[] = [];
+
+  if (params.stripeSubscriptionId) {
+    filters.push(`stripe_subscription_id.eq.${params.stripeSubscriptionId}`);
+  }
+  if (params.stripeCustomerId) {
+    filters.push(`stripe_customer_id.eq.${params.stripeCustomerId}`);
+  }
+  if (!filters.length) return null;
+
+  const { data, error } = await admin
+    .from("pro_subscriptions")
+    .select("user_id, updated_at")
+    .or(filters.join(","))
+    .order("updated_at", { ascending: false })
+    .limit(1);
+
+  if (error) throw error;
+  return data?.[0]?.user_id ?? null;
+}
+
 async function upsertProSubscription(params: {
   userId: string;
   stripeCustomerId: string | null;
@@ -77,8 +112,74 @@ async function upsertProSubscription(params: {
   if (error) throw error;
 }
 
+async function claimFounderAnnual(userId: string) {
+  if (!admin) return;
+  const { data } = await admin.rpc("claim_founder_annual", { p_user_id: userId });
+  if (data?.claimed === true) {
+    await admin
+      .from("pro_subscriptions")
+      .update({
+        is_founder_annual: true,
+        founder_claimed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId);
+  }
+}
+
+async function handleSubscriptionLifecycle(sub: Stripe.Subscription, options?: { deleted?: boolean }) {
+  const deleted = options?.deleted === true;
+  const meta = readMeta(sub);
+  const stripeCustomerId = typeof sub.customer === "string" ? sub.customer : null;
+  const userId = meta.userId ??
+    await findUserIdByStripeRefs({
+      stripeSubscriptionId: sub.id,
+      stripeCustomerId,
+    });
+
+  if (!userId) return { ok: true, note: "missing_user" } as const;
+
+  const status = deleted ? "canceled" : sub.status;
+  const plan = meta.plan ?? "starter";
+  const interval = meta.interval ?? "monthly";
+
+  await upsertProSubscription({
+    userId,
+    stripeCustomerId,
+    stripeSubscriptionId: sub.id,
+    plan,
+    interval,
+    status,
+    currentPeriodEnd: deleted ? null : periodEndIso(sub.current_period_end),
+  });
+
+  if (deleted) {
+    await admin!
+      .from("pro_subscriptions")
+      .update({
+        is_founder_annual: false,
+        founder_claimed_at: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId);
+    return { received: true } as const;
+  }
+
+  if (
+    (meta.tier === "founder_annual" || plan === "founder") &&
+    (status === "active" || status === "trialing")
+  ) {
+    await claimFounderAnnual(userId);
+  }
+
+  return { received: true } as const;
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json(405, { error: "method_not_allowed" });
+  if (!stripe || !admin || !STRIPE_WEBHOOK_SECRET) {
+    return json(500, { error: "misconfigured_webhook_env" });
+  }
 
   const sig = req.headers.get("stripe-signature");
   if (!sig) return json(400, { error: "missing_signature" });
@@ -99,7 +200,11 @@ Deno.serve(async (req) => {
       const meta = readMeta(session);
       const userId =
         meta.userId ??
-        (typeof session.client_reference_id === "string" ? session.client_reference_id : null);
+        (typeof session.client_reference_id === "string" ? session.client_reference_id : null) ??
+        await findUserIdByStripeRefs({
+          stripeSubscriptionId: typeof session.subscription === "string" ? session.subscription : null,
+          stripeCustomerId: typeof session.customer === "string" ? session.customer : null,
+        });
 
       if (!userId) return json(200, { ok: true, note: "missing_user" });
 
@@ -116,7 +221,7 @@ Deno.serve(async (req) => {
       if (stripeSubscriptionId) {
         const sub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
         status = sub.status;
-        currentPeriodEndIso = new Date(sub.current_period_end * 1000).toISOString();
+        currentPeriodEndIso = periodEndIso(sub.current_period_end);
 
         const subMeta = readMeta(sub);
         tier = tier ?? subMeta.tier;
@@ -135,71 +240,29 @@ Deno.serve(async (req) => {
       });
 
       // Founder claim only when founder_annual
-      if (tier === "founder_annual") {
-        const { data } = await admin.rpc("claim_founder_annual", { p_user_id: userId });
-        if (data?.claimed === true) {
-          await admin
-            .from("pro_subscriptions")
-            .update({
-              is_founder_annual: true,
-              founder_claimed_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .eq("user_id", userId);
-        }
+      if (
+        (tier === "founder_annual" || plan === "founder") &&
+        (status === "active" || status === "trialing")
+      ) {
+        await claimFounderAnnual(userId);
       }
 
       return json(200, { received: true });
     }
 
+    if (event.type === "customer.subscription.created") {
+      const sub = event.data.object as Stripe.Subscription;
+      return json(200, await handleSubscriptionLifecycle(sub));
+    }
+
     if (event.type === "customer.subscription.updated") {
       const sub = event.data.object as Stripe.Subscription;
-      const meta = readMeta(sub);
-
-      if (!meta.userId) return json(200, { ok: true, note: "missing_user" });
-
-      const currentPeriodEndIso = new Date(sub.current_period_end * 1000).toISOString();
-
-      await upsertProSubscription({
-        userId: meta.userId,
-        stripeCustomerId: typeof sub.customer === "string" ? sub.customer : null,
-        stripeSubscriptionId: sub.id,
-        plan: meta.plan ?? "starter",
-        interval: meta.interval ?? "monthly",
-        status: sub.status,
-        currentPeriodEnd: currentPeriodEndIso,
-      });
-
-      return json(200, { received: true });
+      return json(200, await handleSubscriptionLifecycle(sub));
     }
 
     if (event.type === "customer.subscription.deleted") {
       const sub = event.data.object as Stripe.Subscription;
-      const meta = readMeta(sub);
-
-      if (!meta.userId) return json(200, { ok: true, note: "missing_user" });
-
-      await upsertProSubscription({
-        userId: meta.userId,
-        stripeCustomerId: typeof sub.customer === "string" ? sub.customer : null,
-        stripeSubscriptionId: sub.id,
-        plan: meta.plan ?? "starter",
-        interval: meta.interval ?? "monthly",
-        status: "canceled",
-        currentPeriodEnd: null,
-      });
-
-      // if founder cancels, remove founder flags
-      await admin
-        .from("pro_subscriptions")
-        .update({
-          is_founder_annual: false,
-          founder_claimed_at: null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", meta.userId);
-
-      return json(200, { received: true });
+      return json(200, await handleSubscriptionLifecycle(sub, { deleted: true }));
     }
 
     return json(200, { received: true, ignored: event.type });

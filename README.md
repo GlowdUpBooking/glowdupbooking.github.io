@@ -30,6 +30,41 @@ Required env vars for this function:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `ALLOWED_ORIGINS` (recommended)
 
+## Stripe Subscription Sync (Webhook)
+To keep plan status in sync automatically (upgrade, cancel, renew), deploy and configure:
+
+- Supabase Edge Function: `stripe-webhook` at `supabase/functions/stripe-webhook/index.ts`
+- Stripe events consumed:
+  - `checkout.session.completed`
+  - `customer.subscription.created`
+  - `customer.subscription.updated`
+  - `customer.subscription.deleted`
+
+### 1) Deploy function
+```bash
+supabase login
+supabase link --project-ref <YOUR_PROJECT_REF>
+supabase functions deploy stripe-webhook --no-verify-jwt
+```
+
+### 2) Set webhook secret in Supabase
+Create endpoint in Stripe Dashboard:
+- Developers -> Webhooks -> Add endpoint
+- URL: `https://<YOUR_PROJECT_REF>.supabase.co/functions/v1/stripe-webhook`
+- Select the 4 events listed above
+- Copy the endpoint signing secret (`whsec_...`)
+
+Then set secret in Supabase:
+```bash
+supabase secrets set STRIPE_WEBHOOK_SECRET="whsec_xxx"
+```
+
+### 3) Verify end-to-end
+1. Start from a Free account in app.
+2. Upgrade from `/pricing`.
+3. Complete checkout.
+4. Confirm `pro_subscriptions` row updates (`status`, `plan`, `interval`, `stripe_customer_id`, `stripe_subscription_id`).
+
 ## Availability Cloud Sync (Supabase)
 To sync pro availability across devices, run this SQL once in Supabase SQL Editor:
 
