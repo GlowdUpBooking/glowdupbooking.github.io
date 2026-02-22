@@ -78,6 +78,64 @@ function stripeHeaders(stripeKey: string) {
   };
 }
 
+function isNoSuchAccount(stripeError: any) {
+  const msg = String(stripeError?.message ?? "").toLowerCase();
+  const code = String(stripeError?.code ?? "").toLowerCase();
+  const param = String(stripeError?.param ?? "").toLowerCase();
+  return (
+    msg.includes("no such account") ||
+    (code === "resource_missing" && (param === "account" || msg.includes("account")))
+  );
+}
+
+function notStartedStatus() {
+  return {
+    connected: false,
+    account_id: null,
+    charges_enabled: false,
+    payouts_enabled: false,
+    details_submitted: false,
+    status: "not_started",
+  };
+}
+
+async function createExpressConnectAccount(params: {
+  stripeKey: string;
+  userId: string;
+  email: string | null | undefined;
+}) {
+  const createForm = new URLSearchParams();
+  createForm.set("type", "express");
+  createForm.set("country", "US");
+  if (params.email) createForm.set("email", params.email);
+  createForm.set("capabilities[card_payments][requested]", "true");
+  createForm.set("capabilities[transfers][requested]", "true");
+  createForm.set("metadata[user_id]", params.userId);
+
+  const createRes = await stripePost("accounts", createForm, params.stripeKey);
+  if (!createRes.ok) return { ok: false as const, createRes };
+  const accountId = createRes.data?.id ?? null;
+  if (!accountId) return { ok: false as const, createRes };
+  return { ok: true as const, accountId };
+}
+
+async function createAccountLink(params: {
+  stripeKey: string;
+  accountId: string;
+  siteUrl: string;
+}) {
+  const refreshUrl = `${params.siteUrl}/app/onboarding/payouts?stripe=refresh`;
+  const returnUrl = `${params.siteUrl}/app/onboarding/payouts?stripe=return`;
+
+  const linkForm = new URLSearchParams();
+  linkForm.set("account", params.accountId);
+  linkForm.set("type", "account_onboarding");
+  linkForm.set("refresh_url", refreshUrl);
+  linkForm.set("return_url", returnUrl);
+
+  return stripePost("account_links", linkForm, params.stripeKey);
+}
+
 async function stripePost(path: string, params: URLSearchParams, stripeKey: string) {
   const res = await fetch(`https://api.stripe.com/v1/${path}`, {
     method: "POST",
@@ -172,23 +230,28 @@ serve(async (req) => {
 
   if (action === "status") {
     if (!accountId) {
-      return json(req, 200, {
-        connected: false,
-        account_id: null,
-        charges_enabled: false,
-        payouts_enabled: false,
-        details_submitted: false,
-        status: "not_started",
-      });
+      return json(req, 200, notStartedStatus());
     }
 
     const accountRes = await stripeGet(`accounts/${accountId}`, stripeKey);
     if (!accountRes.ok) {
+      const stripeError = accountRes.data?.error;
+      if (isNoSuchAccount(stripeError)) {
+        await admin.auth.admin.updateUserById(userId, {
+          user_metadata: {
+            ...existingMeta,
+            stripe_connect_account_id: null,
+            stripe_connect_status: "not_started",
+          },
+        });
+        return json(req, 200, notStartedStatus());
+      }
+
       console.error("[stripe-connect] stripe_account_fetch_failed", accountRes.data ?? accountRes.text);
       return json(req, 500, {
         error: "stripe_account_fetch_failed",
         status_code: accountRes.status,
-        details: accountRes.data?.error?.message ?? accountRes.text,
+        details: stripeError?.message ?? accountRes.text,
       });
     }
 
@@ -209,38 +272,53 @@ serve(async (req) => {
   }
 
   if (!accountId) {
-    const createForm = new URLSearchParams();
-    createForm.set("type", "express");
-    createForm.set("country", "US");
-    if (authUser.email) createForm.set("email", authUser.email);
-    createForm.set("capabilities[card_payments][requested]", "true");
-    createForm.set("capabilities[transfers][requested]", "true");
-    createForm.set("metadata[user_id]", userId);
-
-    const createRes = await stripePost("accounts", createForm, stripeKey);
-    if (!createRes.ok) {
-      console.error("[stripe-connect] stripe_account_create_failed", createRes.data ?? createRes.text);
+    const created = await createExpressConnectAccount({
+      stripeKey,
+      userId,
+      email: authUser.email,
+    });
+    if (!created.ok) {
+      console.error("[stripe-connect] stripe_account_create_failed", created.createRes.data ?? created.createRes.text);
       return json(req, 500, {
         error: "stripe_account_create_failed",
-        status_code: createRes.status,
-        details: createRes.data?.error?.message ?? createRes.text,
+        status_code: created.createRes.status,
+        details: created.createRes.data?.error?.message ?? created.createRes.text,
       });
     }
 
-    accountId = createRes.data?.id ?? null;
-    if (!accountId) return json(req, 500, { error: "missing_account_id" });
+    accountId = created.accountId;
   }
 
-  const refreshUrl = `${siteUrl}/app/onboarding/payouts?stripe=refresh`;
-  const returnUrl = `${siteUrl}/app/onboarding/payouts?stripe=return`;
+  let linkRes = await createAccountLink({
+    stripeKey,
+    accountId,
+    siteUrl,
+  });
 
-  const linkForm = new URLSearchParams();
-  linkForm.set("account", accountId);
-  linkForm.set("type", "account_onboarding");
-  linkForm.set("refresh_url", refreshUrl);
-  linkForm.set("return_url", returnUrl);
+  // Migration guard: test-mode account IDs can be stale when moving to live mode.
+  if (!linkRes.ok && isNoSuchAccount(linkRes.data?.error)) {
+    const created = await createExpressConnectAccount({
+      stripeKey,
+      userId,
+      email: authUser.email,
+    });
+    if (!created.ok) {
+      console.error("[stripe-connect] stripe_account_create_failed_after_stale_id", created.createRes.data ?? created.createRes.text);
+      return json(req, 500, {
+        error: "stripe_account_create_failed",
+        status_code: created.createRes.status,
+        details: created.createRes.data?.error?.message ?? created.createRes.text,
+      });
+    }
 
-  const linkRes = await stripePost("account_links", linkForm, stripeKey);
+    accountId = created.accountId;
+    linkRes = await createAccountLink({
+      stripeKey,
+      accountId,
+      siteUrl,
+    });
+  }
+
   if (!linkRes.ok) {
     console.error("[stripe-connect] stripe_account_link_failed", linkRes.data ?? linkRes.text);
     return json(req, 500, {

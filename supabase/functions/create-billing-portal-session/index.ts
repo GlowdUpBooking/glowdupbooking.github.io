@@ -41,6 +41,57 @@ function json(req: Request, status: number, body: Record<string, unknown>) {
   });
 }
 
+function parseStripeError(text: string) {
+  try {
+    const parsed = JSON.parse(text);
+    return parsed?.error ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function isNoSuchCustomer(stripeError: any) {
+  const msg = String(stripeError?.message ?? "").toLowerCase();
+  const code = String(stripeError?.code ?? "").toLowerCase();
+  const param = String(stripeError?.param ?? "").toLowerCase();
+  return (
+    msg.includes("no such customer") ||
+    (code === "resource_missing" && (param === "customer" || msg.includes("customer")))
+  );
+}
+
+async function fetchSubscriptionCustomer(
+  stripeKey: string,
+  stripeSubscriptionId: string,
+) {
+  const res = await fetch(`https://api.stripe.com/v1/subscriptions/${stripeSubscriptionId}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${stripeKey}`,
+    },
+  });
+  const text = await res.text();
+  const stripeError = parseStripeError(text);
+  if (!res.ok) {
+    return {
+      ok: false,
+      stripeError,
+      customerId: null as string | null,
+    };
+  }
+  let payload: any = null;
+  try {
+    payload = JSON.parse(text);
+  } catch {
+    payload = null;
+  }
+  return {
+    ok: true,
+    stripeError: null,
+    customerId: typeof payload?.customer === "string" ? payload.customer : null,
+  };
+}
+
 async function getUserIdFromJwt(authHeader: string) {
   const supabaseUrl = getEnv("SUPABASE_URL") ?? getEnv("SB_URL");
   const anonKey =
@@ -109,7 +160,7 @@ serve(async (req) => {
 
     const { data: subRow, error: subErr } = await admin
       .from("pro_subscriptions")
-      .select("stripe_customer_id")
+      .select("stripe_customer_id, stripe_subscription_id")
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -120,7 +171,21 @@ serve(async (req) => {
       });
     }
 
-    const customerId = subRow?.stripe_customer_id;
+    let customerId: string | null = subRow?.stripe_customer_id ?? null;
+    const stripeSubscriptionId: string | null = subRow?.stripe_subscription_id ?? null;
+
+    // Migration guard: recover a live customer from subscription when customer ID is missing/stale.
+    if (!customerId && stripeSubscriptionId) {
+      const lookup = await fetchSubscriptionCustomer(stripeKey, stripeSubscriptionId);
+      if (lookup.ok && lookup.customerId) {
+        customerId = lookup.customerId;
+        await admin
+          .from("pro_subscriptions")
+          .update({ stripe_customer_id: customerId, updated_at: new Date().toISOString() })
+          .eq("user_id", userId);
+      }
+    }
+
     if (!customerId) {
       return json(req, 400, {
         error: "no_stripe_customer",
@@ -154,16 +219,51 @@ serve(async (req) => {
 
     const text = await stripeRes.text();
     if (!stripeRes.ok) {
-      let stripeJson: any = null;
-      try {
-        stripeJson = JSON.parse(text);
-      } catch {
-        stripeJson = null;
+      const stripeError = parseStripeError(text);
+
+      // Migration guard: old test customer IDs on live keys should gracefully send user to plan setup.
+      if (isNoSuchCustomer(stripeError)) {
+        if (stripeSubscriptionId) {
+          const lookup = await fetchSubscriptionCustomer(stripeKey, stripeSubscriptionId);
+          if (lookup.ok && lookup.customerId) {
+            const retryForm = new URLSearchParams();
+            retryForm.set("customer", lookup.customerId);
+            retryForm.set("return_url", returnUrl);
+
+            const retryRes = await fetch("https://api.stripe.com/v1/billing_portal/sessions", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${stripeKey}`,
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: retryForm.toString(),
+            });
+            const retryText = await retryRes.text();
+            if (retryRes.ok) {
+              await admin
+                .from("pro_subscriptions")
+                .update({ stripe_customer_id: lookup.customerId, updated_at: new Date().toISOString() })
+                .eq("user_id", userId);
+              const retrySession = JSON.parse(retryText);
+              return json(req, 200, { url: retrySession.url, id: retrySession.id });
+            }
+          }
+        }
+
+        await admin
+          .from("pro_subscriptions")
+          .update({ stripe_customer_id: null, updated_at: new Date().toISOString() })
+          .eq("user_id", userId);
+
+        return json(req, 400, {
+          error: "no_stripe_customer",
+          message: "No Stripe customer exists yet for this account.",
+        });
       }
 
       return json(req, 500, {
         error: "stripe_billing_portal_failed",
-        message: stripeJson?.error?.message ?? text ?? "Stripe request failed",
+        message: stripeError?.message ?? text ?? "Stripe request failed",
       });
     }
 
