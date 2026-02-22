@@ -21,6 +21,7 @@ import RequireOnboarding from "./components/onboarding/RequireOnboarding";
 // Onboarding (existing file in your tree)
 import Onboarding from "./pages/Onboarding";
 import { trackPageView } from "./lib/analytics";
+import { getSignupPath, isSignupPaused } from "./lib/siteFlags";
 
 function RouteTracker() {
   const location = useLocation();
@@ -34,6 +35,8 @@ function RouteTracker() {
 }
 
 export default function AppRouter() {
+  const signupPaused = isSignupPaused();
+
   return (
     <>
       <RouteTracker />
@@ -41,7 +44,10 @@ export default function AppRouter() {
         {/* Public marketing */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route
+          path="/signup"
+          element={signupPaused ? <Navigate to={getSignupPath()} replace /> : <Signup />}
+        />
         <Route path="/verify-email" element={<VerifyEmail />} />
 
         {/* Pricing page (public ok; you can keep it public or wrap it later) */}

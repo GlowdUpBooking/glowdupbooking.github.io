@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../components/auth/AuthProvider";
+import { SIGNUP_PAUSED_MESSAGE, isSignupPaused } from "../lib/siteFlags";
 import "../styles/signup.css";
 
 export default function Login() {
@@ -12,6 +13,10 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const signupPaused = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return isSignupPaused() || params.get("signup") === "paused";
+  }, [location.search]);
   const nextPath = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return params.get("next") || "/app";
@@ -59,12 +64,18 @@ export default function Login() {
             <Link className="authNavLink" to="/pricing#plans">
               Pricing
             </Link>
-            <Link className="authNavBtn authNavBtnGhost" to="/signup">
-              Create Account
-            </Link>
-            <Link className="authNavBtn" to="/signup">
-              Start Free <span className="authArrow">→</span>
-            </Link>
+            {!signupPaused ? (
+              <>
+                <Link className="authNavBtn authNavBtnGhost" to="/signup">
+                  Create Account
+                </Link>
+                <Link className="authNavBtn" to="/signup">
+                  Start Free <span className="authArrow">→</span>
+                </Link>
+              </>
+            ) : (
+              <span className="authNavTag">Signups paused</span>
+            )}
           </div>
         </div>
       </header>
@@ -90,6 +101,7 @@ export default function Login() {
             <p className="authSub">Access your account and continue managing bookings.</p>
           </div>
 
+          {signupPaused ? <div className="authFormInfo">{SIGNUP_PAUSED_MESSAGE}</div> : null}
           <form onSubmit={onSubmit} className="authForm">
             <div className="authGrid">
               <div className="authFull uiField">
@@ -132,9 +144,18 @@ export default function Login() {
 
           <div className="authFooter">
             <div className="authFooterLinks">
-              <span>Need an account?</span>
-              <Link to="/signup">Create account</Link>
-              <span className="authDot">·</span>
+              {!signupPaused ? (
+                <>
+                  <span>Need an account?</span>
+                  <Link to="/signup">Create account</Link>
+                  <span className="authDot">·</span>
+                </>
+              ) : (
+                <>
+                  <span>New account signup is paused.</span>
+                  <span className="authDot">·</span>
+                </>
+              )}
               <Link to={`/verify-email?email=${encodeURIComponent(email)}`}>Resend email</Link>
               <span className="authDot">·</span>
               <Link to="/">Back home</Link>

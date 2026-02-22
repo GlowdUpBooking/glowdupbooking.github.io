@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import { trackEvent } from "../lib/analytics";
+import { getSignupPath } from "../lib/siteFlags";
 
 const WHY_PROS = [
   "Keep more of what you earn with clear, transparent pricing",
@@ -65,6 +66,8 @@ function relativeUpdate(ts) {
 
 export default function Pricing() {
   const nav = useNavigate();
+  const location = useLocation();
+  const signupPath = getSignupPath();
 
   const [session, setSession] = useState(null);
   const [billingCycle, setBillingCycle] = useState("monthly");
@@ -225,13 +228,23 @@ export default function Pricing() {
   }, []);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(location.search);
     if (params.get("checkout") === "success") setToast("Payment complete. Your access will update shortly.");
     if (params.get("checkout") === "cancel") setToast("Payment canceled. You can try again anytime.");
-    if (params.get("billing") === "setup") {
+
+    const fromBillingSetup = params.get("billing") === "setup";
+    const focusPlans = params.get("focus") === "plans" || location.hash === "#plans";
+
+    if (fromBillingSetup) {
       setToast("You’re on Free. Choose a paid plan first, then billing management opens automatically.");
     }
-  }, []);
+
+    if (fromBillingSetup || focusPlans) {
+      window.requestAnimationFrame(() => {
+        document.getElementById("plans")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }, [location.search, location.hash]);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -257,7 +270,7 @@ export default function Pricing() {
       const s = authData?.session;
       if (!s?.access_token) {
         trackEvent("checkout_requires_auth", { page: "pricing", tier });
-        nav("/signup", { replace: true });
+        nav(signupPath, { replace: true });
         return;
       }
 
@@ -346,7 +359,7 @@ export default function Pricing() {
                 <Link className="lpNavBtn lpNavBtnSecondary" to="/login" onClick={() => trackEvent("nav_click", { page: "pricing", cta: "sign_in" })}>
                   Sign In
                 </Link>
-                <Link className="lpNavBtn" to="/signup" onClick={() => trackEvent("cta_click", { page: "pricing", cta: "start_free_nav" })}>
+                <Link className="lpNavBtn" to={signupPath} onClick={() => trackEvent("cta_click", { page: "pricing", cta: "start_free_nav" })}>
                   Start Free <span className="lpArrow">→</span>
                 </Link>
               </>
@@ -374,7 +387,7 @@ export default function Pricing() {
           <p className="lpLead">Clients book free. Pros pay only for tools and growth.</p>
 
           <div className="lpHeroBtns">
-            <Link to="/signup" onClick={() => trackEvent("cta_click", { page: "pricing", cta: "start_free_hero" })}>
+            <Link to={signupPath} onClick={() => trackEvent("cta_click", { page: "pricing", cta: "start_free_hero" })}>
               <Button variant="outline" className="lpBtn">Start Free</Button>
             </Link>
             <Button
@@ -468,7 +481,7 @@ export default function Pricing() {
               <div className="lpChooseWrap">
                 {!session ? (
                   <Link
-                    to="/signup"
+                    to={signupPath}
                     onClick={() => trackEvent("plan_cta_click", { page: "pricing", plan: "free", cta: "start_free" })}
                   >
                     <Button variant="outline" className="lpChoose">Start Free</Button>

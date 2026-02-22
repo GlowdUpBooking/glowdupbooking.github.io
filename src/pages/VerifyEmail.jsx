@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { getSignupPath } from "../lib/siteFlags";
 import "../styles/signup.css";
 
 export default function VerifyEmail() {
   const [params] = useSearchParams();
+  const signupPath = getSignupPath();
   const initialEmail = (params.get("email") || "").trim();
   const [email, setEmail] = useState(initialEmail);
   const [busy, setBusy] = useState(false);
@@ -80,7 +82,7 @@ export default function VerifyEmail() {
             <div className="authFooterLinks">
               <Link to="/login">Back to sign in</Link>
               <span className="authDot">·</span>
-              <Link to="/signup">Use a different email</Link>
+              <Link to={signupPath}>Use a different email</Link>
             </div>
           </div>
         </section>

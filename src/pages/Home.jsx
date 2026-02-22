@@ -4,6 +4,7 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import { getFounderSpotsLeft } from "../lib/foundingOffer";
 import { trackEvent } from "../lib/analytics";
+import { getSignupPath } from "../lib/siteFlags";
 
 const WHY_PROS = [
   "Keep more of what you earn with clear, transparent pricing",
@@ -137,6 +138,7 @@ function relativeUpdate(ts) {
 }
 
 export default function Home() {
+  const signupPath = getSignupPath();
   const [founderLeft, setFounderLeft] = useState(1000);
   const [loadingFounder, setLoadingFounder] = useState(true);
   const [updatedAt, setUpdatedAt] = useState(null);
@@ -224,7 +226,7 @@ export default function Home() {
             >
               Sign In
             </Link>
-            <Link className="lpNavBtn" to="/signup" onClick={() => trackEvent("cta_click", { page: "home", cta: "start_free_nav" })}>
+            <Link className="lpNavBtn" to={signupPath} onClick={() => trackEvent("cta_click", { page: "home", cta: "start_free_nav" })}>
               Start Free <span className="lpArrow">→</span>
             </Link>
           </div>
@@ -249,7 +251,7 @@ export default function Home() {
           <p className="lpLead">Clients book free. Pros pay only for tools and growth.</p>
 
           <div className="lpHeroBtns">
-            <Link to="/signup" onClick={() => trackEvent("cta_click", { page: "home", cta: "start_free_hero" })}>
+            <Link to={signupPath} onClick={() => trackEvent("cta_click", { page: "home", cta: "start_free_hero" })}>
               <Button variant="outline" className="lpBtn">
                 Start Free
               </Button>
