@@ -11,16 +11,19 @@ function getEnv(name: string) {
 
 function corsHeaders(req: Request) {
   const origin = req.headers.get("origin") ?? "";
-  const allowlistRaw =
-    getEnv("ALLOWED_ORIGINS") ?? "http://localhost:5173,http://127.0.0.1:5173";
-  const allowlist = allowlistRaw
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  const allowed = allowlist.includes(origin);
+  const allowlistRaw = getEnv("ALLOWED_ORIGINS") ?? "";
+  const allowlist = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:4173",
+    "http://127.0.0.1:4173",
+    ...allowlistRaw.split(",").map((s) => s.trim()).filter(Boolean),
+  ];
+  const uniqueAllowlist = Array.from(new Set(allowlist));
+  const allowed = !origin || uniqueAllowlist.includes(origin);
+  const fallbackOrigin = uniqueAllowlist[0] ?? "http://localhost:5173";
   return {
-    "Access-Control-Allow-Origin": allowed ? origin : allowlist[0] ?? "",
+    "Access-Control-Allow-Origin": allowed ? (origin || fallbackOrigin) : fallbackOrigin,
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Credentials": "true",

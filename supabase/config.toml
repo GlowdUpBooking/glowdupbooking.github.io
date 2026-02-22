@@ -2,7 +2,13 @@
 verify_jwt = false
 
 [functions.stripe-connect]
-verify_jwt = true
+verify_jwt = false
+
+[functions.create-checkout-session]
+verify_jwt = false
+
+[functions.create-billing-portal-session]
+verify_jwt = false
 
 [functions.get-prices]
 verify_jwt = false

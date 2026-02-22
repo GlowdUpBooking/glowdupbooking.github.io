@@ -46,8 +46,7 @@ export async function fetchStripeConnectStatus() {
 
     if (error) throw new Error(await formatInvokeError(error));
     return { ...fallbackStatus(), ...(data || {}) };
-  } catch (e) {
-    console.warn("[stripe-connect] status failed:", e?.message || e);
+  } catch {
     return fallbackStatus();
   }
 }

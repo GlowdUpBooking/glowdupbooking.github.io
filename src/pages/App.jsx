@@ -278,7 +278,7 @@ export default function App() {
 
     const likelyFreePlan = currentPlanKey === "free" || !isActive;
     if (likelyFreePlan) {
-      nav("/pricing?billing=setup");
+      nav("/pricing?billing=setup&focus=plans");
       return;
     }
 
@@ -320,7 +320,7 @@ export default function App() {
       try {
         const invokePayload = error?.context ? await error.context.json() : null;
         if (invokePayload?.error === "no_stripe_customer") {
-          nav("/pricing?billing=setup");
+          nav("/pricing?billing=setup&focus=plans");
           return;
         }
       } catch {
@@ -349,7 +349,7 @@ export default function App() {
       if (!res.ok) {
         const code = json?.error || json?.code || "";
         if (code === "no_stripe_customer") {
-          nav("/pricing?billing=setup");
+          nav("/pricing?billing=setup&focus=plans");
           return;
         }
         throw new Error(json?.message || json?.error || `Edge Function failed (${res.status})`);
