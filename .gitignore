@@ -18,3 +18,6 @@ supabase/.temp/
 
 # build output
 /dist/
+
+# macOS Finder metadata
+.DS_Store
