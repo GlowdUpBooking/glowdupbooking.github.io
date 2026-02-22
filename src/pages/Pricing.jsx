@@ -22,10 +22,57 @@ const FAQ_ITEMS = [
   { q: "What is instant payout?", a: "An optional payout method with an additional fee for immediate access to funds." },
 ];
 
+const DEFAULT_PRICES = Object.freeze({
+  free_monthly: { id: "free", unit_amount: 0, currency: "USD", interval: "month", interval_count: 1, product_name: "Free" },
+  starter_monthly: { id: "starter_default", unit_amount: 999, currency: "USD", interval: "month", interval_count: 1, product_name: "Starter" },
+  pro_monthly: { id: "pro_default", unit_amount: 1499, currency: "USD", interval: "month", interval_count: 1, product_name: "Pro" },
+  founder_annual: { id: "founder_default", unit_amount: 9900, currency: "USD", interval: "year", interval_count: 1, product_name: "Founder" },
+});
+
+function toCents(priceObj) {
+  if (typeof priceObj?.unit_amount === "number" && Number.isFinite(priceObj.unit_amount)) return priceObj.unit_amount;
+  if (typeof priceObj?.unit_amount === "string" && priceObj.unit_amount.trim().length) {
+    const n = Number(priceObj.unit_amount);
+    if (Number.isFinite(n)) return n;
+  }
+  if (typeof priceObj?.unit_amount_decimal === "string" && priceObj.unit_amount_decimal.trim().length) {
+    const n = Number(priceObj.unit_amount_decimal);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
+function mergeLivePrices(livePrices) {
+  const pick = (key) => {
+    const fallback = DEFAULT_PRICES[key];
+    const candidate = livePrices?.[key];
+    const unitAmount = toCents(candidate);
+
+    if (!candidate || typeof candidate !== "object" || unitAmount === null) {
+      return fallback;
+    }
+
+    return {
+      ...fallback,
+      ...candidate,
+      unit_amount: unitAmount,
+      currency: typeof candidate.currency === "string" && candidate.currency ? candidate.currency : fallback.currency,
+    };
+  };
+
+  return {
+    free_monthly: DEFAULT_PRICES.free_monthly,
+    starter_monthly: pick("starter_monthly"),
+    pro_monthly: pick("pro_monthly"),
+    founder_annual: pick("founder_annual"),
+    studio_monthly: livePrices?.studio_monthly ?? null,
+  };
+}
+
 function formatMoneyFromStripe(priceObj, billingCycle = "monthly") {
-  const cents = priceObj?.unit_amount;
+  const cents = toCents(priceObj);
   const currency = priceObj?.currency || "USD";
-  if (typeof cents !== "number") return null;
+  if (cents === null) return null;
 
   let amount = cents / 100;
   if (billingCycle === "annual" && priceObj?.interval === "month") {
@@ -83,7 +130,7 @@ export default function Pricing() {
 
   const [pricesLoading, setPricesLoading] = useState(true);
   const [pricesErr, setPricesErr] = useState("");
-  const [prices, setPrices] = useState(null);
+  const [prices, setPrices] = useState(DEFAULT_PRICES);
 
   const remaining = useMemo(() => {
     const max = typeof maxSpots === "number" ? maxSpots : 1000;
@@ -204,17 +251,15 @@ export default function Pricing() {
           payload = json;
         }
 
-        const p = payload?.prices ?? null;
-        if (!p?.starter_monthly || !p?.pro_monthly || !p?.founder_annual) {
-          throw new Error("Invalid pricing payload.");
-        }
+        const p = mergeLivePrices(payload?.prices ?? null);
 
         if (!mounted) return;
         setPrices(p);
       } catch (e) {
         console.error("[Pricing] get-prices failed:", e);
         if (!mounted) return;
-        setPricesErr("Pricing unavailable. Refresh the page or try again soon.");
+        setPrices(DEFAULT_PRICES);
+        setPricesErr("Live pricing sync is unavailable. Showing standard plan rates.");
       } finally {
         if (!mounted) return;
         setPricesLoading(false);

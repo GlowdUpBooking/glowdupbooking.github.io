@@ -11,6 +11,11 @@ function getEnv(name: string) {
   return v && v.trim().length ? v.trim() : null;
 }
 
+function isNoSuchPriceError(err: unknown) {
+  const msg = String(err ?? "").toLowerCase();
+  return msg.includes("no such price");
+}
+
 function safeErr(e: unknown) {
   const anyE = e as any;
   return {
@@ -95,6 +100,78 @@ function assertTier(x: any): Tier | null {
   return null;
 }
 
+async function stripeGet(path: string, stripeKey: string) {
+  const res = await fetch(`https://api.stripe.com/v1/${path}`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${stripeKey}` },
+  });
+  const text = await res.text();
+  let data: any = null;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    // ignore
+  }
+  if (!res.ok) {
+    return {
+      ok: false as const,
+      status: res.status,
+      error: data?.error?.message ?? text ?? "Stripe request failed",
+    };
+  }
+  return { ok: true as const, status: res.status, data };
+}
+
+function specForTier(tier: Tier) {
+  if (tier === "starter_monthly") return { token: "starter", interval: "month" as const };
+  if (tier === "pro_monthly") return { token: "pro", interval: "month" as const };
+  if (tier === "founder_annual") return { token: "founder", interval: "year" as const };
+  return { token: "studio", interval: "month" as const };
+}
+
+function pickFallbackPrice(listData: any, tier: Tier) {
+  const spec = specForTier(tier);
+  const rows = Array.isArray(listData?.data) ? listData.data : [];
+
+  const candidates = rows.filter((p: any) => {
+    const recurringInterval = typeof p?.recurring?.interval === "string" ? p.recurring.interval : null;
+    if (recurringInterval !== spec.interval) return false;
+
+    const productName = typeof p?.product?.name === "string" ? p.product.name : "";
+    const nickname = typeof p?.nickname === "string" ? p.nickname : "";
+    const haystack = `${productName} ${nickname}`.toLowerCase();
+    return haystack.includes(spec.token);
+  });
+
+  if (!candidates.length) return null;
+  candidates.sort((a: any, b: any) => Number(b?.created ?? 0) - Number(a?.created ?? 0));
+  return candidates[0];
+}
+
+async function resolvePriceId(stripeKey: string, tier: Tier, configuredPriceId: string | null) {
+  if (configuredPriceId) {
+    const direct = await stripeGet(`prices/${configuredPriceId}?expand[]=product`, stripeKey);
+    if (direct.ok) {
+      return { ok: true as const, priceId: configuredPriceId, source: "env" as const };
+    }
+    if (!isNoSuchPriceError(direct.error)) {
+      return { ok: false as const, status: direct.status, error: direct.error };
+    }
+  }
+
+  const list = await stripeGet("prices?active=true&limit=100&expand[]=data.product", stripeKey);
+  if (!list.ok) {
+    return { ok: false as const, status: list.status, error: list.error };
+  }
+
+  const fallback = pickFallbackPrice(list.data, tier);
+  if (!fallback?.id) {
+    return { ok: false as const, status: 404, error: `No active fallback price found for ${tier}` };
+  }
+
+  return { ok: true as const, priceId: fallback.id as string, source: "fallback" as const };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return json(req, 200, { ok: true });
   if (req.method !== "POST") return json(req, 405, { error: "method_not_allowed" });
@@ -149,32 +226,35 @@ serve(async (req) => {
 
     let plan: Plan = "pro";
     let interval: "monthly" | "annual" = "monthly";
-    let priceId: string | null = null;
+    let configuredPriceId: string | null = null;
 
     if (tier === "starter_monthly") {
       plan = "starter";
       interval = "monthly";
-      priceId = priceStarter;
+      configuredPriceId = priceStarter;
     } else if (tier === "pro_monthly") {
       plan = "pro";
       interval = "monthly";
-      priceId = pricePro;
+      configuredPriceId = pricePro;
     } else if (tier === "founder_annual") {
       plan = "founder";
       interval = "annual";
-      priceId = priceFounder;
+      configuredPriceId = priceFounder;
     } else if (tier === "studio_monthly") {
       plan = "studio";
       interval = "monthly";
-      priceId = priceStudio;
+      configuredPriceId = priceStudio;
     }
 
-    if (!priceId) {
+    const priceResolve = await resolvePriceId(stripeKey, tier, configuredPriceId);
+    if (!priceResolve.ok) {
       return json(req, 500, {
-        error: "Missing price for tier (set STRIPE_PRICE_STUDIO_MONTHLY if using Studio)",
-        tier,
+        error: priceResolve.error,
+        stripe_status: priceResolve.status,
+        used: { tier, plan, interval, configuredPriceId },
       });
     }
+    const priceId = priceResolve.priceId;
 
     const successUrl = `${siteUrl}/app?checkout=success`;
     const cancelUrl = `${siteUrl}/pricing?checkout=cancel`;
@@ -223,7 +303,7 @@ serve(async (req) => {
       return json(req, 500, {
         error: stripeJson?.error?.message ?? "Stripe request failed",
         stripe_status: stripeRes.status,
-        used: { tier, plan, interval, priceId },
+        used: { tier, plan, interval, configuredPriceId, resolvedPriceId: priceId, resolvedFrom: priceResolve.source },
       });
     }
 

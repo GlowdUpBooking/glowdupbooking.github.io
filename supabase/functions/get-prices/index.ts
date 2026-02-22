@@ -20,6 +20,78 @@ function getEnv(name: string) {
   return v && v.trim().length ? v.trim() : null;
 }
 
+function isNoSuchPriceError(err: unknown) {
+  const msg = String(err ?? "").toLowerCase();
+  return msg.includes("no such price");
+}
+
+function specForTier(tier: "starter_monthly" | "pro_monthly" | "founder_annual" | "studio_monthly") {
+  if (tier === "starter_monthly") return { token: "starter", interval: "month" as const };
+  if (tier === "pro_monthly") return { token: "pro", interval: "month" as const };
+  if (tier === "founder_annual") return { token: "founder", interval: "year" as const };
+  return { token: "studio", interval: "month" as const };
+}
+
+function pickFallbackPrice(listData: any, tier: "starter_monthly" | "pro_monthly" | "founder_annual" | "studio_monthly") {
+  const spec = specForTier(tier);
+  const rows = Array.isArray(listData?.data) ? listData.data : [];
+
+  const candidates = rows.filter((p: any) => {
+    const recurringInterval = typeof p?.recurring?.interval === "string" ? p.recurring.interval : null;
+    if (recurringInterval !== spec.interval) return false;
+
+    const productName = typeof p?.product?.name === "string" ? p.product.name : "";
+    const nickname = typeof p?.nickname === "string" ? p.nickname : "";
+    const haystack = `${productName} ${nickname}`.toLowerCase();
+    return haystack.includes(spec.token);
+  });
+
+  if (!candidates.length) return null;
+  candidates.sort((a: any, b: any) => Number(b?.created ?? 0) - Number(a?.created ?? 0));
+  return candidates[0];
+}
+
+async function resolvePrice(
+  stripeKey: string,
+  configuredPriceId: string | null,
+  tier: "starter_monthly" | "pro_monthly" | "founder_annual" | "studio_monthly"
+) {
+  if (configuredPriceId) {
+    const direct = await stripeGet(`prices/${configuredPriceId}?expand[]=product`, stripeKey);
+    if (direct.ok) {
+      return { ok: true as const, price: direct.data, resolved_price_id: configuredPriceId, source: "env" as const };
+    }
+
+    if (!isNoSuchPriceError(direct.error)) {
+      return {
+        ok: false as const,
+        status: direct.status,
+        error: direct.error,
+      };
+    }
+  }
+
+  const list = await stripeGet("prices?active=true&limit=100&expand[]=data.product", stripeKey);
+  if (!list.ok) {
+    return {
+      ok: false as const,
+      status: list.status,
+      error: list.error,
+    };
+  }
+
+  const fallback = pickFallbackPrice(list.data, tier);
+  if (!fallback?.id) {
+    return {
+      ok: false as const,
+      status: 404,
+      error: `No active fallback price found for ${tier}`,
+    };
+  }
+
+  return { ok: true as const, price: fallback, resolved_price_id: fallback.id, source: "fallback" as const };
+}
+
 async function stripeGet(path: string, stripeKey: string) {
   const res = await fetch(`https://api.stripe.com/v1/${path}`, {
     method: "GET",
@@ -101,14 +173,14 @@ serve(async (req) => {
     });
   }
 
-  const starterRes = await stripeGet(`prices/${priceStarter}?expand[]=product`, stripeKey);
-  const proRes = await stripeGet(`prices/${pricePro}?expand[]=product`, stripeKey);
-  const founderRes = await stripeGet(`prices/${priceFounder}?expand[]=product`, stripeKey);
+  const starterRes = await resolvePrice(stripeKey, priceStarter, "starter_monthly");
+  const proRes = await resolvePrice(stripeKey, pricePro, "pro_monthly");
+  const founderRes = await resolvePrice(stripeKey, priceFounder, "founder_annual");
 
   let studioNorm: any = null;
   if (priceStudio) {
-    const studioRes = await stripeGet(`prices/${priceStudio}?expand[]=product`, stripeKey);
-    if (studioRes.ok) studioNorm = normalizePrice(studioRes.data);
+    const studioRes = await resolvePrice(stripeKey, priceStudio, "studio_monthly");
+    if (studioRes.ok) studioNorm = normalizePrice(studioRes.price);
   }
 
   if (!starterRes.ok || !proRes.ok || !founderRes.ok) {
@@ -128,12 +200,17 @@ serve(async (req) => {
       // Free is $0 and not a Stripe price
       free_monthly: { id: "free", unit_amount: 0, currency: "USD", interval: "month", interval_count: 1, product_name: "Free", livemode: null },
 
-      starter_monthly: normalizePrice(starterRes.data),
-      pro_monthly: normalizePrice(proRes.data),
-      founder_annual: normalizePrice(founderRes.data),
+      starter_monthly: normalizePrice(starterRes.price),
+      pro_monthly: normalizePrice(proRes.price),
+      founder_annual: normalizePrice(founderRes.price),
 
       // optional: only present if you set STRIPE_PRICE_STUDIO_MONTHLY
       studio_monthly: studioNorm,
+    },
+    sources: {
+      starter_monthly: starterRes.source,
+      pro_monthly: proRes.source,
+      founder_annual: founderRes.source,
     },
   });
 });
