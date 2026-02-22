@@ -276,7 +276,7 @@ export default function App() {
   async function openBillingPortal() {
     if (billingLoading) return;
 
-    const likelyFreePlan = normalizePlanKey(plan) === "free" || !isActive;
+    const likelyFreePlan = currentPlanKey === "free" || !isActive;
     if (likelyFreePlan) {
       nav("/pricing?billing=setup");
       return;
@@ -298,7 +298,8 @@ export default function App() {
 
       const s = authData?.session;
       if (!s?.access_token) {
-        nav("/login", { replace: true });
+        const next = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
+        nav(`/login?next=${next}`, { replace: true });
         return;
       }
 
