@@ -9,17 +9,41 @@ function getEnv(name: string) {
   return v && v.trim().length ? v.trim() : null;
 }
 
-function corsHeaders(req: Request) {
-  const origin = req.headers.get("origin") ?? "";
+function getAllowedOrigins(siteUrl: string | null) {
   const allowlistRaw = getEnv("ALLOWED_ORIGINS") ?? "";
+  const siteOrigin = (() => {
+    if (!siteUrl) return null;
+    try {
+      return new URL(siteUrl).origin;
+    } catch {
+      return null;
+    }
+  })();
+
   const allowlist = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:4173",
     "http://127.0.0.1:4173",
     ...allowlistRaw.split(",").map((s) => s.trim()).filter(Boolean),
+    ...(siteOrigin ? [siteOrigin] : []),
   ];
-  const uniqueAllowlist = Array.from(new Set(allowlist));
+
+  return Array.from(new Set(allowlist));
+}
+
+function pickRedirectBase(req: Request, siteUrl: string) {
+  const origin = (req.headers.get("origin") ?? "").trim();
+  const allowedOrigins = getAllowedOrigins(siteUrl);
+  if (origin && allowedOrigins.includes(origin)) {
+    return origin.replace(/\/+$/, "");
+  }
+  return siteUrl.replace(/\/+$/, "");
+}
+
+function corsHeaders(req: Request) {
+  const origin = req.headers.get("origin") ?? "";
+  const uniqueAllowlist = getAllowedOrigins(getEnv("SITE_URL"));
   const allowed = !origin || uniqueAllowlist.includes(origin);
   const fallbackOrigin = uniqueAllowlist[0] ?? "http://localhost:5173";
   return {
@@ -202,7 +226,8 @@ serve(async (req) => {
 
     const reqPath = typeof payload?.return_path === "string" ? payload.return_path.trim() : "";
     const safePath = reqPath.startsWith("/") ? reqPath : "/app";
-    const returnUrl = `${siteUrl.replace(/\/+$/, "")}${safePath}`;
+    const redirectBase = pickRedirectBase(req, siteUrl);
+    const returnUrl = `${redirectBase}${safePath}`;
 
     const form = new URLSearchParams();
     form.set("customer", customerId);
