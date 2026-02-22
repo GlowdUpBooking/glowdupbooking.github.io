@@ -157,10 +157,51 @@ export default function Pricing() {
       setPricesErr("");
 
       try {
-        const { data, error } = await supabase.functions.invoke("get-prices");
-        if (error) throw error;
+        const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+        const sbUrl = import.meta.env.VITE_SUPABASE_URL || "";
+        if (!anonKey || !sbUrl) {
+          throw new Error("Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY.");
+        }
 
-        const p = data?.prices ?? null;
+        let payload = null;
+
+        const invokeRes = await supabase.functions.invoke("get-prices", {
+          headers: {
+            apikey: anonKey,
+            Authorization: `Bearer ${anonKey}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!invokeRes.error && invokeRes.data?.prices) {
+          payload = invokeRes.data;
+        } else {
+          const fnUrl = `${sbUrl}/functions/v1/get-prices`;
+          const res = await fetch(fnUrl, {
+            method: "POST",
+            headers: {
+              apikey: anonKey,
+              Authorization: `Bearer ${anonKey}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          const text = await res.text();
+          let json;
+          try {
+            json = JSON.parse(text);
+          } catch {
+            json = { raw: text };
+          }
+          if (!res.ok) {
+            throw new Error(
+              `get-prices failed (${res.status}): ${json?.error || json?.message || text}`
+            );
+          }
+          payload = json;
+        }
+
+        const p = payload?.prices ?? null;
         if (!p?.starter_monthly || !p?.pro_monthly || !p?.founder_annual) {
           throw new Error("Invalid pricing payload.");
         }
