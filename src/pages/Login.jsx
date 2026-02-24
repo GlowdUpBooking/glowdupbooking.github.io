@@ -2,7 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../components/auth/AuthProvider";
-import { SIGNUP_PAUSED_MESSAGE, isSignupPaused } from "../lib/siteFlags";
+import {
+  SIGNIN_PAUSED_MESSAGE,
+  SIGNUP_PAUSED_MESSAGE,
+  isSigninPaused,
+  isSignupPaused,
+} from "../lib/siteFlags";
 import "../styles/signup.css";
 
 export default function Login() {
@@ -13,6 +18,10 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const signinPaused = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return isSigninPaused() || params.get("signin") === "paused";
+  }, [location.search]);
   const signupPaused = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return isSignupPaused() || params.get("signup") === "paused";
@@ -29,6 +38,12 @@ export default function Login() {
   async function onSubmit(e) {
     e.preventDefault();
     setMsg("");
+
+    if (signinPaused) {
+      setMsg(SIGNIN_PAUSED_MESSAGE);
+      return;
+    }
+
     setBusy(true);
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -74,7 +89,7 @@ export default function Login() {
                 </Link>
               </>
             ) : (
-              <span className="authNavTag">Signups paused</span>
+              <span className="authNavTag">Auth paused</span>
             )}
           </div>
         </div>
@@ -101,6 +116,7 @@ export default function Login() {
             <p className="authSub">Access your account and continue managing bookings.</p>
           </div>
 
+          {signinPaused ? <div className="authFormInfo">{SIGNIN_PAUSED_MESSAGE}</div> : null}
           {signupPaused ? <div className="authFormInfo">{SIGNUP_PAUSED_MESSAGE}</div> : null}
           <form onSubmit={onSubmit} className="authForm">
             <div className="authGrid">
@@ -113,6 +129,7 @@ export default function Login() {
                     onChange={(e) => setEmail(e.target.value)}
                     type="email"
                     autoComplete="email"
+                    disabled={signinPaused}
                     required
                   />
                 </div>
@@ -127,6 +144,7 @@ export default function Login() {
                     onChange={(e) => setPassword(e.target.value)}
                     type="password"
                     autoComplete="current-password"
+                    disabled={signinPaused}
                     required
                   />
                 </div>
@@ -136,8 +154,8 @@ export default function Login() {
             {msg ? <div className="authFormError">{msg}</div> : null}
 
             <div className="authActions">
-              <button className="authPrimaryBtn" disabled={busy} type="submit">
-                {busy ? "Signing in..." : "Sign in"}
+              <button className="authPrimaryBtn" disabled={busy || signinPaused} type="submit">
+                {signinPaused ? "Sign in unavailable" : busy ? "Signing in..." : "Sign in"}
               </button>
             </div>
           </form>

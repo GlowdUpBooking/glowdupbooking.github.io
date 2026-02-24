@@ -18,9 +18,18 @@ export function isSignupPaused() {
   return isLiveMarketingHost();
 }
 
+export function isSigninPaused() {
+  const override = parseBool(import.meta.env.VITE_SIGNIN_PAUSED);
+  if (override !== null) return override;
+  return isLiveMarketingHost();
+}
+
 export function getSignupPath() {
   return isSignupPaused() ? "/login?signup=paused" : "/signup";
 }
 
 export const SIGNUP_PAUSED_MESSAGE =
   "New signups are temporarily paused while we finish setup. Please check back soon.";
+
+export const SIGNIN_PAUSED_MESSAGE =
+  "Sign-in is temporarily paused while we finish setup. Please check back soon.";
