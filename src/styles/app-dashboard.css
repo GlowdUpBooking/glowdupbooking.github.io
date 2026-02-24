@@ -58,6 +58,7 @@
   color: #f3f3f3;
   opacity: 0.86;
   text-decoration: none;
+  transition: background-color 0.16s ease, opacity 0.16s ease;
 }
 
 .shellNav a,
@@ -70,6 +71,11 @@
   opacity: 1;
 }
 
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 1;
+}
+
 .navIcon {
   width: 18px;
   display: inline-flex;
@@ -78,6 +84,8 @@
 
 .shellMain {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .shellTopbar {
@@ -98,11 +106,16 @@
   padding: 18px;
 }
 
+.shellMobileNav {
+  display: none;
+}
+
 .shell .btn {
   border-radius: 999px;
   min-height: 38px;
   padding: 8px 14px;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .shell .btnOutline {
@@ -122,6 +135,14 @@
   background: rgba(255, 255, 255, 0.03);
   border-radius: 16px;
   padding: 14px;
+}
+
+.u-muted {
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.btnFull {
+  width: 100%;
 }
 
 .g-page {
@@ -144,6 +165,17 @@
 .g-colRight {
   display: grid;
   gap: 14px;
+  align-content: start;
+}
+
+.g-planCard,
+.g-profileCard,
+.g-servicesCard,
+.g-glanceCard,
+.g-startCard,
+.g-nudgeCard {
+  display: grid;
+  gap: 12px;
 }
 
 .g-planTop,
@@ -161,6 +193,38 @@
 
 .g-profileRow {
   align-items: flex-start;
+  min-width: 0;
+}
+
+.g-planMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.g-dotIcon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.g-linkBtn {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  min-height: 34px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.g-linkBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.g-ext {
+  margin-left: 6px;
 }
 
 .g-avatarWrap {
@@ -195,19 +259,47 @@
 .g-serviceList {
   display: grid;
   gap: 8px;
+  min-width: 0;
 }
 
 .g-profileName {
   font-size: 20px;
   font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.g-profileNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.g-founderBadge {
+  border: 1px solid rgba(255, 214, 120, 0.62);
+  background: rgba(255, 214, 120, 0.14);
+  color: #ffe2a2;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .g-profileType,
-.u-muted,
 .g-serviceSub,
 .g-nudgeRow span,
 .g-checkMeta span {
   opacity: 0.74;
+  overflow-wrap: anywhere;
+}
+
+.g-profileCtas {
+  display: grid;
+  gap: 8px;
+}
+
+.g-ctaWide {
+  min-width: 136px;
 }
 
 .g-badge {
@@ -239,6 +331,29 @@
   gap: 8px;
 }
 
+.g-metaIcon,
+.g-statIcon {
+  width: 16px;
+  display: inline-flex;
+  justify-content: center;
+}
+
+.g-cardTitle {
+  font-size: clamp(22px, 2.2vw, 34px);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.g-serviceTitle,
+.g-statVal {
+  font-weight: 700;
+}
+
+.g-price {
+  font-size: clamp(22px, 2.1vw, 34px);
+  font-weight: 800;
+}
+
 .g-divider {
   height: 1px;
   background: rgba(255, 255, 255, 0.12);
@@ -247,6 +362,90 @@
 .g-editPill,
 .g-pillBtn {
   border-radius: 999px;
+}
+
+.g-checklist {
+  display: grid;
+  gap: 10px;
+}
+
+.g-checkItem {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.g-checkItemDone {
+  border-color: rgba(108, 255, 179, 0.35);
+}
+
+.g-checkMeta {
+  display: grid;
+  gap: 4px;
+}
+
+.g-checkMeta strong {
+  font-size: 14px;
+}
+
+.g-checkMeta span {
+  font-size: 12px;
+}
+
+.g-pillBtn {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.g-pillBtn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.g-nudgeCard {
+  margin-top: 0;
+}
+
+.g-nudgeList {
+  display: grid;
+  gap: 10px;
+}
+
+.g-nudgeRow {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  align-items: center;
+}
+
+.g-nudgeRow > div {
+  display: grid;
+  gap: 4px;
+}
+
+.g-nudgeRow strong {
+  font-size: 14px;
+}
+
+.g-nudgeRow span {
+  font-size: 12px;
+}
+
+.g-smallMsg {
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.85;
 }
 
 .sv-grid {
@@ -346,6 +545,12 @@
   gap: 8px;
 }
 
+@media (max-width: 1200px) {
+  .g-grid {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 1100px) {
   .shell {
     grid-template-columns: 1fr;
@@ -354,11 +559,95 @@
   .shellSidebar {
     display: none;
   }
+
+  .shellTopbar {
+    min-height: 64px;
+    padding: 0 14px;
+  }
+
+  .shellMobileNav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 10px 14px;
+    overflow-x: auto;
+  }
+
+  .shellMobileNav .navItem {
+    min-height: 42px;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.03);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 10px;
+    text-align: center;
+    line-height: 1.2;
+    white-space: normal;
+  }
+
+  .shellMobileNav .navItemActive {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.35);
+  }
+
+  .shellContent {
+    padding: 14px;
+  }
 }
 
 @media (max-width: 860px) {
+  .g-h1 {
+    font-size: clamp(34px, 8vw, 54px);
+  }
+
   .g-grid {
     grid-template-columns: 1fr;
+  }
+
+  .g-profileRow {
+    flex-direction: column;
+  }
+
+  .g-profileCtas {
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .g-ctaWide {
+    width: 100%;
+  }
+
+  .g-cardHeader {
+    flex-wrap: wrap;
+  }
+
+  .g-serviceRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .g-serviceRight {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .g-statRow {
+    gap: 8px;
+  }
+
+  .g-nudgeRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .g-nudgeRow .g-pillBtn {
+    align-self: flex-end;
+  }
+
+  .btnFull {
+    min-height: 42px;
   }
 
   .sv-grid,
@@ -368,5 +657,105 @@
 
   .sv-photoGrid {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .shellTopbar {
+    min-height: 60px;
+    padding: 0 12px;
+  }
+
+  .shellTitle {
+    font-size: 18px;
+  }
+
+  .shell .btn {
+    min-height: 34px;
+    padding: 7px 12px;
+    font-size: 13px;
+  }
+
+  .shellMobileNav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 10px 12px;
+  }
+
+  .shellContent {
+    padding: 12px;
+  }
+
+  .g-page {
+    gap: 12px;
+  }
+
+  .g-h1 {
+    font-size: clamp(28px, 10vw, 40px);
+  }
+
+  .g-planTop,
+  .g-planBottom {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .g-linkBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .g-profileCtas {
+    grid-template-columns: 1fr;
+  }
+
+  .g-cardTitle {
+    font-size: clamp(20px, 5.5vw, 24px);
+  }
+
+  .g-price {
+    font-size: 28px;
+  }
+
+  .g-checkItem {
+    flex-direction: column;
+  }
+
+  .g-checkItem .g-pillBtn {
+    align-self: flex-end;
+  }
+
+  .g-metaItem {
+    align-items: flex-start;
+  }
+
+  .sv-photoGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .shellTopbar {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .shellTitle {
+    font-size: 17px;
+  }
+
+  .shellMobileNav .navItem {
+    font-size: 12px;
+    padding: 7px 8px;
+  }
+
+  .g-profileName {
+    font-size: 18px;
+  }
+
+  .g-statLeft,
+  .g-statVal {
+    font-size: 14px;
   }
 }

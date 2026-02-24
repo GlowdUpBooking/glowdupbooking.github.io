@@ -361,3 +361,70 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 760px) {
+  .authTopNavInner {
+    height: auto;
+    min-height: 66px;
+    padding: 10px 12px;
+    align-items: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .authBrand {
+    font-size: 18px;
+  }
+
+  .authBrandLogo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .authTopNavRight {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .authShell {
+    padding: 22px 12px 44px;
+    gap: 14px;
+  }
+
+  .authPitch,
+  .authCard {
+    padding: 16px;
+    border-radius: 16px;
+  }
+}
+
+@media (max-width: 520px) {
+  .authTitle {
+    font-size: clamp(28px, 10vw, 36px);
+  }
+
+  .authPitch h2 {
+    font-size: clamp(30px, 11vw, 40px);
+  }
+
+  .authNavBtn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    min-height: 38px;
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+
+  .authTopNavRight {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .authTopNavRight .authNavTag {
+    grid-column: 1 / -1;
+    text-align: center;
+  }
+}

@@ -809,3 +809,250 @@
     height: 34px;
   }
 }
+
+@media (max-width: 760px) {
+  .lpNavInner {
+    height: auto;
+    min-height: 66px;
+    padding: 10px 12px;
+    align-items: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .lpBrand {
+    font-size: 18px;
+    gap: 8px;
+  }
+
+  .lpBrandLogo {
+    width: 30px;
+    height: 30px;
+  }
+
+  .lpNavRight {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .lpNavBtn {
+    font-size: 12px;
+    padding: 8px 11px;
+  }
+
+  .lpHeroStrip {
+    padding: 12px 12px 0;
+    gap: 8px;
+  }
+
+  .lpHeroImg {
+    height: 100px;
+    border-radius: 12px;
+  }
+
+  .lpHeroInner {
+    padding: 14px 12px 0;
+  }
+
+  .lpH1 {
+    margin-top: 14px;
+    font-size: clamp(34px, 11vw, 46px);
+  }
+
+  .lpLead {
+    font-size: 17px;
+    line-height: 1.55;
+  }
+
+  .lpHeroBtns {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .lpBtn {
+    width: 100%;
+    max-width: 300px;
+    font-size: 17px !important;
+  }
+
+  .lpTrustRow {
+    gap: 10px;
+    font-size: 13px;
+  }
+
+  .lpLiveChip {
+    margin-top: 12px;
+    font-size: 13px;
+    padding: 7px 12px;
+  }
+
+  .lpWhy,
+  .lpPricing {
+    padding: 26px 0 42px;
+  }
+
+  .lpPricingInner {
+    padding: 0 12px;
+  }
+
+  .lpH2 {
+    font-size: 30px;
+  }
+
+  .lpSub {
+    font-size: 15px;
+  }
+
+  .lpToggleWrap {
+    display: flex;
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .lpToggleBtn {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .lpCounterTop {
+    margin-top: 12px;
+    font-size: 20px;
+  }
+
+  .lpGrid4 {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .lpPriceCard {
+    padding: 18px;
+  }
+
+  .lpPrice {
+    font-size: 48px;
+  }
+
+  .lpTerm {
+    font-size: 16px;
+  }
+
+  .lpList {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .lpChoose {
+    font-size: 17px !important;
+  }
+
+  .lpFounderTop {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .lpFaqList {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 560px) {
+  .lpBrandStrong {
+    font-size: 18px;
+  }
+
+  .lpBrandLight {
+    font-size: 18px;
+  }
+
+  .lpNavRight {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .lpNavBtn {
+    width: 100%;
+    justify-content: center;
+    min-height: 36px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .lpHeroStrip {
+    grid-template-columns: 1fr;
+  }
+
+  .lpHeroImg:nth-child(n + 3) {
+    display: none;
+  }
+
+  .lpLead {
+    font-size: 16px;
+  }
+
+  .lpTrustRow {
+    justify-content: flex-start;
+  }
+
+  .lpCounterTop {
+    font-size: 18px;
+  }
+
+  .lpPriceLine {
+    gap: 8px;
+  }
+
+  .lpPrice {
+    font-size: 42px;
+  }
+
+  .lpFooterLine {
+    margin-top: 16px;
+    padding-top: 14px;
+  }
+
+  .lpFooterSmall {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 420px) {
+  .lpNavInner {
+    padding: 10px;
+  }
+
+  .lpBrand {
+    gap: 6px;
+    font-size: 16px;
+  }
+
+  .lpBrandLogo {
+    width: 27px;
+    height: 27px;
+  }
+
+  .lpNavBtn {
+    font-size: 11px;
+    padding: 7px 10px;
+  }
+
+  .lpNavRight {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lpNavRight .lpNavBtn:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .lpH1 {
+    font-size: clamp(30px, 12vw, 38px);
+  }
+
+  .lpPrice {
+    font-size: 38px;
+  }
+}
