@@ -323,7 +323,6 @@ export default function Signup() {
             stylists, tattoo artists, nail techs, and more.
           </p>
           <div className="authTrustRow">
-            <span>No booking fees</span>
             <span>Stripe-secured payments</span>
             <span>Upgrade anytime</span>
           </div>

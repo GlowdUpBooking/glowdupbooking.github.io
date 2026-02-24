@@ -451,7 +451,6 @@ export default function Pricing() {
           </div>
 
           <div className="lpTrustRow">
-            <span>No booking fees</span>
             <span>Stripe-secured payments</span>
             <span>Cancel anytime</span>
           </div>
