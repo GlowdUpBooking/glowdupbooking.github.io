@@ -28,10 +28,19 @@ function isNoSuchPriceError(err: unknown) {
 type Tier = "starter_monthly" | "pro_monthly" | "founder_annual" | "elite_monthly";
 
 function specForTier(tier: Tier) {
-  if (tier === "starter_monthly") return { token: "starter", interval: "month" as const };
-  if (tier === "pro_monthly") return { token: "pro", interval: "month" as const };
-  if (tier === "founder_annual") return { token: "founder", interval: "year" as const };
-  return { token: "elite", interval: "month" as const };
+  if (tier === "starter_monthly") return { token: "starter", interval: "month" as const, expected_amount: 999 };
+  if (tier === "pro_monthly") return { token: "pro", interval: "month" as const, expected_amount: 1999 };
+  if (tier === "founder_annual") return { token: "founder", interval: "year" as const, expected_amount: 9900 };
+  return { token: "elite", interval: "month" as const, expected_amount: 2999 };
+}
+
+function priceAmountCents(p: any): number | null {
+  if (typeof p?.unit_amount === "number" && Number.isFinite(p.unit_amount)) return p.unit_amount;
+  if (typeof p?.unit_amount_decimal === "string" && p.unit_amount_decimal.trim().length) {
+    const n = Number(p.unit_amount_decimal);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
 }
 
 function pickFallbackPrice(listData: any, tier: Tier) {
@@ -49,8 +58,10 @@ function pickFallbackPrice(listData: any, tier: Tier) {
   });
 
   if (!candidates.length) return null;
-  candidates.sort((a: any, b: any) => Number(b?.created ?? 0) - Number(a?.created ?? 0));
-  return candidates[0];
+  const exactAmount = candidates.filter((p: any) => priceAmountCents(p) === spec.expected_amount);
+  const pool = exactAmount.length ? exactAmount : candidates;
+  pool.sort((a: any, b: any) => Number(b?.created ?? 0) - Number(a?.created ?? 0));
+  return pool[0];
 }
 
 async function resolvePrice(
@@ -58,13 +69,24 @@ async function resolvePrice(
   configuredPriceId: string | null,
   tier: Tier
 ) {
+  const spec = specForTier(tier);
+
   if (configuredPriceId) {
     const direct = await stripeGet(`prices/${configuredPriceId}?expand[]=product`, stripeKey);
     if (direct.ok) {
-      return { ok: true as const, price: direct.data, resolved_price_id: configuredPriceId, source: "env" as const };
+      const amount = priceAmountCents(direct.data);
+      if (amount === spec.expected_amount) {
+        return { ok: true as const, price: direct.data, resolved_price_id: configuredPriceId, source: "env" as const };
+      }
+      console.warn("[get-prices] configured price amount mismatch; falling back by tier lookup", {
+        tier,
+        configuredPriceId,
+        got: amount,
+        expected: spec.expected_amount,
+      });
     }
 
-    if (!isNoSuchPriceError(direct.error)) {
+    if (!direct.ok && !isNoSuchPriceError(direct.error)) {
       return {
         ok: false as const,
         status: direct.status,

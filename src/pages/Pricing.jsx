@@ -53,6 +53,10 @@ function mergeLivePrices(livePrices) {
       return fallback;
     }
 
+    if (typeof fallback?.unit_amount === "number" && unitAmount !== fallback.unit_amount) {
+      return fallback;
+    }
+
     return {
       ...fallback,
       ...candidate,
@@ -77,7 +81,7 @@ function formatMoneyFromStripe(priceObj, billingCycle = "monthly") {
 
   let amount = cents / 100;
   if (billingCycle === "annual" && priceObj?.interval === "month") {
-    amount = amount * 12 * 0.85;
+    amount = amount * 12;
   }
 
   try {
@@ -504,7 +508,7 @@ export default function Pricing() {
                 role="radio"
                 aria-checked={billingCycle === "annual"}
               >
-                Annual (save 15%)
+                Annual
               </button>
             </div>
 
@@ -550,7 +554,7 @@ export default function Pricing() {
                 <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : starterPrice || "-"}</span>
                 <span className="lpTerm">{starterTerm || ""}</span>
               </div>
-              {billingCycle === "annual" ? <div className="lpTinyNote">Display estimate for annual billing</div> : null}
+              {billingCycle === "annual" ? <div className="lpTinyNote">Billed annually before taxes.</div> : null}
               <ul className="lpList">
                 <li>✓ Everything in Free</li>
                 <li>✓ Unlimited accepted bookings</li>
@@ -584,7 +588,7 @@ export default function Pricing() {
                 <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : proPrice || "-"}</span>
                 <span className="lpTerm">{proTerm || ""}</span>
               </div>
-              {billingCycle === "annual" ? <div className="lpTinyNote">Display estimate for annual billing</div> : null}
+              {billingCycle === "annual" ? <div className="lpTinyNote">Billed annually before taxes.</div> : null}
               <ul className="lpList">
                 <li>✓ Everything in Starter</li>
                 <li>✓ Advanced deposits + optional full prepay</li>
