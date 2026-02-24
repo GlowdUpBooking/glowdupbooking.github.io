@@ -3,8 +3,8 @@
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
-type Plan = "free" | "starter" | "pro" | "founder" | "studio";
-type Tier = "starter_monthly" | "pro_monthly" | "founder_annual" | "studio_monthly";
+type Plan = "free" | "starter" | "pro" | "founder" | "elite";
+type Tier = "starter_monthly" | "pro_monthly" | "founder_annual" | "elite_monthly";
 
 function getEnv(name: string) {
   const v = Deno.env.get(name);
@@ -119,8 +119,70 @@ function assertTier(x: any): Tier | null {
   if (t === "starter_monthly") return "starter_monthly";
   if (t === "pro_monthly") return "pro_monthly";
   if (t === "founder_annual") return "founder_annual";
-  if (t === "studio_monthly") return "studio_monthly";
+  if (t === "elite_monthly") return "elite_monthly";
   return null;
+}
+
+async function fetchFounderRolloutState() {
+  const supabaseUrl = getEnv("SUPABASE_URL") ?? getEnv("SB_URL");
+  const serviceRoleKey =
+    getEnv("SUPABASE_SERVICE_ROLE_KEY") ??
+    getEnv("SB_SERVICE_ROLE_KEY");
+  const anonKey =
+    getEnv("SUPABASE_ANON_KEY") ??
+    getEnv("SB_ANON_KEY") ??
+    getEnv("SUPABASE_ANON_PUBLIC") ??
+    getEnv("SB_ANON_PUBLIC");
+
+  const apiKey = serviceRoleKey ?? anonKey;
+
+  if (!supabaseUrl || !apiKey) {
+    return { ok: false as const, error: "missing_supabase_env" };
+  }
+
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/founding_offer?select=max_spots,claimed_spots&id=eq.1&limit=1`,
+    {
+      headers: {
+        apikey: apiKey,
+        Authorization: `Bearer ${apiKey}`,
+      },
+    }
+  );
+
+  const text = await res.text();
+  let json: any = null;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    // ignore
+  }
+
+  if (!res.ok) {
+    return {
+      ok: false as const,
+      error: `founding_offer_lookup_failed:${res.status}`,
+      detail: json ?? text,
+    };
+  }
+
+  const row = Array.isArray(json) ? json[0] : null;
+  if (!row) {
+    return { ok: false as const, error: "founding_offer_row_missing" };
+  }
+
+  const maxSpots = Number(row.max_spots ?? 1000);
+  const claimedSpots = Number(row.claimed_spots ?? 0);
+  if (!Number.isFinite(maxSpots) || !Number.isFinite(claimedSpots)) {
+    return { ok: false as const, error: "founding_offer_bad_values" };
+  }
+
+  return {
+    ok: true as const,
+    maxSpots,
+    claimedSpots,
+    remaining: Math.max(0, maxSpots - claimedSpots),
+  };
 }
 
 async function stripeGet(path: string, stripeKey: string) {
@@ -149,7 +211,7 @@ function specForTier(tier: Tier) {
   if (tier === "starter_monthly") return { token: "starter", interval: "month" as const };
   if (tier === "pro_monthly") return { token: "pro", interval: "month" as const };
   if (tier === "founder_annual") return { token: "founder", interval: "year" as const };
-  return { token: "studio", interval: "month" as const };
+  return { token: "elite", interval: "month" as const };
 }
 
 function pickFallbackPrice(listData: any, tier: Tier) {
@@ -208,7 +270,7 @@ serve(async (req) => {
     const priceStarter = getEnv("STRIPE_PRICE_STARTER_MONTHLY");
     const pricePro = getEnv("STRIPE_PRICE_PRO_MONTHLY");
     const priceFounder = getEnv("STRIPE_PRICE_FOUNDER_ANNUAL");
-    const priceStudio = getEnv("STRIPE_PRICE_STUDIO_MONTHLY"); // optional (only used if you have it)
+    const priceElite = getEnv("STRIPE_PRICE_ELITE_MONTHLY"); // optional (falls back by product token)
 
     if (!stripeKey) return json(req, 500, { error: "Missing STRIPE_SECRET_KEY" });
     if (!siteUrl) return json(req, 500, { error: "Missing SITE_URL (required for prod redirects)" });
@@ -234,7 +296,7 @@ serve(async (req) => {
     if (!tier) {
       return json(req, 400, {
         error: "invalid_tier",
-        allowed: ["starter_monthly", "pro_monthly", "founder_annual", "studio_monthly"],
+        allowed: ["starter_monthly", "pro_monthly", "founder_annual", "elite_monthly"],
         received: payload?.tier ?? null,
       });
     }
@@ -245,6 +307,33 @@ serve(async (req) => {
     if (!userId) {
       if (DEBUG) console.log("[create-checkout-session] auth failed", { reason, detail });
       return json(req, 401, { error: "not_authenticated", reason });
+    }
+
+    // Rollout guard: Elite is blocked until Founder spots are fully claimed.
+    // Founder is blocked once spots are exhausted.
+    if (tier === "founder_annual" || tier === "elite_monthly") {
+      const rollout = await fetchFounderRolloutState();
+
+      if (!rollout.ok) {
+        return json(req, 503, {
+          error: "founder_rollout_unavailable",
+          detail: rollout.error,
+        });
+      }
+
+      if (tier === "elite_monthly" && rollout.remaining > 0) {
+        return json(req, 403, {
+          error: "elite_locked_until_founder_full",
+          founder_spots_left: rollout.remaining,
+        });
+      }
+
+      if (tier === "founder_annual" && rollout.remaining <= 0) {
+        return json(req, 403, {
+          error: "founder_closed_elite_live",
+          founder_spots_left: rollout.remaining,
+        });
+      }
     }
 
     let plan: Plan = "pro";
@@ -263,10 +352,10 @@ serve(async (req) => {
       plan = "founder";
       interval = "annual";
       configuredPriceId = priceFounder;
-    } else if (tier === "studio_monthly") {
-      plan = "studio";
+    } else if (tier === "elite_monthly") {
+      plan = "elite";
       interval = "monthly";
-      configuredPriceId = priceStudio;
+      configuredPriceId = priceElite;
     }
 
     const priceResolve = await resolvePriceId(stripeKey, tier, configuredPriceId);

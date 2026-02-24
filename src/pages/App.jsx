@@ -37,7 +37,7 @@ function normalizePlanKey(raw) {
   if (v === "starter" || v === "starter_monthly") return "starter";
   if (v === "pro" || v === "pro_monthly") return "pro";
   if (v === "founder" || v === "founder_annual") return "founder";
-  if (v === "studio" || v === "studio_monthly") return "studio";
+  if (v === "elite" || v === "elite_monthly") return "elite";
   return null;
 }
 
@@ -382,10 +382,12 @@ export default function App() {
     if (currentPlanKey === "starter") return "Starter";
     if (currentPlanKey === "pro") return "Pro";
     if (currentPlanKey === "founder") return "Founder";
-    if (currentPlanKey === "studio") return "Studio";
+    if (currentPlanKey === "elite") return "Elite";
     if (currentPlanKey === "paid") return "Paid";
     return "Free";
   }, [currentPlanKey]);
+
+  const isFounder = currentPlanKey === "founder";
 
   const subscriptionLine = useMemo(() => {
     if (!isActive) return `${planLabel} plan`;
@@ -509,7 +511,10 @@ export default function App() {
                 </div>
 
                 <div className="g-profileMain">
-                  <div className="g-profileName">{displayBusinessName}</div>
+                  <div className="g-profileNameRow">
+                    <div className="g-profileName">{displayBusinessName}</div>
+                    {isFounder ? <span className="g-founderBadge">Founder</span> : null}
+                  </div>
                   <div className="g-profileType">{displayType}</div>
 
                   <div className="g-profileMeta">

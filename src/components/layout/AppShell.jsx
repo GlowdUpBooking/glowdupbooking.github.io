@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 export default function AppShell({ title, onSignOut, children }) {
   const navClass = ({ isActive }) => `navItem${isActive ? " navItemActive" : ""}`;
@@ -73,6 +73,25 @@ export default function AppShell({ title, onSignOut, children }) {
             Sign out
           </button>
         </header>
+
+        <nav className="shellMobileNav" aria-label="Mobile navigation">
+          <NavLink to="/app" end className={navClass}>
+            <div className="navIcon">▦</div>
+            Dashboard
+          </NavLink>
+          <NavLink to="/app/services" className={navClass}>
+            <div className="navIcon">🏷</div>
+            Services
+          </NavLink>
+          <NavLink to="/app/settings" className={navClass}>
+            <div className="navIcon">✓</div>
+            Availability
+          </NavLink>
+          <Link to="/pricing?focus=plans" className="navItem shellMobileNavItem">
+            <div className="navIcon">💳</div>
+            Pricing
+          </Link>
+        </nav>
 
         <main className="shellContent">{children}</main>
       </section>

@@ -25,7 +25,8 @@ const FAQ_ITEMS = [
 const DEFAULT_PRICES = Object.freeze({
   free_monthly: { id: "free", unit_amount: 0, currency: "USD", interval: "month", interval_count: 1, product_name: "Free" },
   starter_monthly: { id: "starter_default", unit_amount: 999, currency: "USD", interval: "month", interval_count: 1, product_name: "Starter" },
-  pro_monthly: { id: "pro_default", unit_amount: 1499, currency: "USD", interval: "month", interval_count: 1, product_name: "Pro" },
+  pro_monthly: { id: "pro_default", unit_amount: 1999, currency: "USD", interval: "month", interval_count: 1, product_name: "Pro" },
+  elite_monthly: { id: "elite_default", unit_amount: 2999, currency: "USD", interval: "month", interval_count: 1, product_name: "Elite" },
   founder_annual: { id: "founder_default", unit_amount: 9900, currency: "USD", interval: "year", interval_count: 1, product_name: "Founder" },
 });
 
@@ -64,8 +65,8 @@ function mergeLivePrices(livePrices) {
     free_monthly: DEFAULT_PRICES.free_monthly,
     starter_monthly: pick("starter_monthly"),
     pro_monthly: pick("pro_monthly"),
+    elite_monthly: pick("elite_monthly"),
     founder_annual: pick("founder_annual"),
-    studio_monthly: livePrices?.studio_monthly ?? null,
   };
 }
 
@@ -370,13 +371,15 @@ export default function Pricing() {
 
   const starterPrice = prices ? formatMoneyFromStripe(prices.starter_monthly, billingCycle) : null;
   const proPrice = prices ? formatMoneyFromStripe(prices.pro_monthly, billingCycle) : null;
+  const elitePrice = prices ? formatMoneyFromStripe(prices.elite_monthly, billingCycle) : null;
   const founderPrice = prices ? formatMoneyFromStripe(prices.founder_annual, "annual") : null;
 
   const starterTerm = prices ? formatTerm(prices.starter_monthly, billingCycle) : null;
   const proTerm = prices ? formatTerm(prices.pro_monthly, billingCycle) : null;
+  const eliteTerm = prices ? formatTerm(prices.elite_monthly, billingCycle) : null;
   const founderTerm = prices ? formatTerm(prices.founder_annual, "annual") : null;
 
-  const founderSoldOut = !loading && remaining <= 0;
+  const showFounderPlan = loading || remaining > 0;
 
   return (
     <div className="lp">
@@ -454,7 +457,7 @@ export default function Pricing() {
           </div>
 
           <div className={`lpLiveChip ${loading ? "is-loading" : ""}`}>
-            {loading ? "Loading founder availability..." : `${remaining} Founder spots left`} · {relativeUpdate(updatedAt)}
+            {loading ? "Loading founder availability..." : showFounderPlan ? `${remaining} Founder spots left` : "Founder spots filled · Elite unlocked"} · {relativeUpdate(updatedAt)}
           </div>
 
           {toast ? <div className="lpToast">{toast}</div> : null}
@@ -507,7 +510,7 @@ export default function Pricing() {
             </div>
 
             <div className={`lpCounter lpCounterTop ${loading ? "lpSkeleton" : ""}`}>
-              {loading ? "Founder spots left" : `${remaining} Founder spots left`}
+              {loading ? "Founder spots left" : showFounderPlan ? `${remaining} Founder spots left` : "Founder spots filled · Elite now available"}
             </div>
           </div>
 
@@ -516,12 +519,12 @@ export default function Pricing() {
               <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Free</div>
               <div className="lpPriceLine"><span className="lpPrice">$0</span></div>
               <ul className="lpList">
-                <li>✓ Pro profile + shareable booking link</li>
-                <li>✓ Unlimited booking requests</li>
-                <li>✓ Accept up to 20 bookings per month (resets on the 1st)</li>
-                <li>✓ Optional deposits</li>
-                <li>✓ Basic scheduling + booking management</li>
-                <li>✓ No full prepay (deposit-only payments if enabled)</li>
+                <li>✓ Basic booking link</li>
+                <li>✓ Up to 5 services</li>
+                <li>✓ Up to 20 bookings per month (resets on the 1st)</li>
+                <li>✓ No deposits or full prepay</li>
+                <li>✓ No service photos</li>
+                <li>✓ Basic profile + standard support</li>
               </ul>
               <div className="lpChooseWrap">
                 {!session ? (
@@ -552,10 +555,11 @@ export default function Pricing() {
               <ul className="lpList">
                 <li>✓ Everything in Free</li>
                 <li>✓ Unlimited accepted bookings</li>
-                <li>✓ Better booking controls</li>
-                <li>✓ Service menu (durations + pricing)</li>
-                <li>✓ Client notes + simple organization</li>
-                <li>✓ Faster setup + smoother workflow</li>
+                <li>✓ Unlimited services</li>
+                <li>✓ Fixed-amount deposits</li>
+                <li>✓ Service photos</li>
+                <li>✓ Better booking controls + reminders</li>
+                <li>✓ Basic reporting</li>
               </ul>
               <div className="lpChooseWrap">
                 <Button
@@ -584,12 +588,12 @@ export default function Pricing() {
               {billingCycle === "annual" ? <div className="lpTinyNote">Display estimate for annual billing</div> : null}
               <ul className="lpList">
                 <li>✓ Everything in Starter</li>
-                <li>✓ Optional deposits and optional full prepay</li>
-                <li>✓ Advanced scheduling rules (buffers, availability windows, etc.)</li>
-                <li>✓ Portfolio/service photos</li>
-                <li>✓ Stronger branding + customization</li>
-                <li>✓ Priority placement (when marketplace launches)</li>
-                <li>✓ Instant payout option (fee applies)</li>
+                <li>✓ Advanced deposits + optional full prepay</li>
+                <li>✓ Advanced availability/scheduling rules</li>
+                <li>✓ Social/payment profile fields (IG/X/Cash App)</li>
+                <li>✓ Portfolio/gallery polish</li>
+                <li>✓ Higher reporting capability</li>
+                <li>✓ Priority support</li>
               </ul>
               <div className="lpChooseWrap">
                 <Button
@@ -606,50 +610,80 @@ export default function Pricing() {
               </div>
             </Card>
 
-            <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "210ms" }}>
-              <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Founder</div>
-              <div className="lpPriceLine">
-                <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : founderPrice || "-"}</span>
-                <span className="lpTerm">{founderTerm || ""}</span>
-              </div>
-
-              <div className="lpFounderBox">
-                <div className="lpFounderTop">
-                  <div className="lpFounderTitle">Founder Annual</div>
-                  <div className="lpFounderRule">Price locked while active</div>
+            {showFounderPlan ? (
+              <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "210ms" }}>
+                <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Founder</div>
+                <div className="lpPriceLine">
+                  <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : founderPrice || "-"}</span>
+                  <span className="lpTerm">{founderTerm || ""}</span>
                 </div>
-              </div>
 
-              <div className="lpFounderText">First 1,000 pros only. Lock in the best price while you stay active.</div>
+                <div className="lpFounderBox">
+                  <div className="lpFounderTop">
+                    <div className="lpFounderTitle">Founder Annual</div>
+                    <div className="lpFounderRule">Price locked while active</div>
+                  </div>
+                </div>
 
-              <div className={`lpCounter ${loading ? "lpSkeleton" : ""}`}>
-                {loading ? "Checking founder spots..." : <><strong>{remaining}</strong> Founder spots left</>}
-                {err ? <div className="lpCounterErr">{err}</div> : null}
-              </div>
+                <div className="lpFounderText">First 1,000 pros only. Same feature access as Pro with locked annual pricing.</div>
 
-              <ul className="lpList">
-                <li>✓ Everything in Pro</li>
-                <li>✓ Founder pricing locked while active</li>
-                <li>✓ Founder badge + early feature access</li>
-                <li>✓ Priority support</li>
-                <li>✓ Best long-term value</li>
-                <li>✓ Lapse over 7 days cannot reclaim Founder pricing</li>
-              </ul>
+                <div className={`lpCounter ${loading ? "lpSkeleton" : ""}`}>
+                  {loading ? "Checking founder spots..." : <><strong>{remaining}</strong> Founder spots left</>}
+                  {err ? <div className="lpCounterErr">{err}</div> : null}
+                </div>
 
-              <div className="lpChooseWrap">
-                <Button
-                  variant="outline"
-                  className="lpChoose"
-                  onClick={() => {
-                    trackEvent("plan_cta_click", { page: "pricing", plan: "founder", cta: "choose_founder", billing_cycle: "annual" });
-                    startCheckout("founder_annual");
-                  }}
-                  disabled={sessionLoading || pricesLoading || founderSoldOut}
-                >
-                  {founderSoldOut ? "Founder Sold Out" : sessionLoading ? "Redirecting..." : "Choose Founder"}
-                </Button>
-              </div>
-            </Card>
+                <ul className="lpList">
+                  <li>✓ Everything in Pro</li>
+                  <li>✓ Founder badge + early feature access</li>
+                  <li>✓ Founder pricing locked while active</li>
+                  <li>✓ Priority support</li>
+                  <li>✓ Best long-term value</li>
+                </ul>
+
+                <div className="lpChooseWrap">
+                  <Button
+                    variant="outline"
+                    className="lpChoose"
+                    onClick={() => {
+                      trackEvent("plan_cta_click", { page: "pricing", plan: "founder", cta: "choose_founder", billing_cycle: "annual" });
+                      startCheckout("founder_annual");
+                    }}
+                    disabled={sessionLoading || pricesLoading}
+                  >
+                    {sessionLoading ? "Redirecting..." : "Choose Founder"}
+                  </Button>
+                </div>
+              </Card>
+            ) : (
+              <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "210ms" }}>
+                <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Elite</div>
+                <div className="lpPriceLine">
+                  <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : elitePrice || "-"}</span>
+                  <span className="lpTerm">{eliteTerm || ""}</span>
+                </div>
+                <ul className="lpList">
+                  <li>✓ Everything in Pro</li>
+                  <li>✓ Team/staff workflows</li>
+                  <li>✓ +1 member included</li>
+                  <li>✓ Additional members +$10 each (max 10 total)</li>
+                  <li>✓ Multi-location + advanced business controls</li>
+                  <li>✓ Advanced analytics + concierge support</li>
+                </ul>
+                <div className="lpChooseWrap">
+                  <Button
+                    variant="outline"
+                    className="lpChoose"
+                    onClick={() => {
+                      trackEvent("plan_cta_click", { page: "pricing", plan: "elite", cta: "choose_elite", billing_cycle: billingCycle });
+                      startCheckout("elite_monthly");
+                    }}
+                    disabled={sessionLoading || pricesLoading}
+                  >
+                    {sessionLoading ? "Redirecting..." : "Choose Elite"}
+                  </Button>
+                </div>
+              </Card>
+            )}
           </div>
 
           <div className="lpFooterLine">

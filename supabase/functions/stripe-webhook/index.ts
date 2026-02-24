@@ -23,13 +23,13 @@ function json(status: number, body: Record<string, unknown>) {
   });
 }
 
-type Tier = "starter_monthly" | "pro_monthly" | "founder_annual" | "studio_monthly";
+type Tier = "starter_monthly" | "pro_monthly" | "founder_annual" | "elite_monthly";
 type Interval = "monthly" | "annual";
 
 function normalizeFromTier(tier: Tier) {
   if (tier === "starter_monthly") return { plan: "starter", interval: "monthly" as Interval };
   if (tier === "pro_monthly") return { plan: "pro", interval: "monthly" as Interval };
-  if (tier === "studio_monthly") return { plan: "studio", interval: "monthly" as Interval };
+  if (tier === "elite_monthly") return { plan: "elite", interval: "monthly" as Interval };
   return { plan: "founder", interval: "annual" as Interval };
 }
 
@@ -41,7 +41,7 @@ function readMeta(obj: any) {
     m.tier === "starter_monthly" ||
     m.tier === "pro_monthly" ||
     m.tier === "founder_annual" ||
-    m.tier === "studio_monthly"
+    m.tier === "elite_monthly"
       ? m.tier
       : null;
 

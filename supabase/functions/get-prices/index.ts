@@ -25,14 +25,16 @@ function isNoSuchPriceError(err: unknown) {
   return msg.includes("no such price");
 }
 
-function specForTier(tier: "starter_monthly" | "pro_monthly" | "founder_annual" | "studio_monthly") {
+type Tier = "starter_monthly" | "pro_monthly" | "founder_annual" | "elite_monthly";
+
+function specForTier(tier: Tier) {
   if (tier === "starter_monthly") return { token: "starter", interval: "month" as const };
   if (tier === "pro_monthly") return { token: "pro", interval: "month" as const };
   if (tier === "founder_annual") return { token: "founder", interval: "year" as const };
-  return { token: "studio", interval: "month" as const };
+  return { token: "elite", interval: "month" as const };
 }
 
-function pickFallbackPrice(listData: any, tier: "starter_monthly" | "pro_monthly" | "founder_annual" | "studio_monthly") {
+function pickFallbackPrice(listData: any, tier: Tier) {
   const spec = specForTier(tier);
   const rows = Array.isArray(listData?.data) ? listData.data : [];
 
@@ -54,7 +56,7 @@ function pickFallbackPrice(listData: any, tier: "starter_monthly" | "pro_monthly
 async function resolvePrice(
   stripeKey: string,
   configuredPriceId: string | null,
-  tier: "starter_monthly" | "pro_monthly" | "founder_annual" | "studio_monthly"
+  tier: Tier
 ) {
   if (configuredPriceId) {
     const direct = await stripeGet(`prices/${configuredPriceId}?expand[]=product`, stripeKey);
@@ -159,28 +161,21 @@ serve(async (req) => {
   const priceStarter = getEnv("STRIPE_PRICE_STARTER_MONTHLY");
   const pricePro = getEnv("STRIPE_PRICE_PRO_MONTHLY");
   const priceFounder = getEnv("STRIPE_PRICE_FOUNDER_ANNUAL");
-  const priceStudio = getEnv("STRIPE_PRICE_STUDIO_MONTHLY"); // optional
+  const priceElite = getEnv("STRIPE_PRICE_ELITE_MONTHLY"); // optional (falls back by product token)
 
   if (!stripeKey) return json(500, { error: "Missing STRIPE_SECRET_KEY" });
-  if (!priceStarter || !pricePro || !priceFounder) {
-    return json(500, {
-      error: "Missing one or more STRIPE price env vars",
-      missing: {
-        STRIPE_PRICE_STARTER_MONTHLY: !priceStarter,
-        STRIPE_PRICE_PRO_MONTHLY: !pricePro,
-        STRIPE_PRICE_FOUNDER_ANNUAL: !priceFounder,
-      },
-    });
-  }
 
   const starterRes = await resolvePrice(stripeKey, priceStarter, "starter_monthly");
   const proRes = await resolvePrice(stripeKey, pricePro, "pro_monthly");
   const founderRes = await resolvePrice(stripeKey, priceFounder, "founder_annual");
+  const eliteRes = await resolvePrice(stripeKey, priceElite, "elite_monthly");
 
-  let studioNorm: any = null;
-  if (priceStudio) {
-    const studioRes = await resolvePrice(stripeKey, priceStudio, "studio_monthly");
-    if (studioRes.ok) studioNorm = normalizePrice(studioRes.price);
+  const eliteNorm: any = eliteRes.ok ? normalizePrice(eliteRes.price) : null;
+  if (!eliteRes.ok) {
+    console.warn("[get-prices] elite price lookup failed; returning null for elite_monthly", {
+      status: eliteRes.status,
+      error: eliteRes.error,
+    });
   }
 
   if (!starterRes.ok || !proRes.ok || !founderRes.ok) {
@@ -190,6 +185,7 @@ serve(async (req) => {
         starter: starterRes.ok ? null : { status: starterRes.status, error: starterRes.error },
         pro: proRes.ok ? null : { status: proRes.status, error: proRes.error },
         founder: founderRes.ok ? null : { status: founderRes.status, error: founderRes.error },
+        elite: eliteRes.ok ? null : { status: eliteRes.status, error: eliteRes.error },
       },
     });
   }
@@ -203,14 +199,13 @@ serve(async (req) => {
       starter_monthly: normalizePrice(starterRes.price),
       pro_monthly: normalizePrice(proRes.price),
       founder_annual: normalizePrice(founderRes.price),
-
-      // optional: only present if you set STRIPE_PRICE_STUDIO_MONTHLY
-      studio_monthly: studioNorm,
+      elite_monthly: eliteNorm,
     },
     sources: {
       starter_monthly: starterRes.source,
       pro_monthly: proRes.source,
       founder_annual: founderRes.source,
+      elite_monthly: eliteRes.ok ? eliteRes.source : null,
     },
   });
 });
