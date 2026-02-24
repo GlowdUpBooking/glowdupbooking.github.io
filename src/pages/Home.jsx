@@ -149,6 +149,7 @@ export default function Home() {
     () => PREVIEW_TABS.find((tab) => tab.id === activeTab) || PREVIEW_TABS[0],
     [activeTab]
   );
+  const showFounderPlan = loadingFounder || founderLeft > 0;
   const activeFlow = activePreview.flow || [];
   const activeFlowStep = activeFlow[activeStep] || activeFlow[0];
 
@@ -270,7 +271,12 @@ export default function Home() {
           </div>
 
           <div className={`lpLiveChip ${loadingFounder ? "is-loading" : ""}`}>
-            {loadingFounder ? "Loading founder availability..." : `${founderLeft} Founder spots left`} · {relativeUpdate(updatedAt)}
+            {loadingFounder
+              ? "Loading founder availability..."
+              : showFounderPlan
+              ? `${founderLeft} Founder spots left`
+              : "Founder spots filled · Elite now available"}{" "}
+            · {relativeUpdate(updatedAt)}
           </div>
         </div>
       </section>
@@ -368,7 +374,11 @@ export default function Home() {
             <h2 className="lpH2">Simple pricing for professionals.</h2>
             <div className="lpSub">Choose what fits your workflow.</div>
             <div className={`lpCounter lpCounterTop ${loadingFounder ? "lpSkeleton" : ""}`}>
-              {loadingFounder ? "Founder spots left" : `${founderLeft} Founder spots left`}
+              {loadingFounder
+                ? "Founder spots left"
+                : showFounderPlan
+                ? `${founderLeft} Founder spots left`
+                : "Founder spots filled · Elite now available"}
             </div>
           </div>
 
@@ -380,11 +390,12 @@ export default function Home() {
               </div>
 
               <ul className="lpList">
-                <li>✓ Pro profile + shareable booking link</li>
-                <li>✓ Unlimited booking requests</li>
-                <li>✓ Accept up to 20 bookings per month</li>
-                <li>✓ Optional deposits</li>
-                <li>✓ Basic scheduling + booking management</li>
+                <li>✓ Basic booking link</li>
+                <li>✓ Up to 5 services</li>
+                <li>✓ Up to 20 bookings per month</li>
+                <li>✓ No deposits or full prepay</li>
+                <li>✓ No service photos</li>
+                <li>✓ Basic profile + standard support</li>
               </ul>
 
               <Link
@@ -408,9 +419,11 @@ export default function Home() {
               <ul className="lpList">
                 <li>✓ Everything in Free</li>
                 <li>✓ Unlimited accepted bookings</li>
-                <li>✓ Better booking controls</li>
-                <li>✓ Service menu (durations + pricing)</li>
-                <li>✓ Client notes + simple organization</li>
+                <li>✓ Unlimited services</li>
+                <li>✓ Fixed-amount deposits</li>
+                <li>✓ Service photos</li>
+                <li>✓ Better booking controls + reminders</li>
+                <li>✓ Basic reporting</li>
               </ul>
 
               <Link
@@ -430,17 +443,18 @@ export default function Home() {
                 <div className="lpBadge">Most chosen</div>
               </div>
               <div className="lpPriceLine">
-                <span className="lpPrice">$14.99</span>
+                <span className="lpPrice">$19.99</span>
                 <span className="lpTerm">/month</span>
               </div>
 
               <ul className="lpList">
                 <li>✓ Everything in Starter</li>
-                <li>✓ Optional deposits and optional full prepay</li>
-                <li>✓ Advanced scheduling rules</li>
-                <li>✓ Portfolio/service photos</li>
-                <li>✓ Stronger branding + customization</li>
-                <li>✓ Instant payout option (fee applies)</li>
+                <li>✓ Advanced deposits + optional full prepay</li>
+                <li>✓ Advanced availability/scheduling rules</li>
+                <li>✓ Social/payment profile fields (IG/X/Cash App)</li>
+                <li>✓ Portfolio/gallery polish</li>
+                <li>✓ Higher reporting capability</li>
+                <li>✓ Priority support</li>
               </ul>
 
               <Link
@@ -454,50 +468,77 @@ export default function Home() {
               </Link>
             </Card>
 
-            <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "210ms" }}>
-              <div className="lpTier">Founder</div>
-              <div className="lpPriceLine">
-                <span className="lpPrice">$99</span>
-                <span className="lpTerm">/year</span>
-              </div>
-
-              <div className="lpFounderBox">
-                <div className="lpFounderTop">
-                  <div className="lpFounderTitle">Founder Annual</div>
-                  <div className="lpFounderRule">Price locked while active</div>
+            {showFounderPlan ? (
+              <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "210ms" }}>
+                <div className="lpTier">Founder</div>
+                <div className="lpPriceLine">
+                  <span className="lpPrice">$99</span>
+                  <span className="lpTerm">/year</span>
                 </div>
-              </div>
 
-              <div className="lpFounderText">First 1,000 pros only. Lock in the best price while you stay active.</div>
+                <div className="lpFounderBox">
+                  <div className="lpFounderTop">
+                    <div className="lpFounderTitle">Founder Annual</div>
+                    <div className="lpFounderRule">Price locked while active</div>
+                  </div>
+                </div>
 
-              <div className={`lpCounter ${loadingFounder ? "lpSkeleton" : ""}`}>
-                {loadingFounder ? (
-                  "Checking founder spots..."
-                ) : (
-                  <>
-                    <strong>{founderLeft}</strong> Founder spots left
-                  </>
-                )}
-              </div>
+                <div className="lpFounderText">First 1,000 pros only. Same feature access as Pro with locked annual pricing.</div>
 
-              <ul className="lpList">
-                <li>✓ Everything in Pro</li>
-                <li>✓ Founder pricing locked while active</li>
-                <li>✓ Founder badge + early feature access</li>
-                <li>✓ Priority support</li>
-                <li>✓ Best long-term value</li>
-              </ul>
+                <div className={`lpCounter ${loadingFounder ? "lpSkeleton" : ""}`}>
+                  {loadingFounder ? (
+                    "Checking founder spots..."
+                  ) : (
+                    <>
+                      <strong>{founderLeft}</strong> Founder spots left
+                    </>
+                  )}
+                </div>
 
-              <Link
-                to="/pricing#plans"
-                className="lpChooseWrap"
-                onClick={() => trackEvent("plan_cta_click", { page: "home", plan: "founder", cta: "choose_founder" })}
-              >
-                <Button variant="outline" className="lpChoose">
-                  Choose Founder
-                </Button>
-              </Link>
-            </Card>
+                <ul className="lpList">
+                  <li>✓ Everything in Pro</li>
+                  <li>✓ Founder pricing locked while active</li>
+                  <li>✓ Founder badge + early feature access</li>
+                  <li>✓ Priority support</li>
+                  <li>✓ Best long-term value</li>
+                </ul>
+
+                <Link
+                  to="/pricing#plans"
+                  className="lpChooseWrap"
+                  onClick={() => trackEvent("plan_cta_click", { page: "home", plan: "founder", cta: "choose_founder" })}
+                >
+                  <Button variant="outline" className="lpChoose">
+                    Choose Founder
+                  </Button>
+                </Link>
+              </Card>
+            ) : (
+              <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "210ms" }}>
+                <div className="lpTier">Elite</div>
+                <div className="lpPriceLine">
+                  <span className="lpPrice">$29.99</span>
+                  <span className="lpTerm">/month</span>
+                </div>
+                <ul className="lpList">
+                  <li>✓ Everything in Pro</li>
+                  <li>✓ Team/staff workflows</li>
+                  <li>✓ +1 member included</li>
+                  <li>✓ Additional members +$10 each (max 10 total)</li>
+                  <li>✓ Multi-location + advanced business controls</li>
+                  <li>✓ Advanced analytics + concierge support</li>
+                </ul>
+                <Link
+                  to="/pricing#plans"
+                  className="lpChooseWrap"
+                  onClick={() => trackEvent("plan_cta_click", { page: "home", plan: "elite", cta: "choose_elite" })}
+                >
+                  <Button variant="outline" className="lpChoose">
+                    Choose Elite
+                  </Button>
+                </Link>
+              </Card>
+            )}
           </div>
         </div>
       </section>
