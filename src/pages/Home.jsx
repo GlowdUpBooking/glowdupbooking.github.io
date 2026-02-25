@@ -560,6 +560,21 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+
+      <section className="lpPricing lpReveal lpSectionLazy">
+        <div className="lpPricingInner">
+          <div className="lpFooterLine">
+            <div className="lpFooterBig">Glow’d Up Booking for Pros</div>
+            <div className="lpFooterSmall">
+              Need help? <Link to="/support">Support</Link> • <a href="mailto:glowdupbooking@gmail.com">glowdupbooking@gmail.com</a>
+            </div>
+            <div className="lpFooterSmall">
+              <Link to="/pricing#plans">Pricing</Link> • <Link to="/login">Sign in</Link> • <Link to={signupPath}>Start free</Link>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
