@@ -484,6 +484,32 @@
   padding-top: 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
+.lpFooterInlineWrap {
+  padding: 28px 0 50px;
+}
+
+.lpFooterInline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.lpFooterInline a {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.lpFooterInline a:hover {
+  color: #ffffff;
+}
+
+.lpFooterDot {
+  opacity: 0.5;
+}
+
 
 .lpFooterBig {
   font-size: 30px;
@@ -1017,6 +1043,15 @@
 
   .lpFooterSmall {
     font-size: 14px;
+  }
+
+  .lpFooterInline {
+    font-size: 14px;
+    gap: 6px;
+  }
+
+  .lpFooterInlineWrap {
+    padding: 18px 0 36px;
   }
 }
 

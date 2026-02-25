@@ -562,16 +562,16 @@ export default function Home() {
       </section>
 
 
-      <section className="lpPricing lpReveal lpSectionLazy">
+      <section className="lpFooterInlineWrap lpReveal lpSectionLazy">
         <div className="lpPricingInner">
-          <div className="lpFooterLine">
-            <div className="lpFooterBig">Glow’d Up Booking for Pros</div>
-            <div className="lpFooterSmall">
-              Need help? <Link to="/support">Support</Link> • <a href="mailto:glowdupbooking@gmail.com">glowdupbooking@gmail.com</a>
-            </div>
-            <div className="lpFooterSmall">
-              <Link to="/pricing#plans">Pricing</Link> • <Link to="/login">Sign in</Link> • <Link to={signupPath}>Start free</Link>
-            </div>
+          <div className="lpFooterInline">
+            <span>© {new Date().getFullYear()} Glow’d Up Booking</span>
+            <span className="lpFooterDot">•</span>
+            <a href="https://glowdupbooking.com/privacy.html">Privacy Policy</a>
+            <span className="lpFooterDot">•</span>
+            <a href="https://glowdupbooking.com/terms.html">Terms of Use</a>
+            <span className="lpFooterDot">•</span>
+            <Link to="/support">Support</Link>
           </div>
         </div>
       </section>
