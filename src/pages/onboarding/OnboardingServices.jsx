@@ -448,7 +448,7 @@ export default function OnboardingServices() {
       <header className="nav">
         <div className="navInner">
           <a className="brand" href="/app">
-            <img className="logo" src="/assets/logo-1.png" alt="Glow’d Up Booking" />
+            <img className="logo" src="/assets/logo.png" alt="Glow’d Up Booking" />
             <div className="brandText">
               <div className="brandName">Glow’d Up Booking</div>
               <div className="brandTag">Onboarding</div>

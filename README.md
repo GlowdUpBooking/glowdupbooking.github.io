@@ -1,6 +1,17 @@
 # -glowdupbooking.github.io
 Glow’d Up Booking — coming soon. Booking + reminders + deposits for beauty pros.
 
+## Booking Link Routing
+The pro dashboard builds booking links as:
+
+`/professional/<pro_id>`
+
+Notes:
+- If `VITE_BOOKING_BASE_URL` is set, booking links will use that domain (e.g., `https://glowdupbooking.com/professional/<pro_id>`).
+- If not set, booking links stay on the current domain.
+- The `/professional/:id` route exists in this app and currently shows a "Booking is almost here" placeholder (useful until the customer web app is live).
+- `/book/:code` is kept as a legacy alias and also resolves to the placeholder.
+
 ## Analytics (GA4 + PostHog)
 Set these in your local env file (`.env.local`) for production analytics:
 

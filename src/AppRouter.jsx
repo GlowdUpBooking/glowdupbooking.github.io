@@ -6,9 +6,12 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import VerifyEmail from "./pages/VerifyEmail";
 import App from "./pages/App";
+import Booking from "./pages/Booking";
+import Calendar from "./pages/Calendar";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Services from "./pages/Services";
+import Support from "./pages/Support";
 
 // Pricing / Paywall
 import Pricing from "./pages/Pricing";
@@ -49,6 +52,9 @@ export default function AppRouter() {
           element={signupPaused ? <Navigate to={getSignupPath()} replace /> : <Signup />}
         />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/book/:code" element={<Booking />} />
+        <Route path="/professional/:id" element={<Booking />} />
+        <Route path="/support" element={<Support />} />
 
         {/* Pricing page (public ok; you can keep it public or wrap it later) */}
         <Route path="/pricing" element={<Pricing />} />
@@ -88,6 +94,17 @@ export default function AppRouter() {
         />
 
         <Route
+          path="/app/calendar"
+          element={
+            <RequireAuth>
+              <RequireOnboarding>
+                <Calendar />
+              </RequireOnboarding>
+            </RequireAuth>
+          }
+        />
+
+        <Route
           path="/app/profile"
           element={
             <RequireAuth>
@@ -119,6 +136,8 @@ export default function AppRouter() {
             </RequireAuth>
           }
         />
+
+        <Route path="/app/support" element={<Navigate to="/support" replace />} />
 
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -442,7 +442,8 @@ export default function App() {
       ? `${profile.travel_radius_miles} miles`
       : "—";
 
-  const bookingLink = user?.id ? `${window.location.origin}/book/${user.id.slice(0, 8)}` : "";
+  const bookingBase = (import.meta.env.VITE_BOOKING_BASE_URL || window.location.origin || "").replace(/\/$/, "");
+  const bookingLink = user?.id ? `${bookingBase}/professional/${user.id}` : "";
   const activationText = `Hey! You can book me here: ${bookingLink}. Pick your service + time and I will confirm right away.`;
 
   const hasProfileStep = Boolean(profile?.business_name && profile?.business_type);
