@@ -51,7 +51,7 @@ const FAQS = [
   },
   {
     q: "What is the Founder plan?",
-    a: "The Founder plan is available to the first 1,000 pros at $99/year. It includes everything in Pro with your price locked for as long as the plan stays active.",
+    a: "The Founder plan is available to the first 500 pros at $99/year. It includes everything in Pro with your price locked for as long as the plan stays active.",
   },
 ];
 
@@ -165,7 +165,7 @@ const PREVIEW_TABS = [
 
 export default function Home() {
   const signupPath = getSignupPath();
-  const [founderLeft, setFounderLeft] = useState(1000);
+  const [founderLeft, setFounderLeft] = useState(500);
   const [loadingFounder, setLoadingFounder] = useState(true);
   const [activeTab, setActiveTab] = useState("book");
   const [activeStep, setActiveStep] = useState(0);
@@ -197,10 +197,10 @@ export default function Home() {
       try {
         const left = await getFounderSpotsLeft();
         if (!mounted) return;
-        setFounderLeft(typeof left === "number" ? left : 1000);
+        setFounderLeft(typeof left === "number" ? left : 500);
       } catch {
         if (!mounted) return;
-        setFounderLeft(1000);
+        setFounderLeft(500);
       } finally {
         if (mounted) setLoadingFounder(false);
       }
@@ -539,7 +539,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="lpFounderText">First 1,000 pros only. Same feature access as Pro with locked annual pricing.</div>
+                <div className="lpFounderText">First 500 pros only. Same feature access as Pro with locked annual pricing.</div>
 
                 <div className={`lpCounter ${loadingFounder ? "lpSkeleton" : ""}`}>
                   {loadingFounder ? (

@@ -63,7 +63,7 @@ export default function PaywallBanner() {
             <span style={{ opacity: 0.8 }}>of {computed.max}</span>
           </div>
           <div style={{ opacity: 0.8 }}>
-            First 1,000 Pros lock in <strong>$99/year</strong> while active.
+            First 500 Pros lock in <strong>$99/year</strong> while active.
           </div>
         </div>
 
