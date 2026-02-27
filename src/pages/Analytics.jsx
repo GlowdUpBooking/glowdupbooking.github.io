@@ -43,6 +43,64 @@ function dayStart(date, daysBack) {
   return d.toISOString().split("T")[0];
 }
 
+function startOfMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function monthKey(date) {
+  const y = date.getFullYear();
+  const m = `${date.getMonth() + 1}`.padStart(2, "0");
+  return `${y}-${m}`;
+}
+
+function monthLabel(date) {
+  return date.toLocaleDateString(undefined, { month: "short" });
+}
+
+function buildMonthSeries(rows, months, valueFn) {
+  const map = new Map();
+  months.forEach((m) => map.set(m.key, 0));
+  rows.forEach((row) => {
+    const d = row.appointment_date ? new Date(row.appointment_date) : null;
+    if (!d || Number.isNaN(d.getTime())) return;
+    const key = monthKey(d);
+    if (!map.has(key)) return;
+    map.set(key, map.get(key) + valueFn(row));
+  });
+  return months.map((m) => ({ label: m.label, value: map.get(m.key) || 0 }));
+}
+
+function LineChart({ series, color }) {
+  const width = 520;
+  const height = 120;
+  const pad = 10;
+  const max = Math.max(1, ...series.map((s) => s.value));
+  const stepX = (width - pad * 2) / Math.max(1, series.length - 1);
+  const points = series.map((s, i) => {
+    const x = pad + i * stepX;
+    const y = height - pad - (s.value / max) * (height - pad * 2);
+    return `${x},${y}`;
+  });
+  const areaPoints = [`${pad},${height - pad}`, ...points, `${width - pad},${height - pad}`].join(" ");
+
+  return (
+    <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+      <polyline
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        points={points.join(" ")}
+      />
+      <polyline
+        fill={color}
+        opacity="0.1"
+        stroke="none"
+        points={areaPoints}
+      />
+    </svg>
+  );
+}
+
 function StatCard({ label, value, trend, trendColor: tColor }) {
   return (
     <Card style={{ padding: 16, flex: 1, minWidth: 220 }}>
@@ -93,6 +151,8 @@ export default function Analytics() {
     avgDepositAllTime: 0,
     status30: { pending: 0, confirmed: 0, completed: 0, canceled: 0, total: 0 },
     funnel30: { requests: 0, confirmed: 0, completed: 0 },
+    bookingsSeries: [],
+    depositsSeries: [],
   });
 
   const isActive = subStatus === "active";
@@ -110,6 +170,17 @@ export default function Analytics() {
   const thisMonthStart = useMemo(() => monthStart(new Date()), []);
   const lastMonthStart = useMemo(() => monthStart(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1)), []);
   const last30Start = useMemo(() => dayStart(new Date(), 30), []);
+  const sixMonthStart = useMemo(() => monthStart(new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1)), []);
+
+  const lastSixMonths = useMemo(() => {
+    const list = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i -= 1) {
+      const d = startOfMonth(new Date(now.getFullYear(), now.getMonth() - i, 1));
+      list.push({ key: monthKey(d), label: monthLabel(d) });
+    }
+    return list;
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -170,6 +241,7 @@ export default function Analytics() {
         lmP,
         atP,
         last30Rows,
+        sixMonthRows,
       ] = await Promise.all([
         supabase
           .from("appointments")
@@ -212,6 +284,11 @@ export default function Analytics() {
           .select("status, deposit_paid, deposit_amount")
           .eq("profile_id", user.id)
           .gte("appointment_date", last30Start),
+        supabase
+          .from("appointments")
+          .select("appointment_date, status, deposit_paid, deposit_amount")
+          .eq("profile_id", user.id)
+          .gte("appointment_date", sixMonthStart),
       ]);
 
       const sumDeposits = (rows) => (rows ?? []).reduce((acc, r) => acc + Number(r.deposit_amount ?? 0), 0);
@@ -234,6 +311,18 @@ export default function Analytics() {
 
       const confirmedOrCompleted = statusCounts.confirmed + statusCounts.completed;
 
+      const sixRows = sixMonthRows.data ?? [];
+      const bookingsSeries = buildMonthSeries(
+        sixRows.filter((r) => !["canceled", "cancelled"].includes(String(r.status || "").toLowerCase())),
+        lastSixMonths,
+        () => 1
+      );
+      const depositsSeries = buildMonthSeries(
+        sixRows.filter((r) => r.deposit_paid),
+        lastSixMonths,
+        (r) => Number(r.deposit_amount ?? 0)
+      );
+
       setStats({
         thisMonthBookings: tmB.count ?? 0,
         lastMonthBookings: lmB.count ?? 0,
@@ -249,13 +338,15 @@ export default function Analytics() {
           confirmed: confirmedOrCompleted,
           completed: statusCounts.completed,
         },
+        bookingsSeries,
+        depositsSeries,
       });
     } catch (e) {
       console.error("[Analytics] loadStats error:", e);
     } finally {
       setStatsLoading(false);
     }
-  }, [user?.id, thisMonthStart, lastMonthStart, last30Start]);
+  }, [user?.id, thisMonthStart, lastMonthStart, last30Start, lastSixMonths, sixMonthStart]);
 
   useEffect(() => {
     if (!loading && isPro) loadStats();
@@ -370,6 +461,34 @@ export default function Analytics() {
               <Card style={{ padding: 16, gridColumn: "1 / -1" }}>
                 <div style={{ fontSize: 32, fontWeight: 900 }}>{fmtMoney(stats.allTimeRevenue)}</div>
                 <div className="u-muted" style={{ marginTop: 6 }}>All-time deposits collected</div>
+              </Card>
+            </div>
+          )}
+        </div>
+
+        <div style={{ marginTop: 20 }}>
+          <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 8 }}>6‑Month Trends</div>
+          {statsLoading ? (
+            <Card style={{ padding: 16 }}>Loading metrics…</Card>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
+              <Card style={{ padding: 16 }}>
+                <div style={{ fontWeight: 700, marginBottom: 8 }}>Bookings</div>
+                <LineChart series={stats.bookingsSeries || []} color="#6cffb3" />
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, opacity: 0.7, marginTop: 6 }}>
+                  {(stats.bookingsSeries || []).map((s) => (
+                    <span key={s.label}>{s.label}</span>
+                  ))}
+                </div>
+              </Card>
+              <Card style={{ padding: 16 }}>
+                <div style={{ fontWeight: 700, marginBottom: 8 }}>Deposit Revenue</div>
+                <LineChart series={stats.depositsSeries || []} color="#ffd678" />
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, opacity: 0.7, marginTop: 6 }}>
+                  {(stats.depositsSeries || []).map((s) => (
+                    <span key={s.label}>{s.label}</span>
+                  ))}
+                </div>
               </Card>
             </div>
           )}
