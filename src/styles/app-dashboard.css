@@ -1079,6 +1079,37 @@
 
 .ap-searchClear:hover { background: rgba(255, 255, 255, 0.14); }
 
+.ap-filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+
+.ap-filterBtn {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s, border-color 0.14s;
+}
+
+.ap-filterBtn:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ap-filterBtnActive {
+  color: #0a0a0a;
+  background: #fff;
+  border-color: #fff;
+}
+
 .ap-tabBar {
   display: flex;
   gap: 0;

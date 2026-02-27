@@ -38,6 +38,7 @@ export default function Appointments() {
   const [appointments, setAppointments] = useState([]);
   const [selectedId, setSelectedId]   = useState(null);
   const [activeTab, setActiveTab]     = useState("pending");
+  const [dateFilter, setDateFilter]   = useState("all");
   const [query, setQuery]             = useState("");
   const [actionLoading, setActionLoading] = useState(null);
   const [showDetail, setShowDetail]   = useState(false);
@@ -82,6 +83,20 @@ export default function Appointments() {
 
   const todayStr    = new Date().toISOString().split("T")[0];
   const thisMonthStr = new Date().toISOString().slice(0, 7);
+  const dateRanges = useMemo(() => {
+    const today = new Date();
+    const toISO = (d) => d.toISOString().split("T")[0];
+    const addDays = (base, days) => {
+      const copy = new Date(base);
+      copy.setDate(copy.getDate() + days);
+      return copy;
+    };
+    return {
+      today: toISO(today),
+      next7: toISO(addDays(today, 7)),
+      thisMonth: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`,
+    };
+  }, []);
 
   const counts = useMemo(() => ({
     all:       appointments.length,
@@ -115,10 +130,26 @@ export default function Appointments() {
     }
   }, [appointments, activeTab, todayStr]);
 
+  const filteredByDate = useMemo(() => {
+    if (dateFilter === "all") return filtered;
+    if (dateFilter === "today") {
+      return filtered.filter((a) => a.appointment_date === dateRanges.today);
+    }
+    if (dateFilter === "next7") {
+      return filtered.filter((a) =>
+        a.appointment_date >= dateRanges.today && a.appointment_date <= dateRanges.next7
+      );
+    }
+    if (dateFilter === "month") {
+      return filtered.filter((a) => a.appointment_date?.startsWith(dateRanges.thisMonth));
+    }
+    return filtered;
+  }, [filtered, dateFilter, dateRanges]);
+
   const searchQuery = query.trim().toLowerCase();
   const filteredWithSearch = useMemo(() => {
-    if (!searchQuery) return filtered;
-    return filtered.filter((a) => {
+    if (!searchQuery) return filteredByDate;
+    return filteredByDate.filter((a) => {
       const haystack = [
         a.client_name,
         a.client_phone,
@@ -130,7 +161,7 @@ export default function Appointments() {
         .toLowerCase();
       return haystack.includes(searchQuery);
     });
-  }, [filtered, searchQuery]);
+  }, [filteredByDate, searchQuery]);
 
   const monthRevenue = useMemo(() =>
     appointments
@@ -297,6 +328,27 @@ export default function Appointments() {
               </button>
             )}
           </div>
+        </div>
+
+        <div className="ap-filterRow">
+          {[
+            { key: "all", label: "All dates" },
+            { key: "today", label: "Today" },
+            { key: "next7", label: "Next 7 days" },
+            { key: "month", label: "This month" },
+          ].map((f) => (
+            <button
+              key={f.key}
+              className={`ap-filterBtn${dateFilter === f.key ? " ap-filterBtnActive" : ""}`}
+              onClick={() => {
+                setDateFilter(f.key);
+                setSelectedId(null);
+                setShowDetail(false);
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
 
         <div className="ap-tabBar" role="tablist">
