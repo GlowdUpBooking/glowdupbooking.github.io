@@ -110,7 +110,7 @@ export default function Pricing() {
   const [billingCycle, setBillingCycle] = useState("monthly");
 
   const [loading, setLoading] = useState(true);
-  const [maxSpots, setMaxSpots] = useState(1000);
+  const [maxSpots, setMaxSpots] = useState(500);
   const [claimed, setClaimed] = useState(0);
   const [err, setErr] = useState("");
 
@@ -122,7 +122,7 @@ export default function Pricing() {
   const [prices, setPrices] = useState(DEFAULT_PRICES);
 
   const remaining = useMemo(() => {
-    const max = typeof maxSpots === "number" ? maxSpots : 1000;
+    const max = typeof maxSpots === "number" ? maxSpots : 500;
     const used = typeof claimed === "number" ? claimed : 0;
     return Math.max(0, max - used);
   }, [maxSpots, claimed]);
@@ -162,7 +162,7 @@ export default function Pricing() {
 
         if (error) throw error;
 
-        const max = typeof data?.max_spots === "number" ? data.max_spots : 1000;
+        const max = typeof data?.max_spots === "number" ? data.max_spots : 500;
         const used = typeof data?.claimed_spots === "number" ? data.claimed_spots : 0;
 
         if (!mounted) return;
@@ -172,7 +172,7 @@ export default function Pricing() {
         console.error("[FounderCounter] load failed:", e);
 
         if (!mounted) return;
-        setMaxSpots(1000);
+        setMaxSpots(500);
         setClaimed(0);
         setErr("Availability counter unavailable (still fine to sign up).");
       } finally {
@@ -641,7 +641,7 @@ export default function Pricing() {
                   </div>
                 </div>
 
-                <div className="lpFounderText">First 1,000 pros only. Same feature access as Pro with locked annual pricing.</div>
+                <div className="lpFounderText">First 500 pros only. Same feature access as Pro with locked annual pricing.</div>
 
                 <div className={`lpCounter ${loading ? "lpSkeleton" : ""}`}>
                   {loading ? "Checking founder spots..." : <><strong>{remaining}</strong> Founder spots left</>}
