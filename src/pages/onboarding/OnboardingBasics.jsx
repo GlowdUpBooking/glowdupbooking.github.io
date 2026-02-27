@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import OnboardingProgress from "../../components/onboarding/OnboardingProgress";
+import FullScreenLoader from "../../components/ui/FullScreenLoader";
 
 export default function OnboardingBasics() {
   const nav = useNavigate();
   const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
   const [autosaveStatus, setAutosaveStatus] = useState("Loading...");
   const [userId, setUserId] = useState(null);
   const [businessName, setBusinessName] = useState("");
@@ -59,11 +61,16 @@ export default function OnboardingBasics() {
 
   async function next() {
     setSaving(true);
+    setErr("");
     const { data } = await supabase.auth.getUser();
     const user = data?.user;
-    if (!user) return;
+    if (!user) {
+      setSaving(false);
+      nav("/login");
+      return;
+    }
 
-    await supabase
+    const { error } = await supabase
       .from("profiles")
       .update({
         role: "professional",
@@ -74,8 +81,18 @@ export default function OnboardingBasics() {
       })
       .eq("id", user.id);
 
+    if (error) {
+      setErr("Couldn’t save your basics. Please try again.");
+      setSaving(false);
+      return;
+    }
+
     setSaving(false);
     nav("/app/onboarding/location");
+  }
+
+  if (autosaveStatus === "Loading..." && !userId) {
+    return <FullScreenLoader label="Loading basics..." />;
   }
 
   return (
@@ -113,6 +130,8 @@ export default function OnboardingBasics() {
               {saving ? "Saving..." : "Continue"}
             </button>
           </div>
+
+          {err ? <div style={{ marginTop: 12, opacity: 0.9 }}>{err}</div> : null}
         </section>
       </main>
     </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import FullScreenLoader from "../../components/ui/FullScreenLoader";
 
 const STEP_TO_ROUTE = {
   "role-selection": "/app/onboarding/basics", // legacy default
@@ -75,6 +76,6 @@ export default function OnboardingIndex() {
     };
   }, [nav]);
 
-  if (loading) return null;
+  if (loading) return <FullScreenLoader label="Preparing onboarding..." />;
   return null;
 }

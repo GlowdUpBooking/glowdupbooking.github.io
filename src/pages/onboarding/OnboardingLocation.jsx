@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import OnboardingProgress from "../../components/onboarding/OnboardingProgress";
+import FullScreenLoader from "../../components/ui/FullScreenLoader";
 
 export default function Location() {
   const nav = useNavigate();
@@ -56,6 +57,10 @@ export default function Location() {
       if (!error && profile) {
         setHasLocation(!!profile.has_location);
         setMobile(!!profile.travels_to_clients);
+        if (!profile.has_location) {
+          const travelChoice = profile.travels_to_clients;
+          if (typeof travelChoice === "boolean") setMobileChoice(travelChoice);
+        }
 
         setAddress1(profile.address_line1 ?? "");
         setAddress2(profile.address_line2 ?? "");
@@ -167,6 +172,12 @@ export default function Location() {
 
   useEffect(() => {
     if (!hydrated.current || !userId) return;
+
+    if (!hasLocation && mobileChoice === null) {
+      setAutosaveStatus("Waiting for choice");
+      return;
+    }
+
     const t = setTimeout(async () => {
       setAutosaveStatus("Saving...");
       const travelsToClients = hasLocation ? !!mobile : mobileChoice === true;
@@ -201,7 +212,7 @@ export default function Location() {
     buildDisplayLocation,
   ]);
 
-  if (loading) return null;
+  if (loading) return <FullScreenLoader label="Loading location..." />;
 
   return (
     <div className="obPage page">

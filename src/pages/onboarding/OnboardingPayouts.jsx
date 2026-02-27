@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import OnboardingProgress from "../../components/onboarding/OnboardingProgress";
 import { supabase } from "../../lib/supabase";
+import FullScreenLoader from "../../components/ui/FullScreenLoader";
 import {
   createStripeConnectOnboardingLink,
   fetchStripeConnectStatus,
@@ -107,7 +108,7 @@ export default function OnboardingPayouts() {
     }
   }
 
-  if (loading) return null;
+  if (loading) return <FullScreenLoader label="Loading payouts..." />;
 
   return (
     <div className="obPage page">

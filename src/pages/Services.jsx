@@ -630,7 +630,7 @@ export default function Services() {
                       </button>
                     ) : (
                       <div className="sv-deleteConfirm">
-                        <div className="sv-deleteWarning">Delete "{description}"? This cannot be undone.</div>
+                        <div className="sv-deleteWarning">Delete &quot;{description}&quot;? This cannot be undone.</div>
                         <div style={{ display: "flex", gap: 8 }}>
                           <Button variant="primary" onClick={deleteService} disabled={deleting}>
                             {deleting ? "Deleting..." : "Yes, delete"}
@@ -657,4 +657,3 @@ export default function Services() {
     </AppShell>
   );
 }
-

@@ -4,7 +4,6 @@ const STEPS = [
   { id: "profile", label: "Profile" },
   { id: "services", label: "Services" },
   { id: "payouts", label: "Payouts" },
-  { id: "availability", label: "Publish" },
 ];
 
 export default function OnboardingProgress({ active = "profile", autosaveStatus = "" }) {

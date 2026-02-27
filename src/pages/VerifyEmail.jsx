@@ -8,7 +8,7 @@ export default function VerifyEmail() {
   const [params] = useSearchParams();
   const signupPath = getSignupPath();
   const initialEmail = (params.get("email") || "").trim();
-  const [email, setEmail] = useState(initialEmail);
+  const [email] = useState(initialEmail);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import OnboardingProgress from "../../components/onboarding/OnboardingProgress";
+import FullScreenLoader from "../../components/ui/FullScreenLoader";
 
 export default function Travel() {
   const nav = useNavigate();
@@ -120,7 +121,7 @@ export default function Travel() {
     return () => clearTimeout(t);
   }, [userId, travels, feeNum, radiusNum]);
 
-  if (loading) return null;
+  if (loading) return <FullScreenLoader label="Loading travel..." />;
 
   return (
     <div className="obPage page">

@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import OnboardingProgress from "../../components/onboarding/OnboardingProgress";
+import FullScreenLoader from "../../components/ui/FullScreenLoader";
 
 export default function OnboardingSocial() {
   const nav = useNavigate();
   const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
   const [autosaveStatus, setAutosaveStatus] = useState("Loading...");
   const [userId, setUserId] = useState(null);
   const hydrated = useRef(false);
@@ -63,11 +65,16 @@ export default function OnboardingSocial() {
 
   async function next() {
     setSaving(true);
+    setErr("");
     const { data } = await supabase.auth.getUser();
     const user = data?.user;
-    if (!user) return;
+    if (!user) {
+      setSaving(false);
+      nav("/login");
+      return;
+    }
 
-    await supabase
+    const { error } = await supabase
       .from("profiles")
       .update({
         instagram_handle: instagram || null,
@@ -79,8 +86,18 @@ export default function OnboardingSocial() {
       })
       .eq("id", user.id);
 
+    if (error) {
+      setErr("Couldn’t save your social links. Please try again.");
+      setSaving(false);
+      return;
+    }
+
     setSaving(false);
     nav("/app/onboarding/services");
+  }
+
+  if (autosaveStatus === "Loading..." && !userId) {
+    return <FullScreenLoader label="Loading social..." />;
   }
 
   return (
@@ -130,6 +147,8 @@ export default function OnboardingSocial() {
               {saving ? "Saving..." : "Continue"}
             </button>
           </div>
+
+          {err ? <div style={{ marginTop: 12, opacity: 0.9 }}>{err}</div> : null}
         </section>
       </main>
     </div>

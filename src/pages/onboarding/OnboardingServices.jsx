@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import OnboardingProgress from "../../components/onboarding/OnboardingProgress";
 import { fetchStripeConnectStatus } from "../../lib/stripeConnect";
+import FullScreenLoader from "../../components/ui/FullScreenLoader";
 
 const BUCKET = "service-photos";
 
@@ -169,31 +170,6 @@ export default function OnboardingServices() {
       mounted = false;
     };
   }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (loading) return;
-    const t = setTimeout(() => {
-      try {
-        localStorage.setItem(
-          "gub_service_draft",
-          JSON.stringify({
-            selectedId,
-            description,
-            price,
-            durationMinutes,
-            category,
-            depositAmount,
-            coverUrl,
-            ts: Date.now(),
-          })
-        );
-        setAutosaveStatus("Draft saved");
-      } catch {
-        setAutosaveStatus("Draft save failed");
-      }
-    }, 500);
-    return () => clearTimeout(t);
-  }, [loading, selectedId, description, price, durationMinutes, category, depositAmount, coverUrl]);
 
   // ---------- Actions ----------
   function startNewService() {
@@ -421,6 +397,26 @@ export default function OnboardingServices() {
     }
   }
 
+  async function skipToPayouts() {
+    if (!user) return;
+    setSaving(true);
+    setErr("");
+    setOkMsg("");
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ onboarding_step: "payouts" })
+        .eq("id", user.id);
+      if (error) throw error;
+      nav("/app/onboarding/payouts", { replace: true });
+    } catch (e) {
+      console.error("[OnboardingServices] skip error:", e);
+      setErr("Couldn’t skip right now. Try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function setAsCover(url) {
     if (!user || !selectedId) return;
     setCoverUrl(url);
@@ -436,7 +432,7 @@ export default function OnboardingServices() {
     setNewFiles(files);
   }
 
-  if (loading) return null;
+  if (loading) return <FullScreenLoader label="Loading services..." />;
 
   return (
     <div className="obPage page">
@@ -624,7 +620,7 @@ export default function OnboardingServices() {
 
                 {/* Finish */}
                 <div style={{ marginTop: 16, display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                  <button className="btn ghost" onClick={() => nav("/app")}>
+                  <button className="btn ghost" onClick={skipToPayouts} disabled={saving}>
                     Skip for now
                   </button>
                   <button className="btn gold" onClick={continueToPayouts} disabled={saving}>
