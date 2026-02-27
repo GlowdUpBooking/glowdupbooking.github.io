@@ -23,11 +23,10 @@ const FAQ_ITEMS = [
 ];
 
 const DEFAULT_PRICES = Object.freeze({
-  free_monthly: { id: "free", unit_amount: 0, currency: "USD", interval: "month", interval_count: 1, product_name: "Free" },
-  starter_monthly: { id: "starter_default", unit_amount: 999, currency: "USD", interval: "month", interval_count: 1, product_name: "Starter" },
-  pro_monthly: { id: "pro_default", unit_amount: 1999, currency: "USD", interval: "month", interval_count: 1, product_name: "Pro" },
-  elite_monthly: { id: "elite_default", unit_amount: 2999, currency: "USD", interval: "month", interval_count: 1, product_name: "Elite" },
-  founder_annual: { id: "founder_default", unit_amount: 9900, currency: "USD", interval: "year", interval_count: 1, product_name: "Founder" },
+  free_monthly:    { id: "free",            unit_amount: 0,    currency: "USD", interval: "month", interval_count: 1, product_name: "Free"    },
+  starter_monthly: { id: "starter_default", unit_amount: 999,  currency: "USD", interval: "month", interval_count: 1, product_name: "Starter" },
+  pro_monthly:     { id: "pro_default",     unit_amount: 1999, currency: "USD", interval: "month", interval_count: 1, product_name: "Pro"     },
+  founder_annual:  { id: "founder_default", unit_amount: 9900, currency: "USD", interval: "year",  interval_count: 1, product_name: "Founder" },
 });
 
 function toCents(priceObj) {
@@ -62,11 +61,10 @@ function mergeLivePrices(livePrices) {
   };
 
   return {
-    free_monthly: DEFAULT_PRICES.free_monthly,
+    free_monthly:    DEFAULT_PRICES.free_monthly,
     starter_monthly: pick("starter_monthly"),
-    pro_monthly: pick("pro_monthly"),
-    elite_monthly: pick("elite_monthly"),
-    founder_annual: pick("founder_annual"),
+    pro_monthly:     pick("pro_monthly"),
+    founder_annual:  pick("founder_annual"),
   };
 }
 
@@ -316,16 +314,6 @@ export default function Pricing() {
     nav("/", { replace: true });
   }
 
-  function tierForCycle(baseTier) {
-    // Map a base monthly tier to the correct tier key based on the selected billing cycle.
-    // Annual tier keys must be supported by the create-checkout-session edge function.
-    if (billingCycle === "annual") {
-      const annual = baseTier.replace("_monthly", "_annual");
-      return annual;
-    }
-    return baseTier;
-  }
-
   async function startCheckout(tier) {
     trackEvent("checkout_start", { page: "pricing", tier, billing_cycle: billingCycle });
     setToast("");
@@ -399,14 +387,12 @@ export default function Pricing() {
   }
 
   const starterPrice = prices ? formatMoneyFromStripe(prices.starter_monthly, billingCycle) : null;
-  const proPrice = prices ? formatMoneyFromStripe(prices.pro_monthly, billingCycle) : null;
-  const elitePrice = prices ? formatMoneyFromStripe(prices.elite_monthly, billingCycle) : null;
-  const founderPrice = prices ? formatMoneyFromStripe(prices.founder_annual, "annual") : null;
+  const proPrice     = prices ? formatMoneyFromStripe(prices.pro_monthly,     billingCycle) : null;
+  const founderPrice = prices ? formatMoneyFromStripe(prices.founder_annual,  "annual")     : null;
 
-  const starterTerm = prices ? formatTerm(prices.starter_monthly, billingCycle) : null;
-  const proTerm = prices ? formatTerm(prices.pro_monthly, billingCycle) : null;
-  const eliteTerm = prices ? formatTerm(prices.elite_monthly, billingCycle) : null;
-  const founderTerm = prices ? formatTerm(prices.founder_annual, "annual") : null;
+  const starterTerm  = prices ? formatTerm(prices.starter_monthly, billingCycle) : null;
+  const proTerm      = prices ? formatTerm(prices.pro_monthly,     billingCycle) : null;
+  const founderTerm  = prices ? formatTerm(prices.founder_annual,  "annual")     : null;
 
   const showFounderPlan = loading || remaining > 0;
 
@@ -479,7 +465,7 @@ export default function Pricing() {
             </div>
 
             <div className={`lpLiveChip ${loading ? "is-loading" : ""}`}>
-              {loading ? "Loading founder availability..." : showFounderPlan ? `${remaining} Founder spots left` : "Founder spots filled · Elite unlocked"}
+              {loading ? "Loading founder availability..." : showFounderPlan ? `${remaining} Founder spots left` : "Founder spots filled"}
             </div>
 
             {toast ? <div className="lpToast">{toast}</div> : null}
@@ -540,7 +526,7 @@ export default function Pricing() {
             </div>
 
             <div className={`lpCounter lpCounterTop ${loading ? "lpSkeleton" : ""}`}>
-              {loading ? "Founder spots left" : showFounderPlan ? `${remaining} Founder spots left` : "Founder spots filled · Elite now available"}
+              {loading ? "Founder spots left" : showFounderPlan ? `${remaining} Founder spots left` : "Founder spots filled"}
             </div>
           </div>
 
@@ -581,7 +567,7 @@ export default function Pricing() {
                 <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : starterPrice || "-"}</span>
                 <span className="lpTerm">{starterTerm || ""}</span>
               </div>
-              {billingCycle === "annual" ? <div className="lpTinyNote">Annual billing — total billed once per year.</div> : null}
+              {billingCycle === "annual" ? <div className="lpTinyNote">Annual cost equivalent — billed monthly.</div> : null}
               <ul className="lpList">
                 <li>✓ Everything in Free</li>
                 <li>✓ Unlimited accepted bookings</li>
@@ -597,7 +583,7 @@ export default function Pricing() {
                   className="lpChoose"
                   onClick={() => {
                     trackEvent("plan_cta_click", { page: "pricing", plan: "starter", cta: "choose_starter", billing_cycle: billingCycle });
-                    startCheckout(tierForCycle("starter_monthly"));
+                    startCheckout("starter_monthly");
                   }}
                   disabled={sessionLoading || pricesLoading}
                 >
@@ -615,7 +601,7 @@ export default function Pricing() {
                 <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : proPrice || "-"}</span>
                 <span className="lpTerm">{proTerm || ""}</span>
               </div>
-              {billingCycle === "annual" ? <div className="lpTinyNote">Annual billing — total billed once per year.</div> : null}
+              {billingCycle === "annual" ? <div className="lpTinyNote">Annual cost equivalent — billed monthly.</div> : null}
               <ul className="lpList">
                 <li>✓ Everything in Starter</li>
                 <li>✓ Advanced deposits + optional full prepay</li>
@@ -631,7 +617,7 @@ export default function Pricing() {
                   className="lpChoose"
                   onClick={() => {
                     trackEvent("plan_cta_click", { page: "pricing", plan: "pro", cta: "choose_pro", billing_cycle: billingCycle });
-                    startCheckout(tierForCycle("pro_monthly"));
+                    startCheckout("pro_monthly");
                   }}
                   disabled={sessionLoading || pricesLoading}
                 >
@@ -685,31 +671,26 @@ export default function Pricing() {
                 </div>
               </Card>
             ) : (
-              <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "210ms" }}>
-                <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Elite</div>
+              <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "210ms", opacity: 0.6 }}>
+                <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Founder</div>
                 <div className="lpPriceLine">
-                  <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : elitePrice || "-"}</span>
-                  <span className="lpTerm">{eliteTerm || ""}</span>
+                  <span className="lpPrice">$99</span>
+                  <span className="lpTerm">/year</span>
                 </div>
-                <ul className="lpList">
-                  <li>✓ Everything in Pro</li>
-                  <li>✓ Team/staff workflows</li>
-                  <li>✓ +1 member included</li>
-                  <li>✓ Additional members +$10 each (max 10 total)</li>
-                  <li>✓ Multi-location + advanced business controls</li>
-                  <li>✓ Advanced analytics + concierge support</li>
-                </ul>
+                <div className="lpFounderBox">
+                  <div className="lpFounderTop">
+                    <div className="lpFounderTitle">Sold Out</div>
+                    <div className="lpFounderRule">All spots have been claimed</div>
+                  </div>
+                </div>
+                <div className="lpFounderText">The Founder offer is no longer available. Upgrade to Pro to access all Pro features.</div>
                 <div className="lpChooseWrap">
                   <Button
                     variant="outline"
                     className="lpChoose"
-                    onClick={() => {
-                      trackEvent("plan_cta_click", { page: "pricing", plan: "elite", cta: "choose_elite", billing_cycle: billingCycle });
-                    startCheckout(tierForCycle("elite_monthly"));
-                    }}
-                    disabled={sessionLoading || pricesLoading}
+                    disabled
                   >
-                    {sessionLoading ? "Redirecting..." : "Choose Elite"}
+                    Sold Out
                   </Button>
                 </div>
               </Card>
