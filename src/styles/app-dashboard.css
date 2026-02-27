@@ -1844,6 +1844,28 @@
   flex-wrap: wrap;
 }
 
+.st-summary {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  margin-bottom: 14px;
+}
+
+.st-summaryRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.st-summaryLabel { font-weight: 700; }
+.st-summaryDivider { opacity: 0.4; }
+.st-summaryNote { font-size: 12px; opacity: 0.65; }
+
 .st-toggle {
   display: flex;
   align-items: flex-start;
@@ -1933,6 +1955,35 @@
 
 .st-timeSep { opacity: 0.45; font-size: 14px; flex-shrink: 0; }
 
+.st-dayActions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.st-dayBtn {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s;
+}
+
+.st-dayBtn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.st-dayBtnPrimary {
+  background: #fff;
+  color: #0a0a0a;
+  border-color: #fff;
+}
+
 /* Profile/Settings responsive */
 @media (max-width: 1100px) {
   .pf-layout { grid-template-columns: 1fr; }
@@ -1943,6 +1994,7 @@
   .pf-twoCol  { grid-template-columns: 1fr; }
   .st-dayRow  { flex-direction: column; align-items: flex-start; gap: 8px; }
   .st-dayTimes { width: 100%; }
+  .st-dayActions { width: 100%; justify-content: flex-end; margin-left: 0; }
 }
 
 /* Mobile nav: 5 items */

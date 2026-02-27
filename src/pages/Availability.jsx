@@ -38,11 +38,64 @@ export default function Availability() {
   const [week, setWeek] = useState(defaultWeek());
   const [blockedDatesText, setBlockedDatesText] = useState("");
   const [availabilityStorage, setAvailabilityStorage] = useState("checking");
+  const [copiedDayKey, setCopiedDayKey] = useState(null);
 
   const activeDays = useMemo(
     () => DAYS.reduce((acc, d) => (week?.[d.key]?.enabled ? acc + 1 : acc), 0),
     [week]
   );
+
+  const summary = useMemo(() => {
+    const parseTime = (value) => {
+      if (!value) return null;
+      const [h, m] = value.split(":").map((n) => Number(n));
+      if (Number.isNaN(h) || Number.isNaN(m)) return null;
+      return h * 60 + m;
+    };
+    const formatTimeLabel = (value) => {
+      if (!value) return "—";
+      const [hRaw, mRaw] = value.split(":").map((n) => Number(n));
+      if (Number.isNaN(hRaw) || Number.isNaN(mRaw)) return value;
+      const ampm = hRaw >= 12 ? "PM" : "AM";
+      const hour = hRaw % 12 === 0 ? 12 : hRaw % 12;
+      return `${hour}${mRaw ? `:${String(mRaw).padStart(2, "0")}` : ""} ${ampm}`;
+    };
+
+    const active = DAYS.filter((d) => week?.[d.key]?.enabled).map((d) => ({
+      ...d,
+      start: week[d.key]?.start || "09:00",
+      end: week[d.key]?.end || "17:00",
+    }));
+    const totalMinutes = active.reduce((acc, d) => {
+      const start = parseTime(d.start);
+      const end = parseTime(d.end);
+      if (start == null || end == null || end <= start) return acc;
+      return acc + (end - start);
+    }, 0);
+
+    const allSameHours = active.length > 0 && active.every((d) => d.start === active[0].start && d.end === active[0].end);
+    const hoursLabel = active.length === 0
+      ? "No active hours"
+      : allSameHours
+        ? `${formatTimeLabel(active[0].start)}–${formatTimeLabel(active[0].end)}`
+        : "Varies by day";
+
+    const totalHours = totalMinutes / 60;
+    const totalHoursLabel = totalHours === 0
+      ? "0 hrs"
+      : Number.isInteger(totalHours)
+        ? `${totalHours} hrs`
+        : `${totalHours.toFixed(1)} hrs`;
+
+    const daysLabel = active.length === 0 ? "None" : active.map((d) => d.label).join(", ");
+
+    return {
+      daysLabel,
+      hoursLabel,
+      totalHoursLabel,
+      averageLabel: active.length > 0 ? `${(totalHours / active.length).toFixed(1)} hrs/day` : "—",
+    };
+  }, [week]);
 
   useEffect(() => {
     let mounted = true;
@@ -146,6 +199,24 @@ export default function Availability() {
     setWeek(next);
   }
 
+  function handleCopyDay(key) {
+    setCopiedDayKey(key);
+  }
+
+  function handlePasteDay(targetKey) {
+    if (!copiedDayKey || !week[copiedDayKey]) return;
+    const source = week[copiedDayKey];
+    setWeek((prev) => ({
+      ...prev,
+      [targetKey]: {
+        ...prev[targetKey],
+        enabled: source.enabled,
+        start: source.start,
+        end: source.end,
+      },
+    }));
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
     window.location.href = "/";
@@ -193,6 +264,28 @@ export default function Availability() {
                 Clear all
               </button>
             </div>
+          </div>
+
+          <div className="st-summary">
+            <div className="st-summaryRow">
+              <span className="st-summaryLabel">Active days:</span>
+              <span>{summary.daysLabel}</span>
+            </div>
+            <div className="st-summaryRow">
+              <span className="st-summaryLabel">Hours:</span>
+              <span>{summary.hoursLabel}</span>
+              <span className="st-summaryDivider">•</span>
+              <span className="st-summaryLabel">Weekly total:</span>
+              <span>{summary.totalHoursLabel}</span>
+              <span className="st-summaryDivider">•</span>
+              <span className="st-summaryLabel">Avg:</span>
+              <span>{summary.averageLabel}</span>
+            </div>
+            {copiedDayKey && (
+              <div className="st-summaryNote">
+                Copied {DAYS.find((d) => d.key === copiedDayKey)?.label}. Tap Paste on another day.
+              </div>
+            )}
           </div>
 
           <label className="pf-field">
@@ -247,6 +340,16 @@ export default function Availability() {
                         setWeek((prev) => ({ ...prev, [d.key]: { ...prev[d.key], end: e.target.value } }))
                       }
                     />
+                  </div>
+                  <div className="st-dayActions">
+                    <button className="st-dayBtn" type="button" onClick={() => handleCopyDay(d.key)}>
+                      Copy
+                    </button>
+                    {copiedDayKey && copiedDayKey !== d.key && (
+                      <button className="st-dayBtn st-dayBtnPrimary" type="button" onClick={() => handlePasteDay(d.key)}>
+                        Paste
+                      </button>
+                    )}
                   </div>
                 </div>
               );
