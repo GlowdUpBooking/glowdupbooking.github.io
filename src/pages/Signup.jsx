@@ -171,6 +171,7 @@ export default function Signup() {
         password,
         options: {
           data: {
+            role: "pro",
             full_name: fullName.trim(),
             business_name: businessName.trim(),
             category: category.trim(),

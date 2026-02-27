@@ -6,22 +6,34 @@ function parseBool(value) {
   return null;
 }
 
-export function isLiveMarketingHost() {
+function isDevHost() {
+  if (typeof window === "undefined") return true;
+  const host = String(window.location.hostname || "").toLowerCase();
+  return host === "localhost" || host === "127.0.0.1" || host.endsWith(".local");
+}
+
+// The pro app lives at glowdupbooking.biz — this is the only production host
+// where pros should be able to sign up and sign in.
+export function isProHost() {
   if (typeof window === "undefined") return false;
   const host = String(window.location.hostname || "").toLowerCase();
   return host === "glowdupbooking.biz" || host === "www.glowdupbooking.biz";
 }
 
+// Signup is blocked on any non-pro, non-dev host (e.g. glowdupbooking.com — the client site).
 export function isSignupPaused() {
   const override = parseBool(import.meta.env.VITE_SIGNUPS_PAUSED);
   if (override !== null) return override;
-  return isLiveMarketingHost();
+  if (isDevHost()) return false;
+  return !isProHost();
 }
 
+// Sign-in is blocked on non-pro, non-dev hosts for the same reason.
 export function isSigninPaused() {
   const override = parseBool(import.meta.env.VITE_SIGNIN_PAUSED);
   if (override !== null) return override;
-  return isLiveMarketingHost();
+  if (isDevHost()) return false;
+  return !isProHost();
 }
 
 export function getSignupPath() {
@@ -29,7 +41,7 @@ export function getSignupPath() {
 }
 
 export const SIGNUP_PAUSED_MESSAGE =
-  "New signups are temporarily paused while we finish setup. Please check back soon.";
+  "Pro accounts are managed at glowdupbooking.biz. Clients, visit glowdupbooking.com to book an appointment.";
 
 export const SIGNIN_PAUSED_MESSAGE =
-  "Sign-in is temporarily paused while we finish setup. Please check back soon.";
+  "Pro sign-in is available at glowdupbooking.biz. Clients, visit glowdupbooking.com to book an appointment.";

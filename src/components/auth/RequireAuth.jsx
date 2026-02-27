@@ -10,5 +10,11 @@ export default function RequireAuth({ children }) {
     return <Navigate to={`/login?next=${next}`} replace />;
   }
 
+  // Block client accounts from accessing the pro dashboard.
+  // Existing pro accounts with no role are allowed for backwards compatibility.
+  if (user.user_metadata?.role === "client") {
+    return <Navigate to="/login?blocked=client" replace />;
+  }
+
   return children;
 }

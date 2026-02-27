@@ -26,6 +26,10 @@ export default function Login() {
     const params = new URLSearchParams(location.search);
     return isSignupPaused() || params.get("signup") === "paused";
   }, [location.search]);
+  const isClientBlocked = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get("blocked") === "client";
+  }, [location.search]);
   const nextPath = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return params.get("next") || "/app";
@@ -116,6 +120,12 @@ export default function Login() {
             <p className="authSub">Access your account and continue managing bookings.</p>
           </div>
 
+          {isClientBlocked ? (
+            <div className="authFormInfo">
+              This site is for beauty professionals only. To book an appointment, visit{" "}
+              <a href="https://glowdupbooking.com">glowdupbooking.com</a>.
+            </div>
+          ) : null}
           {signinPaused ? <div className="authFormInfo">{SIGNIN_PAUSED_MESSAGE}</div> : null}
           {signupPaused ? <div className="authFormInfo">{SIGNUP_PAUSED_MESSAGE}</div> : null}
           <form onSubmit={onSubmit} className="authForm">
