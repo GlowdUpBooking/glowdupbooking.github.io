@@ -1039,6 +1039,46 @@
 .ap-statAlert .ap-statVal { color: #FFD166; }
 .ap-statGreen  .ap-statVal { color: #6CFFB3; }
 
+.ap-searchBar {
+  margin: 14px 0 6px;
+}
+
+.ap-searchInput {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ap-searchIcon { opacity: 0.6; }
+
+.ap-searchInput input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+}
+
+.ap-searchInput input::placeholder { color: rgba(255, 255, 255, 0.45); }
+
+.ap-searchClear {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ap-searchClear:hover { background: rgba(255, 255, 255, 0.14); }
+
 .ap-tabBar {
   display: flex;
   gap: 0;

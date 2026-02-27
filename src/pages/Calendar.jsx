@@ -38,6 +38,7 @@ export default function Appointments() {
   const [appointments, setAppointments] = useState([]);
   const [selectedId, setSelectedId]   = useState(null);
   const [activeTab, setActiveTab]     = useState("pending");
+  const [query, setQuery]             = useState("");
   const [actionLoading, setActionLoading] = useState(null);
   const [showDetail, setShowDetail]   = useState(false);
   const [msg, setMsg]                 = useState("");
@@ -113,6 +114,23 @@ export default function Appointments() {
         });
     }
   }, [appointments, activeTab, todayStr]);
+
+  const searchQuery = query.trim().toLowerCase();
+  const filteredWithSearch = useMemo(() => {
+    if (!searchQuery) return filtered;
+    return filtered.filter((a) => {
+      const haystack = [
+        a.client_name,
+        a.client_phone,
+        a.service,
+        a.notes,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(searchQuery);
+    });
+  }, [filtered, searchQuery]);
 
   const monthRevenue = useMemo(() =>
     appointments
@@ -264,6 +282,23 @@ export default function Appointments() {
         </div>
 
         {/* Tab bar */}
+        <div className="ap-searchBar">
+          <div className="ap-searchInput">
+            <span className="ap-searchIcon">🔎</span>
+            <input
+              type="search"
+              placeholder="Search client, service, phone"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            {query && (
+              <button className="ap-searchClear" onClick={() => setQuery("")}>
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="ap-tabBar" role="tablist">
           {TABS.map((t) => (
             <button
@@ -288,20 +323,26 @@ export default function Appointments() {
 
           {/* Appointment list */}
           <div className="ap-list" role="list">
-            {filtered.length === 0 ? (
+            {filteredWithSearch.length === 0 ? (
               <div className="ap-empty">
                 <div className="ap-emptyIcon">🗓</div>
                 <div style={{ fontWeight: 700 }}>
-                  {activeTab === "pending" ? "You are all caught up" : `No ${activeTab} appointments`}
+                  {query
+                    ? `No matches for "${query}"`
+                    : activeTab === "pending"
+                      ? "You are all caught up"
+                      : `No ${activeTab} appointments`}
                 </div>
                 <div className="u-muted">
-                  {activeTab === "pending"
-                    ? "No pending requests right now."
-                    : "Nothing to show here yet."}
+                  {query
+                    ? "Try a different name, service, or phone number."
+                    : activeTab === "pending"
+                      ? "No pending requests right now."
+                      : "Nothing to show here yet."}
                 </div>
               </div>
             ) : (
-              filtered.map((appt) => (
+              filteredWithSearch.map((appt) => (
                 <button
                   key={appt.id}
                   role="listitem"
