@@ -173,7 +173,8 @@
 .g-servicesCard,
 .g-glanceCard,
 .g-startCard,
-.g-nudgeCard {
+.g-nudgeCard,
+.g-availabilityCard {
   display: grid;
   gap: 12px;
 }
@@ -421,6 +422,35 @@
   gap: 10px;
 }
 
+.g-availabilityRows {
+  display: grid;
+  gap: 10px;
+}
+
+.g-availabilityRow {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.g-availabilityRow > div {
+  display: grid;
+  gap: 4px;
+}
+
+.g-availabilityRow strong {
+  font-size: 14px;
+}
+
+.g-availabilityRow span {
+  font-size: 12px;
+  opacity: 0.74;
+}
 .g-nudgeRow {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;

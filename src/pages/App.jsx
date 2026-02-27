@@ -59,6 +59,7 @@ export default function App() {
   const [profile, setProfile] = useState(null);
   const [services, setServices] = useState([]);
   const [availabilityDays, setAvailabilityDays] = useState(0);
+  const [availabilityStorage, setAvailabilityStorage] = useState("unknown");
   const [stats, setStats] = useState({
     bookings: 0,
     nextAppointment: "n/a",
@@ -176,8 +177,10 @@ export default function App() {
 
         if (availabilityErr) {
           console.warn("[App] pro_availability read warning:", availabilityErr);
+          setAvailabilityStorage("local");
           setAvailabilityDays(0);
         } else {
+          setAvailabilityStorage("cloud");
           setAvailabilityDays(countEnabledAvailabilityDays(availabilityRow?.week));
         }
 
@@ -475,8 +478,9 @@ export default function App() {
   const hasPhotosStep = services.some((s) => s.thumb && !String(s.thumb).includes("/assets/cover.png"));
   const hasDepositStep = services.some((s) => Number(s.deposit_amount ?? 0) > 0);
   const profileEnabledDays = countEnabledAvailabilityDays(extractAvailabilityRaw(profile));
+  const totalAvailabilityDays = Math.max(profileEnabledDays, availabilityDays);
   const hasAvailabilityStep = Boolean(
-    profile?.has_location || profile?.travels_to_clients || profileEnabledDays > 0 || availabilityDays > 0
+    profile?.has_location || profile?.travels_to_clients || totalAvailabilityDays > 0
   );
   const hasPayoutStep = Boolean(payoutStatus.connected);
   const publishDone = [
@@ -787,6 +791,26 @@ export default function App() {
                 </div>
               </Card>
             ) : null}
+
+            <Card className="g-availabilityCard">
+              <div className="g-cardTitle">Availability Summary</div>
+              <div className="g-availabilityRows">
+                <div className="g-availabilityRow">
+                  <div>
+                    <strong>{totalAvailabilityDays} active day{totalAvailabilityDays === 1 ? "" : "s"}</strong>
+                    <span>Set in {availabilityStorage === "cloud" ? "cloud" : "local"} schedule</span>
+                  </div>
+                  <button className="g-pillBtn" onClick={() => nav("/app/availability")}>Edit</button>
+                </div>
+                <div className="g-availabilityRow">
+                  <div>
+                    <strong>{profile?.has_location ? "In‑shop" : "No shop"}</strong>
+                    <span>{profile?.travels_to_clients ? "Mobile enabled" : "Mobile off"}</span>
+                  </div>
+                  <button className="g-pillBtn" onClick={() => nav("/app/settings")}>Settings</button>
+                </div>
+              </div>
+            </Card>
 
             <Card className="g-nudgeCard">
               <div className="g-cardTitle">First Booking Activation</div>

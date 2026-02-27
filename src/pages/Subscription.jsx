@@ -410,14 +410,26 @@ export default function Subscription() {
 
   return (
     <AppShell title="Subscription" onSignOut={signOut}>
-      <div className="g-page">
-        <h1 className="g-h1">Subscription</h1>
-        <div className="u-muted" style={{ marginTop: 4 }}>
-          Current plan: <strong>{planLabel}</strong>
-          {currentPeriodEnd ? ` · Renews on ${new Date(currentPeriodEnd).toLocaleDateString()}` : ""}
+      <div className="sub-page g-page">
+        <div className="sub-hero">
+          <div>
+            <h1 className="g-h1">Subscription</h1>
+            <div className="u-muted sub-heroCopy">
+              Pick the plan that fits your workflow. Upgrade or downgrade anytime.
+            </div>
+          </div>
+          <div className="sub-current">
+            <span className="sub-currentLabel">Current plan</span>
+            <strong>{planLabel}</strong>
+            {currentPeriodEnd ? (
+              <span className="u-muted">Renews on {new Date(currentPeriodEnd).toLocaleDateString()}</span>
+            ) : (
+              <span className="u-muted">Active plan status</span>
+            )}
+          </div>
         </div>
 
-        <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <div className="sub-actions">
           <Button variant="outline" onClick={openBillingPortal} disabled={busy}>
             {busy ? "Opening…" : "Manage subscription"}
           </Button>
@@ -426,48 +438,52 @@ export default function Subscription() {
           </Button>
         </div>
 
-        {msg ? <div className="u-muted" style={{ marginTop: 10 }}>{msg}</div> : null}
-        {err ? <div className="u-muted" style={{ marginTop: 10 }}>{err}</div> : null}
-        {pricesErr ? <div className="u-muted" style={{ marginTop: 10 }}>{pricesErr}</div> : null}
+        {msg ? <div className="u-muted sub-alert">{msg}</div> : null}
+        {err ? <div className="u-muted sub-alert">{err}</div> : null}
+        {pricesErr ? <div className="u-muted sub-alert">{pricesErr}</div> : null}
 
-        <div style={{ marginTop: 18, display: "grid", gap: 14 }}>
+        <div className="sub-grid">
           {PLAN_CARDS.filter((c) => (c.key === "founder" ? showFounder : true)).map((card) => {
             const isCurrent = card.key === currentPlanKey;
+            const isFeatured = card.key === "pro";
             const showRemaining = card.key === "founder" && remaining > 0 && currentPlanKey !== "founder";
             const priceObj = prices?.[card.priceKey] || null;
             const priceLabel = pricesLoading ? "$--" : formatMoneyFromStripe(priceObj, card.billingCycle) || card.priceKey;
             const termLabel = pricesLoading ? "" : formatTerm(priceObj, card.billingCycle) || "";
             return (
-              <Card key={card.key} style={{ padding: 16 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <Card
+                key={card.key}
+                className={`sub-card${isFeatured ? " sub-cardFeatured" : ""}${isCurrent ? " sub-cardCurrent" : ""}`}
+              >
+                <div className="sub-cardHeader">
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: 18 }}>{card.title}</div>
-                    <div className="u-muted">{card.description}</div>
+                    <div className="sub-cardTitle">{card.title}</div>
+                    <div className="sub-desc">{card.description}</div>
                   </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 20, fontWeight: 800 }}>
-                      {priceLabel}
-                      <span className="u-muted" style={{ fontSize: 14, marginLeft: 6 }}>{termLabel}</span>
-                    </div>
-                    {isCurrent ? (
-                      <div className="u-muted" style={{ fontSize: 12, marginTop: 4 }}>Current plan</div>
-                    ) : null}
+                  <div className="sub-badges">
+                    {isFeatured ? <span className="sub-badge sub-badgeFeatured">Most popular</span> : null}
+                    {isCurrent ? <span className="sub-badge sub-badgeCurrent">Current</span> : null}
+                  </div>
+                </div>
+
+                <div className="sub-priceRow">
+                  <div className="sub-price">
+                    {priceLabel}
+                    <span className="sub-term">{termLabel}</span>
                   </div>
                 </div>
 
                 {showRemaining ? (
-                  <div className="u-muted" style={{ marginTop: 8 }}>
-                    {remaining} Founder spots left
-                  </div>
+                  <div className="sub-remaining">{remaining} Founder spots left</div>
                 ) : null}
 
-                <ul style={{ marginTop: 10, paddingLeft: 18 }}>
+                <ul className="sub-list">
                   {card.bullets.map((b) => (
                     <li key={b}>{b}</li>
                   ))}
                 </ul>
 
-                <div style={{ marginTop: 12 }}>
+                <div className="sub-ctaRow">
                   <Button
                     variant={isCurrent ? "outline" : "primary"}
                     onClick={() => handlePlanAction(card)}
@@ -480,6 +496,22 @@ export default function Subscription() {
             );
           })}
         </div>
+
+        <Card className="sub-faqCard">
+          <div className="sub-faqTitle">FAQ</div>
+          <div className="sub-faqItem">
+            <div className="sub-faqQ">Can I downgrade or upgrade anytime?</div>
+            <div className="sub-faqA">Yes. You can change plans in the billing portal and your new plan applies immediately.</div>
+          </div>
+          <div className="sub-faqItem">
+            <div className="sub-faqQ">How does the Founder plan work?</div>
+            <div className="sub-faqA">Founder is limited to the first {maxSpots} pros and is hidden once spots are filled.</div>
+          </div>
+          <div className="sub-faqItem">
+            <div className="sub-faqQ">What happens if I cancel?</div>
+            <div className="sub-faqA">You keep access until the end of your billing period. You can always re‑subscribe later.</div>
+          </div>
+        </Card>
       </div>
     </AppShell>
   );
