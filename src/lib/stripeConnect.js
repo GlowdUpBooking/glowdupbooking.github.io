@@ -59,3 +59,26 @@ export async function createStripeConnectOnboardingLink() {
   if (!data?.url) throw new Error("No Stripe onboarding URL returned.");
   return data;
 }
+
+export async function fetchStripeConnectBalance() {
+  try {
+    const { data, error } = await supabase.functions.invoke("stripe-connect-balance");
+    if (error) throw new Error(await formatInvokeError(error));
+    return data ?? { available: 0, pending: 0 };
+  } catch {
+    return { available: 0, pending: 0 };
+  }
+}
+
+export async function requestInstantPayout(amountCents) {
+  const body = amountCents != null ? { amount: amountCents } : {};
+  const { data, error } = await supabase.functions.invoke("stripe-connect-payout", { body });
+  if (error) throw new Error(await formatInvokeError(error));
+  return data;
+}
+
+export async function getStripeLoginLink() {
+  const { data, error } = await supabase.functions.invoke("stripe-connect-login");
+  if (error) throw new Error(await formatInvokeError(error));
+  return data?.url ?? null;
+}

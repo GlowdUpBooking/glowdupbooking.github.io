@@ -1,6 +1,6 @@
-import { Link, NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 
-export default function AppShell({ title, onSignOut, children }) {
+export default function AppShell({ title, onSignOut, children, pendingCount = 0 }) {
   const navClass = ({ isActive }) => `navItem${isActive ? " navItemActive" : ""}`;
 
   return (
@@ -10,8 +10,8 @@ export default function AppShell({ title, onSignOut, children }) {
         <div className="shellBrand">
           <div className="shellLogo" aria-hidden="true" />
           <div className="shellBrandText">
-            <div className="shellBrandName">Glow’d Up Booking</div>
-            <div className="shellBrandSub">Platform</div>
+            <div className="shellBrandName">Glow'd Up</div>
+            <div className="shellBrandSub">Pro Dashboard</div>
           </div>
         </div>
 
@@ -21,24 +21,22 @@ export default function AppShell({ title, onSignOut, children }) {
             Dashboard
           </NavLink>
 
-          <div className="navItem" style={{ opacity: 0.5 }}>
+          <NavLink to="/app/calendar" className={navClass}>
             <div className="navIcon">🗓</div>
-            Calendar
-          </div>
+            Appointments
+            {pendingCount > 0 && (
+              <span className="navBadge">{pendingCount}</span>
+            )}
+          </NavLink>
 
           <NavLink to="/app/services" className={navClass}>
             <div className="navIcon">🏷</div>
             Services
           </NavLink>
 
-          <div className="navItem" style={{ opacity: 0.5 }}>
-            <div className="navIcon">👥</div>
-            Clients
-          </div>
-
-          <NavLink to="/app/settings" className={navClass}>
-            <div className="navIcon">✓</div>
-            Availability
+          <NavLink to="/app/payouts" className={navClass}>
+            <div className="navIcon">💳</div>
+            Payouts
           </NavLink>
 
           <NavLink to="/app/settings" className={navClass}>
@@ -46,21 +44,17 @@ export default function AppShell({ title, onSignOut, children }) {
             Settings
           </NavLink>
 
-          <div className="navItem" style={{ opacity: 0.5 }}>
-            <div className="navIcon">?</div>
-            Support
-          </div>
+          <NavLink to="/app/profile" className={navClass}>
+            <div className="navIcon">👤</div>
+            Profile
+          </NavLink>
         </nav>
 
         <div className="shellFooter">
-          <NavLink to="/app/settings" className={navClass}>
-            <div className="navIcon">⚙</div>
-            Settings
-          </NavLink>
-          <div className="navItem" style={{ opacity: 0.5 }}>
+          <Link to="/support" className="navItem">
             <div className="navIcon">?</div>
             Support
-          </div>
+          </Link>
         </div>
       </aside>
 
@@ -68,29 +62,40 @@ export default function AppShell({ title, onSignOut, children }) {
       <section className="shellMain">
         <header className="shellTopbar">
           <div className="shellTitle">{title}</div>
-
           <button className="btn btnOutline" onClick={onSignOut}>
             Sign out
           </button>
         </header>
 
+        {/* Mobile tab bar */}
         <nav className="shellMobileNav" aria-label="Mobile navigation">
           <NavLink to="/app" end className={navClass}>
             <div className="navIcon">▦</div>
-            Dashboard
+            Home
           </NavLink>
+
+          <NavLink to="/app/calendar" className={({ isActive }) => `navItem${isActive ? " navItemActive" : ""} navItemRelative`}>
+            <div className="navIcon">🗓</div>
+            Bookings
+            {pendingCount > 0 && (
+              <span className="navBadgeMobile">{pendingCount}</span>
+            )}
+          </NavLink>
+
           <NavLink to="/app/services" className={navClass}>
             <div className="navIcon">🏷</div>
             Services
           </NavLink>
-          <NavLink to="/app/settings" className={navClass}>
-            <div className="navIcon">✓</div>
-            Availability
-          </NavLink>
-          <Link to="/pricing?focus=plans" className="navItem shellMobileNavItem">
+
+          <NavLink to="/app/payouts" className={navClass}>
             <div className="navIcon">💳</div>
-            Pricing
-          </Link>
+            Payouts
+          </NavLink>
+
+          <NavLink to="/app/settings" className={navClass}>
+            <div className="navIcon">⚙</div>
+            Settings
+          </NavLink>
         </nav>
 
         <main className="shellContent">{children}</main>

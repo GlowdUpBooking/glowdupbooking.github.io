@@ -12,6 +12,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Services from "./pages/Services";
 import Support from "./pages/Support";
+import Payouts from "./pages/Payouts";
 
 // Pricing / Paywall
 import Pricing from "./pages/Pricing";
@@ -132,6 +133,17 @@ export default function AppRouter() {
             <RequireAuth>
               <RequireOnboarding>
                 <Services />
+              </RequireOnboarding>
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/app/payouts"
+          element={
+            <RequireAuth>
+              <RequireOnboarding>
+                <Payouts />
               </RequireOnboarding>
             </RequireAuth>
           }

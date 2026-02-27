@@ -24,6 +24,26 @@ function durationLabel(mins) {
   return `${mm}m`;
 }
 
+function formatNextAppt(dateStr, timeStr) {
+  if (!dateStr) return "n/a";
+  try {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+    let dayLabel;
+    if (date.getTime() === today.getTime()) dayLabel = "Today";
+    else if (date.getTime() === tomorrow.getTime()) dayLabel = "Tomorrow";
+    else dayLabel = date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    if (!timeStr) return dayLabel;
+    const [h, min] = timeStr.split(":").map(Number);
+    const timeLabel = new Date(y, m - 1, d, h, min).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    return `${dayLabel} · ${timeLabel}`;
+  } catch {
+    return dateStr;
+  }
+}
+
 function safeFirstName(fullName, fallback = "there") {
   const v = (fullName || fallback).trim();
   const first = v.split(" ")[0]?.trim();
@@ -84,6 +104,7 @@ export default function App() {
     nextAppointment: "n/a",
     services: 0,
     inquiries: 0,
+    monthRevenue: 0,
   });
   const [nudgeMsg, setNudgeMsg] = useState("");
   const [payoutStatus, setPayoutStatus] = useState({
@@ -240,11 +261,42 @@ export default function App() {
         if (!mounted) return;
         setServices(mappedServices);
 
-        // 7) Stats (simple for now)
-        setStats((prev) => ({
-          ...prev,
+        // 7) Bookings stats
+        const todayStr = new Date().toISOString().split("T")[0];
+        const thisMonthStr = new Date().toISOString().slice(0, 7);
+
+        const { data: bookingRows } = await supabase
+          .from("appointments")
+          .select("id, status, appointment_date, appointment_time, deposit_amount")
+          .eq("profile_id", u.id)
+          .order("appointment_date", { ascending: true })
+          .order("appointment_time", { ascending: true });
+
+        const allBookings = bookingRows ?? [];
+        const nextAppt = allBookings.find(
+          (b) =>
+            (b.status === "confirmed" || b.status === "pending") &&
+            b.appointment_date >= todayStr
+        );
+        const pendingCount = allBookings.filter((b) => b.status === "pending").length;
+        const monthRevenue = allBookings
+          .filter(
+            (b) =>
+              (b.status === "confirmed" || b.status === "completed") &&
+              b.appointment_date?.startsWith(thisMonthStr)
+          )
+          .reduce((sum, b) => sum + Number(b.deposit_amount ?? 0), 0);
+
+        if (!mounted) return;
+        setStats({
+          bookings: allBookings.length,
+          nextAppointment: nextAppt
+            ? formatNextAppt(nextAppt.appointment_date, nextAppt.appointment_time)
+            : "n/a",
           services: mappedServices.length,
-        }));
+          inquiries: pendingCount,
+          monthRevenue,
+        });
 
         setLoading(false);
       } catch (e) {
@@ -648,27 +700,30 @@ export default function App() {
 
                 <div className="g-statRow">
                   <div className="g-statLeft">
-                    <span className="g-statIcon">✉</span>Inquiries
+                    <span className="g-statIcon">⏳</span>Pending
                   </div>
                   <div className="g-statVal">{stats.inquiries}</div>
+                </div>
+                <div className="g-divider" />
+
+                <div className="g-statRow">
+                  <div className="g-statLeft">
+                    <span className="g-statIcon">💰</span>Revenue (mo.)
+                  </div>
+                  <div className="g-statVal" style={{ color: "#6CFFB3" }}>{money(stats.monthRevenue)}</div>
                 </div>
               </div>
 
               <Button variant="outline" className="btnFull" onClick={() => nav("/app/calendar")}>
-                + New Booking
+                View All Appointments
               </Button>
 
               <Button
                 variant="outline"
                 className="btnFull"
-                disabled={!hasPayoutStep}
-                onClick={() =>
-                  hasPayoutStep
-                    ? setNudgeMsg("Instant payout actions will appear here.")
-                    : nav("/app/onboarding/payouts")
-                }
+                onClick={() => nav("/app/payouts")}
               >
-                {hasPayoutStep ? "Instant Payout" : "Instant Payout (Locked)"}
+                {hasPayoutStep ? "⚡ Payouts" : "💳 Connect Stripe"}
               </Button>
 
               {err ? (
