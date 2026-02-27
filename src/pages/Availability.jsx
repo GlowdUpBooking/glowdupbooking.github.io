@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../components/layout/AppShell";
 import Button from "../components/ui/Button";
@@ -38,6 +38,11 @@ export default function Availability() {
   const [week, setWeek] = useState(defaultWeek());
   const [blockedDatesText, setBlockedDatesText] = useState("");
   const [availabilityStorage, setAvailabilityStorage] = useState("checking");
+
+  const activeDays = useMemo(
+    () => DAYS.reduce((acc, d) => (week?.[d.key]?.enabled ? acc + 1 : acc), 0),
+    [week]
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -119,6 +124,28 @@ export default function Availability() {
     }
   }
 
+  function applyPreset(preset) {
+    const next = defaultWeek();
+    const enableAll = preset === "all";
+    const enableWeekdays = preset === "weekdays";
+
+    for (const d of DAYS) {
+      const isWeekday = ["mon", "tue", "wed", "thu", "fri"].includes(d.key);
+      const enabled = enableAll || (enableWeekdays && isWeekday);
+      next[d.key] = {
+        ...next[d.key],
+        enabled,
+        start: preset === "late" ? "10:00" : "09:00",
+        end: preset === "late" ? "18:00" : "17:00",
+      };
+      if (preset === "clear") {
+        next[d.key].enabled = false;
+      }
+    }
+
+    setWeek(next);
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
     window.location.href = "/";
@@ -145,6 +172,29 @@ export default function Availability() {
         </div>
 
         <Card style={{ padding: 18 }}>
+          <div className="st-toolbar">
+            <div>
+              <div style={{ fontWeight: 800 }}>Quick presets</div>
+              <div className="u-muted" style={{ fontSize: 12 }}>
+                {activeDays} active day{activeDays === 1 ? "" : "s"}
+              </div>
+            </div>
+            <div className="st-presetBtns">
+              <button className="g-pillBtn" type="button" onClick={() => applyPreset("weekdays")}>
+                Weekdays 9–5
+              </button>
+              <button className="g-pillBtn" type="button" onClick={() => applyPreset("late")}>
+                Weekdays 10–6
+              </button>
+              <button className="g-pillBtn" type="button" onClick={() => applyPreset("all")}>
+                All days 9–5
+              </button>
+              <button className="g-pillBtn" type="button" onClick={() => applyPreset("clear")}>
+                Clear all
+              </button>
+            </div>
+          </div>
+
           <label className="pf-field">
             <span className="pf-label">Time zone</span>
             <select

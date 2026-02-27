@@ -443,6 +443,11 @@ export default function App() {
     }
   }
 
+  function openPublicProfile() {
+    if (!user?.id) return;
+    window.open(`/professional/${user.id}`, "_blank", "noopener,noreferrer");
+  }
+
   // Loading screen
   if (loading) {
     return (
@@ -585,6 +590,10 @@ export default function App() {
 
                   <Button variant="outline" className="g-ctaWide" onClick={() => nav("/app/services")}>
                     Manage Services
+                  </Button>
+
+                  <Button variant="outline" className="g-ctaWide" onClick={openPublicProfile}>
+                    Preview Public Profile
                   </Button>
                 </div>
               </div>

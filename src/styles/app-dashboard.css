@@ -1655,6 +1655,21 @@
   gap: 10px;
 }
 
+.st-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.st-presetBtns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .st-toggle {
   display: flex;
   align-items: flex-start;
