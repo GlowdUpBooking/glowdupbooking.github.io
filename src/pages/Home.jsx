@@ -20,6 +20,41 @@ const METRICS = [
   { value: "Same day", label: "Fast payout option" },
 ];
 
+const FAQS = [
+  {
+    q: "Is it free to get started?",
+    a: "Yes. The Free plan requires no credit card. You get a booking link, up to 5 services, and up to 20 bookings per month at no cost.",
+  },
+  {
+    q: "Do my clients need to create an account?",
+    a: "No. Clients book directly through your link without signing up for anything.",
+  },
+  {
+    q: "How do deposits work?",
+    a: "Deposits are collected from the client at the time of booking through Stripe. The funds are paid out to your connected Stripe account on your standard payout schedule.",
+  },
+  {
+    q: "How fast do I get paid?",
+    a: "Standard payouts arrive the next business day. An instant payout option is also available when you need funds sooner — the fee is shown before you confirm.",
+  },
+  {
+    q: "What payment methods do clients use?",
+    a: "All major credit and debit cards are accepted through Stripe. No additional setup required on your end.",
+  },
+  {
+    q: "Can I cancel my plan anytime?",
+    a: "Yes. No contracts, no lock-in. You can upgrade, downgrade, or cancel from your dashboard at any time.",
+  },
+  {
+    q: "Do I need a website or technical experience?",
+    a: "No. You get a ready-to-share booking link. Paste it in your Instagram bio, send it in a DM, or add it anywhere. No website or coding required.",
+  },
+  {
+    q: "What is the Founder plan?",
+    a: "The Founder plan is available to the first 1,000 pros at $99/year. It includes everything in Pro with your price locked for as long as the plan stays active.",
+  },
+];
+
 const TESTIMONIALS = [
   {
     name: "Maya R.",
@@ -144,6 +179,7 @@ export default function Home() {
   const [updatedAt, setUpdatedAt] = useState(null);
   const [activeTab, setActiveTab] = useState("book");
   const [activeStep, setActiveStep] = useState(0);
+  const [openFaq, setOpenFaq] = useState(null);
 
   const activePreview = useMemo(
     () => PREVIEW_TABS.find((tab) => tab.id === activeTab) || PREVIEW_TABS[0],
@@ -188,6 +224,38 @@ export default function Home() {
       mounted = false;
       links.forEach((link) => link.remove());
     };
+  }, []);
+
+  // Scroll-triggered reveals
+  useEffect(() => {
+    const hero = document.querySelector(".lpHero");
+    if (hero) hero.classList.add("is-visible");
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
+    );
+
+    document.querySelectorAll(".lpReveal:not(.lpHero)").forEach((el) => {
+      observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Nav darken on scroll
+  useEffect(() => {
+    const nav = document.querySelector(".lpNav");
+    const onScroll = () => nav?.classList.toggle("is-scrolled", window.scrollY > 30);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
@@ -235,47 +303,48 @@ export default function Home() {
       </header>
 
       <section className="lpHero lpReveal">
-        <div className="lpHeroStrip" aria-hidden="true">
-          <div className="lpHeroImg lpHeroImg1" />
-          <div className="lpHeroImg lpHeroImg2" />
-          <div className="lpHeroImg lpHeroImg3" />
-          <div className="lpHeroImg lpHeroImg4" />
-        </div>
-
         <div className="lpHeroInner">
-          <h1 className="lpH1">Simple pricing for beauty professionals.</h1>
+          <div className="lpHeroContent">
+            <h1 className="lpH1">Stop managing bookings in your DMs.</h1>
 
-          <p className="lpLead">
-            Built for barbers, stylists, tattoo artists, nail techs, and more. Start free and upgrade
-            when you are ready.
-          </p>
-          <p className="lpLead">Clients book free. Pros pay only for tools and growth.</p>
+            <p className="lpLead">
+              Glow'd Up Booking gives barbers, stylists, tattoo artists, nail techs, and more a
+              professional booking link, deposit collection, and client management — all in one place.
+            </p>
+            <p className="lpLead">Clients book free. Pros pay only for tools and growth.</p>
 
-          <div className="lpHeroBtns">
-            <Link to={signupPath} onClick={() => trackEvent("cta_click", { page: "home", cta: "start_free_hero" })}>
-              <Button variant="outline" className="lpBtn">
-                Start Free
-              </Button>
-            </Link>
-            <Link to="/pricing#plans" onClick={() => trackEvent("cta_click", { page: "home", cta: "view_plans_hero" })}>
-              <Button variant="outline" className="lpBtn">
-                View Plans
-              </Button>
-            </Link>
+            <div className="lpHeroBtns">
+              <Link to={signupPath} onClick={() => trackEvent("cta_click", { page: "home", cta: "start_free_hero" })}>
+                <Button variant="outline" className="lpBtn">
+                  Start Free
+                </Button>
+              </Link>
+              <Link to="/pricing#plans" onClick={() => trackEvent("cta_click", { page: "home", cta: "view_plans_hero" })}>
+                <Button variant="outline" className="lpBtn">
+                  View Plans
+                </Button>
+              </Link>
+            </div>
+
+            <div className="lpTrustRow">
+              <span>Stripe-secured payments</span>
+              <span>Cancel anytime</span>
+            </div>
+
+            <div className={`lpLiveChip ${loadingFounder ? "is-loading" : ""}`}>
+              {loadingFounder
+                ? "Loading founder availability..."
+                : showFounderPlan
+                ? `${founderLeft} Founder spots left`
+                : "Founder spots filled · Elite now available"}
+            </div>
           </div>
 
-          <div className="lpTrustRow">
-            <span>Stripe-secured payments</span>
-            <span>Cancel anytime</span>
-          </div>
-
-          <div className={`lpLiveChip ${loadingFounder ? "is-loading" : ""}`}>
-            {loadingFounder
-              ? "Loading founder availability..."
-              : showFounderPlan
-              ? `${founderLeft} Founder spots left`
-              : "Founder spots filled · Elite now available"}{" "}
-            · {relativeUpdate(updatedAt)}
+          <div className="lpHeroPhotos" aria-hidden="true">
+            <div className="lpHeroImg lpHeroImg1" />
+            <div className="lpHeroImg lpHeroImg2" />
+            <div className="lpHeroImg lpHeroImg3" />
+            <div className="lpHeroImg lpHeroImg4" />
           </div>
         </div>
       </section>
@@ -542,6 +611,32 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="lpFaq lpReveal lpSectionLazy" id="faq">
+        <div className="lpPricingInner">
+          <div className="lpPricingHead">
+            <h2 className="lpH2">Common questions</h2>
+          </div>
+          <ul className="lpFaqList">
+            {FAQS.map((item, i) => (
+              <li
+                key={i}
+                className={`lpFaqItem ${openFaq === i ? "is-open" : ""}`}
+              >
+                <button
+                  className="lpFaqQ"
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  aria-expanded={openFaq === i}
+                >
+                  {item.q}
+                  <span className="lpFaqChevron" aria-hidden="true">⌄</span>
+                </button>
+                <div className="lpFaqA">{item.a}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
       <section className="lpPricing lpReveal lpSectionLazy">
         <div className="lpPricingInner">
           <div className="lpPricingHead">
@@ -561,6 +656,43 @@ export default function Home() {
         </div>
       </section>
 
+
+      <section className="lpMobileTeaser lpReveal lpSectionLazy">
+        <div className="lpPricingInner">
+          <div className="lpMobileTeaserInner">
+            <div className="lpMobileTeaserIcon" aria-hidden="true">📱</div>
+            <div className="lpMobileTeaserText">
+              <h2 className="lpH2">The full experience, in your pocket.</h2>
+              <p className="lpMobileTeaserLead">
+                The Glow'd Up Booking mobile app is coming to iPhone. Accept booking requests, manage
+                your schedule, message clients, and track payments — all from your phone. Built for
+                pros who are always on the move.
+              </p>
+              <p className="lpMobileTeaserSub">
+                iOS app coming soon · Web dashboard available now at{" "}
+                <a href="https://glowdupbooking.biz" className="lpMobileTeaserLink">
+                  glowdupbooking.biz
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="lpFinalCta lpReveal lpSectionLazy">
+        <div className="lpFinalCtaInner">
+          <h2 className="lpH2">Take your bookings off social.</h2>
+          <p className="lpFinalCtaSub">Start free. No credit card required.</p>
+          <Link
+            to={signupPath}
+            onClick={() => trackEvent("cta_click", { page: "home", cta: "start_free_final" })}
+          >
+            <Button variant="outline" className="lpBtn">
+              Start Free →
+            </Button>
+          </Link>
+        </div>
+      </section>
 
       <section className="lpFooterInlineWrap lpReveal lpSectionLazy">
         <div className="lpPricingInner">
