@@ -40,6 +40,9 @@ export default function Appointments() {
   const [activeTab, setActiveTab]     = useState("pending");
   const [dateFilter, setDateFilter]   = useState("all");
   const [query, setQuery]             = useState("");
+  const [bulkMode, setBulkMode]       = useState(false);
+  const [bulkSelected, setBulkSelected] = useState(() => new Set());
+  const [bulkActionLoading, setBulkActionLoading] = useState("");
   const [actionLoading, setActionLoading] = useState(null);
   const [showDetail, setShowDetail]   = useState(false);
   const [msg, setMsg]                 = useState("");
@@ -163,6 +166,19 @@ export default function Appointments() {
     });
   }, [filteredByDate, searchQuery]);
 
+  const bulkSelectedList = useMemo(
+    () => appointments.filter((a) => bulkSelected.has(a.id)),
+    [appointments, bulkSelected]
+  );
+
+  const bulkCounts = useMemo(() => ({
+    total: bulkSelectedList.length,
+    pending: bulkSelectedList.filter((a) => a.status === "pending").length,
+    confirmed: bulkSelectedList.filter((a) => a.status === "confirmed").length,
+    completed: bulkSelectedList.filter((a) => a.status === "completed").length,
+    canceled: bulkSelectedList.filter((a) => a.status === "canceled" || a.status === "cancelled").length,
+  }), [bulkSelectedList]);
+
   const monthRevenue = useMemo(() =>
     appointments
       .filter((a) =>
@@ -184,6 +200,32 @@ export default function Appointments() {
     setMsg("");
     setErr("");
     setConfirmPending(null);
+  }
+
+  function toggleBulkMode() {
+    setBulkMode((prev) => {
+      const next = !prev;
+      if (next) {
+        setSelectedId(null);
+        setShowDetail(false);
+        setConfirmPending(null);
+      }
+      setBulkSelected(new Set());
+      setMsg("");
+      setErr("");
+      return next;
+    });
+  }
+
+  function toggleBulkSelect(id) {
+    setBulkSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    setMsg("");
+    setErr("");
   }
 
   async function handleAccept(appt) {
@@ -288,6 +330,114 @@ export default function Appointments() {
     );
   }
 
+  async function handleBulkConfirm() {
+    const targets = bulkSelectedList.filter((a) => a.status === "pending");
+    if (targets.length === 0) return;
+    setBulkActionLoading("confirm");
+    setMsg(""); setErr("");
+    try {
+      const ids = targets.map((a) => a.id);
+      const { error } = await supabase
+        .from("appointments")
+        .update({ status: "confirmed", updated_at: new Date().toISOString() })
+        .in("id", ids);
+      if (error) throw error;
+      await Promise.all(
+        targets.map((a) =>
+          supabase.functions.invoke("send-booking-notification", {
+            body: { appointment_id: a.id, event: "status_confirmed" },
+          }).catch(() => null)
+        )
+      );
+      setAppointments((prev) => {
+        const idSet = new Set(ids);
+        return prev.map((a) => (idSet.has(a.id) ? { ...a, status: "confirmed" } : a));
+      });
+      setMsg(`${ids.length} appointment${ids.length === 1 ? "" : "s"} confirmed.`);
+      setBulkSelected(new Set());
+    } catch {
+      setErr("Could not confirm selected appointments. Please try again.");
+    }
+    setBulkActionLoading("");
+  }
+
+  async function handleBulkComplete() {
+    const targets = bulkSelectedList.filter((a) => a.status === "confirmed");
+    if (targets.length === 0) return;
+    setBulkActionLoading("complete");
+    setMsg(""); setErr("");
+    try {
+      const ids = targets.map((a) => a.id);
+      const { error } = await supabase
+        .from("appointments")
+        .update({ status: "completed", updated_at: new Date().toISOString() })
+        .in("id", ids);
+      if (error) throw error;
+      await Promise.all(
+        targets.map((a) =>
+          supabase.functions.invoke("send-booking-notification", {
+            body: { appointment_id: a.id, event: "status_completed" },
+          }).catch(() => null)
+        )
+      );
+      setAppointments((prev) => {
+        const idSet = new Set(ids);
+        return prev.map((a) => (idSet.has(a.id) ? { ...a, status: "completed" } : a));
+      });
+      setMsg(`${ids.length} appointment${ids.length === 1 ? "" : "s"} completed.`);
+      setBulkSelected(new Set());
+    } catch {
+      setErr("Could not complete selected appointments. Please try again.");
+    }
+    setBulkActionLoading("");
+  }
+
+  async function handleBulkCancel() {
+    const targets = bulkSelectedList.filter((a) => a.status === "pending" || a.status === "confirmed");
+    if (targets.length === 0) return;
+    setBulkActionLoading("cancel");
+    setMsg(""); setErr("");
+    try {
+      const refundTargets = targets.filter((a) => a.deposit_paid);
+      const updateTargets = targets.filter((a) => !a.deposit_paid);
+
+      if (updateTargets.length > 0) {
+        const ids = updateTargets.map((a) => a.id);
+        const { error } = await supabase
+          .from("appointments")
+          .update({ status: "canceled", updated_at: new Date().toISOString() })
+          .in("id", ids);
+        if (error) throw error;
+      }
+
+      await Promise.all(
+        refundTargets.map((a) =>
+          supabase.functions.invoke("refund-deposit", {
+            body: { appointment_id: a.id, reason: "pro_declined" },
+          }).catch(() => null)
+        )
+      );
+
+      await Promise.all(
+        targets.map((a) =>
+          supabase.functions.invoke("send-booking-notification", {
+            body: { appointment_id: a.id, event: "status_canceled" },
+          }).catch(() => null)
+        )
+      );
+
+      setAppointments((prev) => {
+        const idSet = new Set(targets.map((a) => a.id));
+        return prev.map((a) => (idSet.has(a.id) ? { ...a, status: "canceled" } : a));
+      });
+      setMsg(`${targets.length} appointment${targets.length === 1 ? "" : "s"} canceled.`);
+      setBulkSelected(new Set());
+    } catch {
+      setErr("Could not cancel selected appointments. Please try again.");
+    }
+    setBulkActionLoading("");
+  }
+
   return (
     <AppShell title="Appointments" onSignOut={signOut} pendingCount={counts.pending}>
       <div className="g-page">
@@ -344,12 +494,65 @@ export default function Appointments() {
                 setDateFilter(f.key);
                 setSelectedId(null);
                 setShowDetail(false);
+                setBulkSelected(new Set());
               }}
             >
               {f.label}
             </button>
           ))}
         </div>
+
+        <div className="ap-bulkBar">
+          <button
+            className={`ap-bulkToggle${bulkMode ? " ap-bulkToggleActive" : ""}`}
+            onClick={toggleBulkMode}
+          >
+            {bulkMode ? "Exit Select" : "Select"}
+          </button>
+          {bulkMode ? (
+            <>
+              <div className="ap-bulkCount">{bulkCounts.total} selected</div>
+              <div className="ap-bulkActions">
+                <button
+                  className="ap-bulkBtn ap-bulkBtnPrimary"
+                  disabled={bulkCounts.pending === 0 || bulkActionLoading}
+                  onClick={handleBulkConfirm}
+                >
+                  {bulkActionLoading === "confirm" ? "Confirming…" : `Confirm${bulkCounts.pending ? ` (${bulkCounts.pending})` : ""}`}
+                </button>
+                <button
+                  className="ap-bulkBtn ap-bulkBtnPrimary"
+                  disabled={bulkCounts.confirmed === 0 || bulkActionLoading}
+                  onClick={handleBulkComplete}
+                >
+                  {bulkActionLoading === "complete" ? "Completing…" : `Complete${bulkCounts.confirmed ? ` (${bulkCounts.confirmed})` : ""}`}
+                </button>
+                <button
+                  className="ap-bulkBtn ap-bulkBtnDanger"
+                  disabled={(bulkCounts.pending + bulkCounts.confirmed) === 0 || bulkActionLoading}
+                  onClick={handleBulkCancel}
+                >
+                  {bulkActionLoading === "cancel" ? "Canceling…" : `Cancel${(bulkCounts.pending + bulkCounts.confirmed) ? ` (${bulkCounts.pending + bulkCounts.confirmed})` : ""}`}
+                </button>
+                <button
+                  className="ap-bulkBtn ap-bulkBtnGhost"
+                  disabled={bulkCounts.total === 0}
+                  onClick={() => setBulkSelected(new Set())}
+                >
+                  Clear
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="ap-bulkHint">Select multiple to confirm, complete, or cancel in one go.</div>
+          )}
+        </div>
+
+        {(bulkMode || !selectedAppt) && (msg || err) && (
+          <div className={`ap-msg ${err ? "ap-msgErr" : "ap-msgOk"}`} style={{ marginTop: 10 }}>
+            {err || msg}
+          </div>
+        )}
 
         <div className="ap-tabBar" role="tablist">
           {TABS.map((t) => (
@@ -358,7 +561,12 @@ export default function Appointments() {
               role="tab"
               aria-selected={activeTab === t.key}
               className={`ap-tab${activeTab === t.key ? " ap-tabActive" : ""}`}
-              onClick={() => { setActiveTab(t.key); setSelectedId(null); setShowDetail(false); }}
+              onClick={() => {
+                setActiveTab(t.key);
+                setSelectedId(null);
+                setShowDetail(false);
+                setBulkSelected(new Set());
+              }}
             >
               {t.label}
               {counts[t.key] > 0 && (
@@ -398,13 +606,23 @@ export default function Appointments() {
                 <button
                   key={appt.id}
                   role="listitem"
+                  aria-pressed={bulkMode ? bulkSelected.has(appt.id) : undefined}
                   className={
                     `ap-item` +
-                    (selectedId === appt.id ? " ap-itemSelected" : "") +
+                    (!bulkMode && selectedId === appt.id ? " ap-itemSelected" : "") +
+                    (bulkMode && bulkSelected.has(appt.id) ? " ap-itemBulkSelected" : "") +
                     (appt.status === "pending" ? " ap-itemPending" : "")
                   }
-                  onClick={() => selectAppt(appt.id)}
+                  onClick={() => (bulkMode ? toggleBulkSelect(appt.id) : selectAppt(appt.id))}
                 >
+                  {bulkMode && (
+                    <span
+                      className={`ap-itemCheck${bulkSelected.has(appt.id) ? " ap-itemCheckSelected" : ""}`}
+                      aria-hidden="true"
+                    >
+                      ✓
+                    </span>
+                  )}
                   <div className="ap-avatar" data-status={appt.status}>
                     {getInitials(appt.client_name)}
                   </div>
