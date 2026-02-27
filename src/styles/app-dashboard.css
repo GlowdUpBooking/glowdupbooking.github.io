@@ -542,8 +542,42 @@
   padding: 8px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 8px;
 }
+
+.sv-photoOrder { display: flex; gap: 4px; }
+.sv-orderBtn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7);
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: 13px;
+  cursor: pointer;
+  line-height: 1;
+}
+.sv-orderBtn:disabled { opacity: 0.25; cursor: not-allowed; }
+.sv-orderBtn:not(:disabled):hover { background: rgba(255,255,255,0.14); }
+
+.sv-deleteZone {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.sv-deleteBtn {
+  background: none;
+  border: 1px solid rgba(248,113,113,0.4);
+  color: #f87171;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.14s;
+}
+.sv-deleteBtn:hover { background: rgba(248,113,113,0.08); }
+.sv-deleteConfirm { display: grid; gap: 10px; }
+.sv-deleteWarning { font-size: 13px; color: rgba(255,255,255,0.7); }
 
 @media (max-width: 1200px) {
   .g-grid {
@@ -1073,6 +1107,10 @@
 .ap-actionAccept   { background: #fff; color: #070707; }
 .ap-actionComplete { background: rgba(108,255,179,0.18); border: 1px solid rgba(108,255,179,0.35); color: #6CFFB3; }
 .ap-actionDecline  { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.18); color: rgba(255,255,255,0.75); }
+
+.ap-confirmBox { display: grid; gap: 10px; }
+.ap-confirmText { font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.5; padding: 10px 12px; background: rgba(255,255,255,0.04); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); }
+.ap-confirmBtns { display: grid; gap: 8px; }
 
 .ap-detailState {
   text-align: center;

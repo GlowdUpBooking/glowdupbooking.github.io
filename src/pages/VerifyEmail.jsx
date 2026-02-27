@@ -60,11 +60,16 @@ export default function VerifyEmail() {
                 <input
                   className="uiInput"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  readOnly
                   type="email"
                   autoComplete="email"
                   placeholder="you@business.com"
+                  style={{ opacity: 0.75, cursor: "default" }}
                 />
+              </div>
+              <div style={{ fontSize: 12, opacity: 0.6, marginTop: 5 }}>
+                This is the email you signed up with. Wrong email?{" "}
+                <Link to={signupPath} style={{ color: "inherit", textDecoration: "underline" }}>Start over</Link>.
               </div>
             </div>
 

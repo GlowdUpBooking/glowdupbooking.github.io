@@ -23,6 +23,16 @@ const textareaStyle = {
 
 const AVAILABILITY_LOCAL_KEY_PREFIX = "gub_availability_";
 
+const TIMEZONES = [
+  { value: "America/New_York",    label: "Eastern Time (ET) — New York, Miami, Atlanta" },
+  { value: "America/Chicago",     label: "Central Time (CT) — Chicago, Houston, Dallas" },
+  { value: "America/Denver",      label: "Mountain Time (MT) — Denver, Salt Lake City" },
+  { value: "America/Phoenix",     label: "Mountain Time — Phoenix (no DST)" },
+  { value: "America/Los_Angeles", label: "Pacific Time (PT) — Los Angeles, Seattle" },
+  { value: "America/Anchorage",   label: "Alaska Time (AKT) — Anchorage" },
+  { value: "Pacific/Honolulu",    label: "Hawaii Time (HT) — Honolulu" },
+];
+
 const DAYS = [
   { key: "mon", label: "Monday" },
   { key: "tue", label: "Tuesday" },
@@ -333,7 +343,19 @@ export default function Settings() {
           {/* Availability */}
           <Section title="Availability" hint="Set the days and hours clients can book">
             <Field label="Time zone" hint="All booking times use this timezone">
-              <input style={fieldStyle} value={timezone} onChange={(e) => setTimezone(e.target.value)} placeholder="America/New_York" />
+              <select
+                style={fieldStyle}
+                value={timezone}
+                onChange={(e) => setTimezone(e.target.value)}
+              >
+                {/* If the saved value isn't in our list, show it as-is so data isn't lost */}
+                {!TIMEZONES.some((t) => t.value === timezone) && (
+                  <option value={timezone}>{timezone}</option>
+                )}
+                {TIMEZONES.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
             </Field>
 
             <div className="st-weekGrid">

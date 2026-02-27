@@ -131,7 +131,10 @@ export default function Signup() {
 
   function focusField(field) {
     const r = refs[field]?.current;
-    if (r && typeof r.focus === "function") r.focus();
+    if (r && typeof r.focus === "function") {
+      r.focus();
+      r.scrollIntoView?.({ behavior: "smooth", block: "center" });
+    }
   }
 
   function clearFieldError(name) {
@@ -171,6 +174,7 @@ export default function Signup() {
         password,
         options: {
           data: {
+            role: "pro",
             full_name: fullName.trim(),
             business_name: businessName.trim(),
             category: category.trim(),

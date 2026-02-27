@@ -53,7 +53,7 @@ function TwoCol({ children }) {
 export default function Profile() {
   const nav = useNavigate();
 
-  const [loading, setSaving2]   = useState(true);
+  const [loading, setLoading]   = useState(true);
   const [saving, setSaving]     = useState(false);
   const [userId, setUserId]     = useState(null);
   const [err, setErr]           = useState("");
@@ -80,7 +80,7 @@ export default function Profile() {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      setSaving2(true);
+      setLoading(true);
       const { data: authRes, error: authErr } = await supabase.auth.getUser();
       const u = authRes?.user ?? null;
       if (authErr || !u) { nav("/login", { replace: true }); return; }
@@ -105,7 +105,7 @@ export default function Profile() {
       setWebsite(profile?.website_url ?? "");
       setCashapp(profile?.cashapp_handle ?? "");
       setBookingDeposit(profile?.booking_deposit == null ? "" : String(profile.booking_deposit));
-      setSaving2(false);
+      setLoading(false);
     })();
     return () => { mounted = false; };
   }, [nav]);

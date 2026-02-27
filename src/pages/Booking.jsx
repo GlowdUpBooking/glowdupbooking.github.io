@@ -49,10 +49,13 @@ export default function Booking() {
             <Link className="btn gold" to="/">
               Back to home
             </Link>
+            <Link className="btn" to="/app" style={{ opacity: 0.75 }}>
+              Pro Dashboard →
+            </Link>
           </div>
 
           <div className="heroMicro" style={{ marginTop: 12 }}>
-            If you received this link from a professional, keep it saved for when booking goes live.
+            If you received this link from a professional, keep it saved — it will go live once they finish setting up.
           </div>
         </section>
       </main>

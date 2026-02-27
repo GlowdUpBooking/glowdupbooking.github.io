@@ -2,62 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../components/layout/AppShell";
 import { supabase } from "../lib/supabase";
-
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-function money(n) {
-  const num = Number(n ?? 0);
-  try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(num);
-  } catch {
-    return `$${num.toFixed(2)}`;
-  }
-}
-
-function formatApptDate(dateStr, timeStr) {
-  if (!dateStr) return "—";
-  try {
-    const [y, m, d] = dateStr.split("-").map(Number);
-    const date = new Date(y, m - 1, d);
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-    let dayLabel;
-    if (date.getTime() === today.getTime()) dayLabel = "Today";
-    else if (date.getTime() === tomorrow.getTime()) dayLabel = "Tomorrow";
-    else dayLabel = date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-    if (!timeStr) return dayLabel;
-    const [h, min] = timeStr.split(":").map(Number);
-    const timeLabel = new Date(y, m - 1, d, h, min).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-    return `${dayLabel} · ${timeLabel}`;
-  } catch {
-    return `${dateStr}${timeStr ? " " + timeStr : ""}`;
-  }
-}
-
-function formatDateLong(dateStr, timeStr) {
-  if (!dateStr) return "—";
-  try {
-    const [y, m, d] = dateStr.split("-").map(Number);
-    const date = new Date(y, m - 1, d);
-    const dayLabel = date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-    if (!timeStr) return dayLabel;
-    const [h, min] = timeStr.split(":").map(Number);
-    const timeLabel = new Date(y, m - 1, d, h, min).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-    return `${dayLabel} at ${timeLabel}`;
-  } catch {
-    return dateStr;
-  }
-}
-
-function durationLabel(mins) {
-  const m = Number(mins ?? 0);
-  if (!m) return null;
-  const h = Math.floor(m / 60);
-  const mm = m % 60;
-  if (h && mm) return `${h}h ${mm}m`;
-  if (h) return `${h}h`;
-  return `${mm}m`;
-}
+import { money, durationLabel, formatApptDate, formatDateLong } from "../lib/format";
 
 function getInitials(name) {
   if (!name) return "?";
@@ -97,6 +42,7 @@ export default function Appointments() {
   const [showDetail, setShowDetail]   = useState(false);
   const [msg, setMsg]                 = useState("");
   const [err, setErr]                 = useState("");
+  const [confirmPending, setConfirmPending] = useState(null); // { appt, action: 'decline' | 'cancel' }
 
   useEffect(() => {
     let mounted = true;
@@ -188,6 +134,7 @@ export default function Appointments() {
     setShowDetail(true);
     setMsg("");
     setErr("");
+    setConfirmPending(null);
   }
 
   async function handleAccept(appt) {
@@ -397,7 +344,7 @@ export default function Appointments() {
                 <button
                   className="ap-detailClose"
                   aria-label="Close"
-                  onClick={() => { setShowDetail(false); setSelectedId(null); }}
+                  onClick={() => { setShowDetail(false); setSelectedId(null); setConfirmPending(null); }}
                 >
                   ✕
                 </button>
@@ -458,40 +405,90 @@ export default function Appointments() {
 
               <div className="ap-detailActions">
                 {selectedAppt.status === "pending" && (
-                  <>
-                    <button
-                      className="ap-actionBtn ap-actionAccept"
-                      disabled={!!actionLoading}
-                      onClick={() => handleAccept(selectedAppt)}
-                    >
-                      {actionLoading === `${selectedAppt.id}_accept` ? "Confirming…" : "✓ Accept Booking"}
-                    </button>
-                    <button
-                      className="ap-actionBtn ap-actionDecline"
-                      disabled={!!actionLoading}
-                      onClick={() => handleDecline(selectedAppt)}
-                    >
-                      {actionLoading === `${selectedAppt.id}_decline` ? "Declining…" : "✕ Decline"}
-                    </button>
-                  </>
+                  confirmPending ? (
+                    <div className="ap-confirmBox">
+                      <div className="ap-confirmText">
+                        Decline this booking?
+                        {confirmPending.appt.deposit_paid ? " A deposit refund will be issued." : ""}
+                        {" "}Client will be notified.
+                      </div>
+                      <div className="ap-confirmBtns">
+                        <button
+                          className="ap-actionBtn ap-actionDecline"
+                          disabled={!!actionLoading}
+                          onClick={() => { handleDecline(confirmPending.appt); setConfirmPending(null); }}
+                        >
+                          {actionLoading === `${confirmPending.appt.id}_decline` ? "Declining…" : "Yes, Decline"}
+                        </button>
+                        <button
+                          className="ap-actionBtn"
+                          onClick={() => setConfirmPending(null)}
+                        >
+                          Keep Booking
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        className="ap-actionBtn ap-actionAccept"
+                        disabled={!!actionLoading}
+                        onClick={() => handleAccept(selectedAppt)}
+                      >
+                        {actionLoading === `${selectedAppt.id}_accept` ? "Confirming…" : "✓ Accept Booking"}
+                      </button>
+                      <button
+                        className="ap-actionBtn ap-actionDecline"
+                        disabled={!!actionLoading}
+                        onClick={() => setConfirmPending({ appt: selectedAppt, action: "decline" })}
+                      >
+                        ✕ Decline
+                      </button>
+                    </>
+                  )
                 )}
                 {selectedAppt.status === "confirmed" && (
-                  <>
-                    <button
-                      className="ap-actionBtn ap-actionComplete"
-                      disabled={!!actionLoading}
-                      onClick={() => handleComplete(selectedAppt)}
-                    >
-                      {actionLoading === `${selectedAppt.id}_complete` ? "Completing…" : "✓ Mark as Complete"}
-                    </button>
-                    <button
-                      className="ap-actionBtn ap-actionDecline"
-                      disabled={!!actionLoading}
-                      onClick={() => handleDecline(selectedAppt)}
-                    >
-                      {actionLoading === `${selectedAppt.id}_decline` ? "Canceling…" : "✕ Cancel Appointment"}
-                    </button>
-                  </>
+                  confirmPending ? (
+                    <div className="ap-confirmBox">
+                      <div className="ap-confirmText">
+                        Cancel this appointment?
+                        {confirmPending.appt.deposit_paid ? " A deposit refund will be issued." : ""}
+                        {" "}Client will be notified.
+                      </div>
+                      <div className="ap-confirmBtns">
+                        <button
+                          className="ap-actionBtn ap-actionDecline"
+                          disabled={!!actionLoading}
+                          onClick={() => { handleDecline(confirmPending.appt); setConfirmPending(null); }}
+                        >
+                          {actionLoading === `${confirmPending.appt.id}_decline` ? "Canceling…" : "Yes, Cancel"}
+                        </button>
+                        <button
+                          className="ap-actionBtn"
+                          onClick={() => setConfirmPending(null)}
+                        >
+                          Keep Appointment
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        className="ap-actionBtn ap-actionComplete"
+                        disabled={!!actionLoading}
+                        onClick={() => handleComplete(selectedAppt)}
+                      >
+                        {actionLoading === `${selectedAppt.id}_complete` ? "Completing…" : "✓ Mark as Complete"}
+                      </button>
+                      <button
+                        className="ap-actionBtn ap-actionDecline"
+                        disabled={!!actionLoading}
+                        onClick={() => setConfirmPending({ appt: selectedAppt, action: "cancel" })}
+                      >
+                        ✕ Cancel Appointment
+                      </button>
+                    </>
+                  )
                 )}
                 {selectedAppt.status === "completed" && (
                   <div className="ap-detailState ap-detailStateDone">✓ Completed</div>

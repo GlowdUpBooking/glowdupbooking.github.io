@@ -53,10 +53,6 @@ function mergeLivePrices(livePrices) {
       return fallback;
     }
 
-    if (typeof fallback?.unit_amount === "number" && unitAmount !== fallback.unit_amount) {
-      return fallback;
-    }
-
     return {
       ...fallback,
       ...candidate,
@@ -320,6 +316,16 @@ export default function Pricing() {
     nav("/", { replace: true });
   }
 
+  function tierForCycle(baseTier) {
+    // Map a base monthly tier to the correct tier key based on the selected billing cycle.
+    // Annual tier keys must be supported by the create-checkout-session edge function.
+    if (billingCycle === "annual") {
+      const annual = baseTier.replace("_monthly", "_annual");
+      return annual;
+    }
+    return baseTier;
+  }
+
   async function startCheckout(tier) {
     trackEvent("checkout_start", { page: "pricing", tier, billing_cycle: billingCycle });
     setToast("");
@@ -575,7 +581,7 @@ export default function Pricing() {
                 <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : starterPrice || "-"}</span>
                 <span className="lpTerm">{starterTerm || ""}</span>
               </div>
-              {billingCycle === "annual" ? <div className="lpTinyNote">Billed annually before taxes.</div> : null}
+              {billingCycle === "annual" ? <div className="lpTinyNote">Annual billing — total billed once per year.</div> : null}
               <ul className="lpList">
                 <li>✓ Everything in Free</li>
                 <li>✓ Unlimited accepted bookings</li>
@@ -591,7 +597,7 @@ export default function Pricing() {
                   className="lpChoose"
                   onClick={() => {
                     trackEvent("plan_cta_click", { page: "pricing", plan: "starter", cta: "choose_starter", billing_cycle: billingCycle });
-                    startCheckout("starter_monthly");
+                    startCheckout(tierForCycle("starter_monthly"));
                   }}
                   disabled={sessionLoading || pricesLoading}
                 >
@@ -609,7 +615,7 @@ export default function Pricing() {
                 <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : proPrice || "-"}</span>
                 <span className="lpTerm">{proTerm || ""}</span>
               </div>
-              {billingCycle === "annual" ? <div className="lpTinyNote">Billed annually before taxes.</div> : null}
+              {billingCycle === "annual" ? <div className="lpTinyNote">Annual billing — total billed once per year.</div> : null}
               <ul className="lpList">
                 <li>✓ Everything in Starter</li>
                 <li>✓ Advanced deposits + optional full prepay</li>
@@ -625,7 +631,7 @@ export default function Pricing() {
                   className="lpChoose"
                   onClick={() => {
                     trackEvent("plan_cta_click", { page: "pricing", plan: "pro", cta: "choose_pro", billing_cycle: billingCycle });
-                    startCheckout("pro_monthly");
+                    startCheckout(tierForCycle("pro_monthly"));
                   }}
                   disabled={sessionLoading || pricesLoading}
                 >
@@ -699,7 +705,7 @@ export default function Pricing() {
                     className="lpChoose"
                     onClick={() => {
                       trackEvent("plan_cta_click", { page: "pricing", plan: "elite", cta: "choose_elite", billing_cycle: billingCycle });
-                      startCheckout("elite_monthly");
+                    startCheckout(tierForCycle("elite_monthly"));
                     }}
                     disabled={sessionLoading || pricesLoading}
                   >
