@@ -237,35 +237,59 @@ export default function App() {
         if (!mounted) return;
         setServices(mappedServices);
 
-        // 7) Bookings stats
+        // 7) Bookings stats (lean queries for better perf)
         const todayStr = new Date().toISOString().split("T")[0];
-        const thisMonthStr = new Date().toISOString().slice(0, 7);
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+        const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString().split("T")[0];
 
-        const { data: bookingRows } = await supabase
-          .from("appointments")
-          .select("id, status, appointment_date, appointment_time, deposit_amount")
-          .eq("profile_id", u.id)
-          .order("appointment_date", { ascending: true })
-          .order("appointment_time", { ascending: true });
+        const [
+          totalRes,
+          pendingRes,
+          nextRes,
+          monthRes,
+        ] = await Promise.all([
+          supabase
+            .from("appointments")
+            .select("id", { count: "exact", head: true })
+            .eq("profile_id", u.id)
+            .not("status", "in", '("canceled","cancelled")'),
+          supabase
+            .from("appointments")
+            .select("id", { count: "exact", head: true })
+            .eq("profile_id", u.id)
+            .eq("status", "pending"),
+          supabase
+            .from("appointments")
+            .select("appointment_date, appointment_time, status")
+            .eq("profile_id", u.id)
+            .in("status", ["confirmed", "pending"])
+            .gte("appointment_date", todayStr)
+            .order("appointment_date", { ascending: true })
+            .order("appointment_time", { ascending: true })
+            .limit(1),
+          supabase
+            .from("appointments")
+            .select("deposit_amount")
+            .eq("profile_id", u.id)
+            .in("status", ["confirmed", "completed"])
+            .gte("appointment_date", monthStart)
+            .lt("appointment_date", nextMonthStart),
+        ]);
 
-        const allBookings = bookingRows ?? [];
-        const nextAppt = allBookings.find(
-          (b) =>
-            (b.status === "confirmed" || b.status === "pending") &&
-            b.appointment_date >= todayStr
-        );
-        const pendingCount = allBookings.filter((b) => b.status === "pending").length;
-        const monthRevenue = allBookings
-          .filter(
-            (b) =>
-              (b.status === "confirmed" || b.status === "completed") &&
-              b.appointment_date?.startsWith(thisMonthStr)
-          )
-          .reduce((sum, b) => sum + Number(b.deposit_amount ?? 0), 0);
+        if (totalRes.error) console.warn("[App] bookings count error:", totalRes.error);
+        if (pendingRes.error) console.warn("[App] pending count error:", pendingRes.error);
+        if (nextRes.error) console.warn("[App] next appointment error:", nextRes.error);
+        if (monthRes.error) console.warn("[App] month revenue error:", monthRes.error);
+
+        const totalBookings = totalRes.count ?? 0;
+        const pendingCount = pendingRes.count ?? 0;
+        const nextAppt = (nextRes.data || [])[0] ?? null;
+        const monthRevenue = (monthRes.data ?? []).reduce((sum, b) => sum + Number(b.deposit_amount ?? 0), 0);
 
         if (!mounted) return;
         setStats({
-          bookings: allBookings.length,
+          bookings: totalBookings,
           nextAppointment: nextAppt
             ? formatNextAppt(nextAppt.appointment_date, nextAppt.appointment_time)
             : "n/a",
