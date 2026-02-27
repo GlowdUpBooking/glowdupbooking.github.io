@@ -7,6 +7,8 @@ import {
   SIGNUP_PAUSED_MESSAGE,
   isSigninPaused,
   isSignupPaused,
+  isSiteLocked,
+  SITE_LOCKED_MESSAGE,
 } from "../lib/siteFlags";
 import "../styles/signup.css";
 
@@ -34,6 +36,7 @@ export default function Login() {
     const params = new URLSearchParams(location.search);
     return isSignupPaused() || params.get("signup") === "paused";
   }, [location.search]);
+  const siteLocked = useMemo(() => isSiteLocked(), []);
   const isClientBlocked = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return params.get("blocked") === "client";
@@ -181,7 +184,8 @@ export default function Login() {
               <a href="https://glowdupbooking.com">glowdupbooking.com</a>.
             </div>
           ) : null}
-          {signinPaused ? <div className="authFormInfo">{SIGNIN_PAUSED_MESSAGE}</div> : null}
+          {siteLocked ? <div className="authFormInfo">{SITE_LOCKED_MESSAGE}</div> : null}
+          {signinPaused && !siteLocked ? <div className="authFormInfo">{SIGNIN_PAUSED_MESSAGE}</div> : null}
           {signupPaused ? <div className="authFormInfo">{SIGNUP_PAUSED_MESSAGE}</div> : null}
           <form onSubmit={onSubmit} className="authForm">
             <div className="authGrid">

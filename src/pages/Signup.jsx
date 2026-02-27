@@ -7,6 +7,12 @@ import Input from "../components/ui/Input";
 import { supabase } from "../lib/supabase";
 import { trackEvent } from "../lib/analytics";
 import { useAuth } from "../components/auth/useAuth";
+import {
+  isSignupPaused,
+  isSiteLocked,
+  SIGNUP_PAUSED_MESSAGE,
+  SITE_LOCKED_MESSAGE,
+} from "../lib/siteFlags";
 import "../styles/signup.css";
 
 const CATEGORIES = [
@@ -54,6 +60,9 @@ export default function Signup() {
   const qs = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const pickedPlan = planLabel(qs.get("plan"));
   const next = qs.get("next"); // optional
+  const signupPaused = useMemo(() => isSignupPaused() || qs.get("signup") === "paused", [qs]);
+  const siteLocked = useMemo(() => isSiteLocked(), []);
+  const pauseMessage = siteLocked ? SITE_LOCKED_MESSAGE : SIGNUP_PAUSED_MESSAGE;
 
   const [fullName, setFullName] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -148,6 +157,10 @@ export default function Signup() {
 
   async function onSubmit(e) {
     e.preventDefault();
+    if (signupPaused) {
+      setErrors((prev) => ({ ...prev, form: pauseMessage }));
+      return;
+    }
     trackEvent("signup_submit", {
       page: "signup",
       selected_plan: (qs.get("plan") || "free").toLowerCase(),
@@ -346,6 +359,7 @@ export default function Signup() {
             ) : null}
           </div>
 
+          {signupPaused ? <div className="authFormError">{pauseMessage}</div> : null}
           {errors.form ? <div className="authFormError">{errors.form}</div> : null}
 
           <form onSubmit={onSubmit} className="authForm">
@@ -460,8 +474,8 @@ export default function Signup() {
             </div>
 
             <div className="authActions">
-              <Button className="authPrimaryBtn" disabled={!canSubmit || loading} type="submit">
-                {loading ? "Creating..." : "Create account"}
+              <Button className="authPrimaryBtn" disabled={!canSubmit || loading || signupPaused} type="submit">
+                {signupPaused ? "Signup unavailable" : loading ? "Creating..." : "Create account"}
               </Button>
             </div>
 
