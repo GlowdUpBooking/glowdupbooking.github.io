@@ -171,7 +171,7 @@ async function fetchFounderRolloutState() {
     return { ok: false as const, error: "founding_offer_row_missing" };
   }
 
-  const maxSpots = Number(row.max_spots ?? 1000);
+  const maxSpots = Number(row.max_spots ?? 500);
   const claimedSpots = Number(row.claimed_spots ?? 0);
   if (!Number.isFinite(maxSpots) || !Number.isFinite(claimedSpots)) {
     return { ok: false as const, error: "founding_offer_bad_values" };
