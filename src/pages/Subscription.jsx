@@ -386,6 +386,19 @@ export default function Subscription() {
     }
   }
 
+  function planActionLabel(card) {
+    if (card.key === currentPlanKey) return "Current plan";
+    if (!isActive || currentPlanKey === "free") return "Choose plan";
+
+    const order = { starter: 1, pro: 2, founder: 3, elite: 4 };
+    const currentRank = order[currentPlanKey] ?? 0;
+    const targetRank = order[card.key] ?? 0;
+    if (!currentRank || !targetRank) return "Change plan";
+    if (targetRank > currentRank) return "Upgrade";
+    if (targetRank < currentRank) return "Downgrade";
+    return "Change plan";
+  }
+
   function handlePlanAction(card) {
     if (card.key === currentPlanKey) return;
     if (isActive) {
@@ -489,7 +502,7 @@ export default function Subscription() {
                     onClick={() => handlePlanAction(card)}
                     disabled={busy || isCurrent}
                   >
-                    {isCurrent ? "Current plan" : isActive ? "Change plan" : "Choose plan"}
+                    {planActionLabel(card)}
                   </Button>
                 </div>
               </Card>
