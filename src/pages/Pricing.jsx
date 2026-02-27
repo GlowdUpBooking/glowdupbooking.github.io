@@ -277,6 +277,38 @@ export default function Pricing() {
     };
   }, []);
 
+  // Scroll-triggered reveals
+  useEffect(() => {
+    const hero = document.querySelector(".lpHero");
+    if (hero) hero.classList.add("is-visible");
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
+    );
+
+    document.querySelectorAll(".lpReveal:not(.lpHero)").forEach((el) => {
+      observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Nav darken on scroll
+  useEffect(() => {
+    const nav = document.querySelector(".lpNav");
+    const onScroll = () => nav?.classList.toggle("is-scrolled", window.scrollY > 30);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get("checkout") === "success") setToast("Payment complete. Your access will update shortly.");
@@ -426,45 +458,47 @@ export default function Pricing() {
       </header>
 
       <section className="lpHero lpReveal">
-        <div className="lpHeroStrip" aria-hidden="true">
-          <div className="lpHeroImg lpHeroImg1" />
-          <div className="lpHeroImg lpHeroImg2" />
-          <div className="lpHeroImg lpHeroImg3" />
-          <div className="lpHeroImg lpHeroImg4" />
-        </div>
-
         <div className="lpHeroInner">
-          <h1 className="lpH1">Simple pricing for beauty professionals.</h1>
-          <p className="lpLead">Built for barbers, stylists, tattoo artists, nail techs, and more. Start free and scale with better tools.</p>
-          <p className="lpLead">Clients book free. Pros pay only for tools and growth.</p>
+          <div className="lpHeroContent">
+            <h1 className="lpH1">Simple pricing for beauty professionals.</h1>
+            <p className="lpLead">Built for barbers, stylists, tattoo artists, nail techs, and more. Start free and scale with better tools.</p>
+            <p className="lpLead">Clients book free. Pros pay only for tools and growth.</p>
 
-          <div className="lpHeroBtns">
-            <Link to={signupPath} onClick={() => trackEvent("cta_click", { page: "pricing", cta: "start_free_hero" })}>
-              <Button variant="outline" className="lpBtn">Start Free</Button>
-            </Link>
-            <Button
-              variant="outline"
-              className="lpBtn"
-              onClick={() => {
-                trackEvent("cta_click", { page: "pricing", cta: "view_plans_hero" });
-                document.getElementById("plans")?.scrollIntoView({ behavior: "smooth" });
-              }}
-            >
-              View Plans
-            </Button>
+            <div className="lpHeroBtns">
+              <Link to={signupPath} onClick={() => trackEvent("cta_click", { page: "pricing", cta: "start_free_hero" })}>
+                <Button variant="outline" className="lpBtn">Start Free</Button>
+              </Link>
+              <Button
+                variant="outline"
+                className="lpBtn"
+                onClick={() => {
+                  trackEvent("cta_click", { page: "pricing", cta: "view_plans_hero" });
+                  document.getElementById("plans")?.scrollIntoView({ behavior: "smooth" });
+                }}
+              >
+                View Plans
+              </Button>
+            </div>
+
+            <div className="lpTrustRow">
+              <span>Stripe-secured payments</span>
+              <span>Cancel anytime</span>
+            </div>
+
+            <div className={`lpLiveChip ${loading ? "is-loading" : ""}`}>
+              {loading ? "Loading founder availability..." : showFounderPlan ? `${remaining} Founder spots left` : "Founder spots filled · Elite unlocked"}
+            </div>
+
+            {toast ? <div className="lpToast">{toast}</div> : null}
+            {pricesErr ? <div className="lpToast">{pricesErr}</div> : null}
           </div>
 
-          <div className="lpTrustRow">
-            <span>Stripe-secured payments</span>
-            <span>Cancel anytime</span>
+          <div className="lpHeroPhotos" aria-hidden="true">
+            <div className="lpHeroImg lpHeroImg1" />
+            <div className="lpHeroImg lpHeroImg2" />
+            <div className="lpHeroImg lpHeroImg3" />
+            <div className="lpHeroImg lpHeroImg4" />
           </div>
-
-          <div className={`lpLiveChip ${loading ? "is-loading" : ""}`}>
-            {loading ? "Loading founder availability..." : showFounderPlan ? `${remaining} Founder spots left` : "Founder spots filled · Elite unlocked"} · {relativeUpdate(updatedAt)}
-          </div>
-
-          {toast ? <div className="lpToast">{toast}</div> : null}
-          {pricesErr ? <div className="lpToast">{pricesErr}</div> : null}
         </div>
       </section>
 
