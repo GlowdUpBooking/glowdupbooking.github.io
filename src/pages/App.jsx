@@ -511,8 +511,8 @@ export default function App() {
                   </span>
                 </div>
 
-                <button className="g-linkBtn" type="button" onClick={openBillingPortal}>
-                  {billingLoading ? "Opening billing..." : billingCtaLabel}
+                <button className="g-linkBtn" type="button" onClick={() => nav("/app/subscription")}>
+                  {billingLoading ? "Opening..." : billingCtaLabel}
                   {!billingLoading ? <span className="g-ext">↗</span> : null}
                 </button>
               </div>

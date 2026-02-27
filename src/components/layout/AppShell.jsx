@@ -34,9 +34,24 @@ export default function AppShell({ title, onSignOut, children, pendingCount = 0 
             Services
           </NavLink>
 
+          <NavLink to="/app/availability" className={navClass}>
+            <div className="navIcon">⏰</div>
+            Availability
+          </NavLink>
+
           <NavLink to="/app/payouts" className={navClass}>
             <div className="navIcon">💳</div>
             Payouts
+          </NavLink>
+
+          <NavLink to="/app/subscription" className={navClass}>
+            <div className="navIcon">💳</div>
+            Subscription
+          </NavLink>
+
+          <NavLink to="/app/analytics" className={navClass}>
+            <div className="navIcon">📊</div>
+            Analytics
           </NavLink>
 
           <NavLink to="/app/settings" className={navClass}>
