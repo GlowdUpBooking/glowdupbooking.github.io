@@ -482,7 +482,6 @@ export default function App() {
   }
   // If subscription is not active, DO NOT block the app for starter/free.
   // We show an upgrade card, but continue rendering the dashboard.
-  const showUpgrade = !isActive;
 
   // Dashboard content
   const displayBusinessName = profile?.business_name || "Your Business";

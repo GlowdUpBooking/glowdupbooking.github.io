@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { useAuth } from "../components/auth/AuthProvider";
+import { useAuth } from "../components/auth/useAuth";
 import {
   SIGNIN_PAUSED_MESSAGE,
   SIGNUP_PAUSED_MESSAGE,
@@ -70,7 +70,7 @@ export default function Login() {
       <header className="authTopNav">
         <div className="authTopNavInner">
           <Link className="authBrand" to="/">
-            <img className="authBrandLogo" src="/assets/logo.png" alt="Glow'd Up Booking logo" />
+            <img className="authBrandLogo" src="/assets/logo.png" alt="Glow&apos;d Up Booking logo" />
             <span className="authBrandStrong">Glow’d Up</span>
             <span className="authBrandLight"> Booking</span>
           </Link>

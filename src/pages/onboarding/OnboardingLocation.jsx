@@ -1,5 +1,5 @@
 // src/pages/onboarding/Location.jsx
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import OnboardingProgress from "../../components/onboarding/OnboardingProgress";
@@ -103,7 +103,7 @@ export default function Location() {
     return !needsMobileChoice; // must pick yes/no
   }, [hasLocation, locationRequiredMissing, needsMobileChoice]);
 
-  function buildDisplayLocation() {
+  const buildDisplayLocation = useCallback(() => {
     // For public display, you may want city/state only.
     // Keeping it simple: if hasLocation -> "City, State"
     if (!hasLocation) return null;
@@ -111,7 +111,7 @@ export default function Location() {
     const s = stateProv.trim();
     if (!c && !s) return null;
     return [c, s].filter(Boolean).join(", ");
-  }
+  }, [hasLocation, city, stateProv]);
 
   async function onContinue() {
     if (!userId) return;
@@ -198,6 +198,7 @@ export default function Location() {
     stateProv,
     postal,
     country,
+    buildDisplayLocation,
   ]);
 
   if (loading) return null;

@@ -72,7 +72,7 @@ export default function Support() {
       <header className="lpNav">
         <div className="lpNavInner">
           <Link className="lpBrand" to="/">
-            <img className="lpBrandLogo" src="/assets/logo.png" alt="Glow'd Up Booking logo" />
+            <img className="lpBrandLogo" src="/assets/logo.png" alt="Glow&apos;d Up Booking logo" />
             <span className="lpBrandStrong">Glow’d Up</span>
             <span className="lpBrandLight"> Booking</span>
           </Link>

@@ -90,7 +90,6 @@ export default function Appointments() {
   const nav = useNavigate();
 
   const [loading, setLoading]         = useState(true);
-  const [userId, setUserId]           = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [selectedId, setSelectedId]   = useState(null);
   const [activeTab, setActiveTab]     = useState("pending");
@@ -106,7 +105,6 @@ export default function Appointments() {
       const u = authRes?.user ?? null;
       if (authErr || !u) { nav("/login", { replace: true }); return; }
       if (!mounted) return;
-      setUserId(u.id);
       await loadAppointments(u.id, mounted);
     }
     load();
@@ -347,7 +345,7 @@ export default function Appointments() {
               <div className="ap-empty">
                 <div className="ap-emptyIcon">🗓</div>
                 <div style={{ fontWeight: 700 }}>
-                  {activeTab === "pending" ? "You're all caught up" : `No ${activeTab} appointments`}
+                  {activeTab === "pending" ? "You are all caught up" : `No ${activeTab} appointments`}
                 </div>
                 <div className="u-muted">
                   {activeTab === "pending"

@@ -1,6 +1,15 @@
 # -glowdupbooking.github.io
 Glow’d Up Booking — coming soon. Booking + reminders + deposits for beauty pros.
 
+## Quickstart
+1. Install deps: `npm install`
+2. Run dev server: `npm run dev`
+3. Build: `npm run build`
+4. Preview: `npm run preview`
+
+## Environment
+See `.env.example` for required client env vars. Use `.env.local` for local overrides.
+
 ## Booking Link Routing
 The pro dashboard builds booking links as:
 

@@ -37,7 +37,7 @@ export default function VerifyEmail() {
       <header className="authTopNav">
         <div className="authTopNavInner">
           <Link className="authBrand" to="/">
-            <img className="authBrandLogo" src="/assets/logo.png" alt="Glow'd Up Booking logo" />
+            <img className="authBrandLogo" src="/assets/logo.png" alt="Glow&apos;d Up Booking logo" />
             <span className="authBrandStrong">Glow’d Up</span>
             <span className="authBrandLight"> Booking</span>
           </Link>

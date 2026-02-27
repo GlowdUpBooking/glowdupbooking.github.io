@@ -10,7 +10,7 @@ export default function AppShell({ title, onSignOut, children, pendingCount = 0 
         <div className="shellBrand">
           <div className="shellLogo" aria-hidden="true" />
           <div className="shellBrandText">
-            <div className="shellBrandName">Glow'd Up</div>
+            <div className="shellBrandName">Glow&apos;d Up</div>
             <div className="shellBrandSub">Pro Dashboard</div>
           </div>
         </div>

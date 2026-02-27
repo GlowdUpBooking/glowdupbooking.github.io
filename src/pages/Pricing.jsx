@@ -107,15 +107,6 @@ function formatTerm(priceObj, billingCycle = "monthly") {
   return null;
 }
 
-function relativeUpdate(ts) {
-  if (!ts) return "Updated recently";
-  const mins = Math.max(0, Math.floor((Date.now() - ts) / 60000));
-  if (mins < 1) return "Updated just now";
-  if (mins === 1) return "Updated 1 min ago";
-  if (mins < 60) return `Updated ${mins} mins ago`;
-  return "Updated today";
-}
-
 export default function Pricing() {
   const nav = useNavigate();
   const location = useLocation();
@@ -127,7 +118,6 @@ export default function Pricing() {
   const [loading, setLoading] = useState(true);
   const [maxSpots, setMaxSpots] = useState(1000);
   const [claimed, setClaimed] = useState(0);
-  const [updatedAt, setUpdatedAt] = useState(null);
   const [err, setErr] = useState("");
 
   const [sessionLoading, setSessionLoading] = useState(false);
@@ -192,9 +182,7 @@ export default function Pricing() {
         setClaimed(0);
         setErr("Availability counter unavailable (still fine to sign up).");
       } finally {
-        if (!mounted) return;
-        setUpdatedAt(Date.now());
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
 
@@ -266,8 +254,7 @@ export default function Pricing() {
         setPrices(DEFAULT_PRICES);
         setPricesErr("Live pricing sync is unavailable. Showing standard plan rates.");
       } finally {
-        if (!mounted) return;
-        setPricesLoading(false);
+        if (mounted) setPricesLoading(false);
       }
     }
 
@@ -422,7 +409,7 @@ export default function Pricing() {
       <header className="lpNav">
         <div className="lpNavInner">
           <Link className="lpBrand" to="/">
-            <img className="lpBrandLogo" src="/assets/logo.png" alt="Glow'd Up Booking logo" />
+            <img className="lpBrandLogo" src="/assets/logo.png" alt="Glow&apos;d Up Booking logo" />
             <span className="lpBrandStrong">Glow’d Up</span>
             <span className="lpBrandLight"> Booking</span>
           </Link>

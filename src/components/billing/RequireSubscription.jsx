@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
-import { useAuth } from "../auth/AuthProvider";
+import { useAuth } from "../auth/useAuth";
 import FullScreenLoader from "../ui/FullScreenLoader";
 
 function isActiveRow(row) {

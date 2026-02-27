@@ -6,7 +6,7 @@ import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import { supabase } from "../lib/supabase";
 import { trackEvent } from "../lib/analytics";
-import { useAuth } from "../components/auth/AuthProvider";
+import { useAuth } from "../components/auth/useAuth";
 import "../styles/signup.css";
 
 const CATEGORIES = [
@@ -220,7 +220,9 @@ export default function Signup() {
       // Store plan locally (simple + reliable), onboarding can read this later if needed.
       try {
         localStorage.setItem("gub_selected_plan", (qs.get("plan") || "free").toLowerCase());
-      } catch {}
+      } catch {
+        // ignore localStorage errors
+      }
 
       trackEvent("signup_success", {
         page: "signup",
@@ -254,7 +256,7 @@ export default function Signup() {
         <header className="authTopNav">
           <div className="authTopNavInner">
             <Link className="authBrand" to="/">
-              <img className="authBrandLogo" src="/assets/logo.png" alt="Glow'd Up Booking logo" />
+              <img className="authBrandLogo" src="/assets/logo.png" alt="Glow&apos;d Up Booking logo" />
               <span className="authBrandStrong">Glow’d Up</span>
               <span className="authBrandLight"> Booking</span>
             </Link>
@@ -295,7 +297,7 @@ export default function Signup() {
       <header className="authTopNav">
         <div className="authTopNavInner">
           <Link className="authBrand" to="/">
-            <img className="authBrandLogo" src="/assets/logo.png" alt="Glow'd Up Booking logo" />
+            <img className="authBrandLogo" src="/assets/logo.png" alt="Glow&apos;d Up Booking logo" />
             <span className="authBrandStrong">Glow’d Up</span>
             <span className="authBrandLight"> Booking</span>
           </Link>

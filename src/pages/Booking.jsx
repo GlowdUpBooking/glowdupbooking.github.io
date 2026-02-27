@@ -29,9 +29,9 @@ export default function Booking() {
       <header className="nav">
         <div className="navInner">
           <Link className="brand" to="/">
-            <img className="logo" src="/assets/logo.png" alt="Glow'd Up Booking logo" />
+            <img className="logo" src="/assets/logo.png" alt="Glow&apos;d Up Booking logo" />
             <div className="brandText">
-              <div className="brandName">Glow'd Up Booking</div>
+              <div className="brandName">Glow&apos;d Up Booking</div>
               <div className="brandTag">Client booking</div>
             </div>
           </Link>
@@ -42,7 +42,7 @@ export default function Booking() {
         <section className="heroPanel">
           <h1>Booking is almost here.</h1>
           <p>
-            This professional's booking page is getting ready. Please contact them directly to book for now.
+            This professional&apos;s booking page is getting ready. Please contact them directly to book for now.
           </p>
 
           <div className="heroBtns" style={{ marginTop: 16 }}>

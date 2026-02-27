@@ -36,7 +36,6 @@ export default function OnboardingServices() {
   const [saving, setSaving] = useState(false);
 
   const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
 
   const [services, setServices] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -94,8 +93,6 @@ export default function OnboardingServices() {
         await supabase
           .from("profiles")
           .upsert({ id: u.id, role: "professional", onboarding_step: "services" }, { onConflict: "id" });
-      } else {
-        setProfile(prof);
       }
 
       // services

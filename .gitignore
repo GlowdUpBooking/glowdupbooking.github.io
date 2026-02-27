@@ -1,23 +1,19 @@
-*.bak
+# dependencies
+node_modules/
+
+# local config + env
+.env
+.env.*
+!.env.example
 app.json
-supabase/.temp/
-*.bak
 settings.json
-app.json
-.env
-.env.*
-.env
-.env.*
-.env
-.env.*
-.env
-.env.*
+*.bak
 
 # supabase local
 supabase/.temp/
 
 # build output
-/dist/
+dist/
 
 # macOS Finder metadata
 .DS_Store

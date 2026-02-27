@@ -84,8 +84,8 @@ export default function OnboardingPayouts() {
         return;
       }
       throw new Error("Could not start Stripe onboarding.");
-    } catch (e) {
-      setErr(e?.message || "Couldn’t start Stripe onboarding.");
+    } catch (err) {
+      setErr(err?.message || "Couldn’t start Stripe onboarding.");
       setBusy(false);
     }
   }
@@ -101,7 +101,7 @@ export default function OnboardingPayouts() {
         .eq("id", userId);
       if (error) throw error;
       nav("/app", { replace: true });
-    } catch (e) {
+    } catch {
       setErr("Couldn’t finish onboarding. Please try again.");
       setBusy(false);
     }

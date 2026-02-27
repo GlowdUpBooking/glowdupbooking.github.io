@@ -1,8 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import FullScreenLoader from "../ui/FullScreenLoader";
-
-const AuthContext = createContext(null);
+import AuthContext from "./authContext";
 
 export function AuthProvider({ children }) {
   const [ready, setReady] = useState(false);
@@ -43,10 +42,4 @@ export function AuthProvider({ children }) {
   if (!ready) return <FullScreenLoader label="Preparing your session..." />;
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
-  return ctx;
 }

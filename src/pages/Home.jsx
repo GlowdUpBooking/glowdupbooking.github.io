@@ -163,20 +163,10 @@ const PREVIEW_TABS = [
   },
 ];
 
-function relativeUpdate(ts) {
-  if (!ts) return "Updated recently";
-  const mins = Math.max(0, Math.floor((Date.now() - ts) / 60000));
-  if (mins < 1) return "Updated just now";
-  if (mins === 1) return "Updated 1 min ago";
-  if (mins < 60) return `Updated ${mins} mins ago`;
-  return "Updated today";
-}
-
 export default function Home() {
   const signupPath = getSignupPath();
   const [founderLeft, setFounderLeft] = useState(1000);
   const [loadingFounder, setLoadingFounder] = useState(true);
-  const [updatedAt, setUpdatedAt] = useState(null);
   const [activeTab, setActiveTab] = useState("book");
   const [activeStep, setActiveStep] = useState(0);
   const [openFaq, setOpenFaq] = useState(null);
@@ -212,9 +202,7 @@ export default function Home() {
         if (!mounted) return;
         setFounderLeft(1000);
       } finally {
-        if (!mounted) return;
-        setUpdatedAt(Date.now());
-        setLoadingFounder(false);
+        if (mounted) setLoadingFounder(false);
       }
     }
 
@@ -275,7 +263,7 @@ export default function Home() {
       <header className="lpNav">
         <div className="lpNavInner">
           <Link className="lpBrand" to="/">
-            <img className="lpBrandLogo" src="/assets/logo.png" alt="Glow'd Up Booking logo" />
+            <img className="lpBrandLogo" src="/assets/logo.png" alt="Glow&apos;d Up Booking logo" />
             <span className="lpBrandStrong">Glow’d Up</span>
             <span className="lpBrandLight"> Booking</span>
           </Link>
@@ -308,7 +296,7 @@ export default function Home() {
             <h1 className="lpH1">Stop managing bookings in your DMs.</h1>
 
             <p className="lpLead">
-              Glow'd Up Booking gives barbers, stylists, tattoo artists, nail techs, and more a
+              Glow&apos;d Up Booking gives barbers, stylists, tattoo artists, nail techs, and more a
               professional booking link, deposit collection, and client management — all in one place.
             </p>
             <p className="lpLead">Clients book free. Pros pay only for tools and growth.</p>
@@ -664,7 +652,7 @@ export default function Home() {
             <div className="lpMobileTeaserText">
               <h2 className="lpH2">The full experience, in your pocket.</h2>
               <p className="lpMobileTeaserLead">
-                The Glow'd Up Booking mobile app is coming to iPhone. Accept booking requests, manage
+                The Glow&apos;d Up Booking mobile app is coming to iPhone. Accept booking requests, manage
                 your schedule, message clients, and track payments — all from your phone. Built for
                 pros who are always on the move.
               </p>

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../components/layout/AppShell";
-import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
 
@@ -308,7 +307,7 @@ export default function Settings() {
                 />
                 <div className="st-toggleContent">
                   <span className="st-toggleLabel">I offer mobile / travel service</span>
-                  <span className="pf-hint">You go to the client's location</span>
+                  <span className="pf-hint">You go to the client&apos;s location</span>
                 </div>
               </label>
             </div>
@@ -378,7 +377,7 @@ export default function Settings() {
               })}
             </div>
 
-            <Field label="Blocked dates" hint="Comma-separated dates you're unavailable, e.g. 2026-07-04, 2026-12-25">
+            <Field label="Blocked dates" hint="Comma-separated dates you are unavailable, e.g. 2026-07-04, 2026-12-25">
               <input
                 style={fieldStyle}
                 placeholder="2026-07-04, 2026-12-25"
