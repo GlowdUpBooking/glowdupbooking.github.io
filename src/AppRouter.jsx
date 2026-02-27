@@ -2,7 +2,7 @@ import { Suspense, lazy, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 // ✅ Route guards
-import RequireAuth from "./components/auth/RequireAuth";
+import RequirePro from "./components/auth/RequirePro";
 import RequireSubscription from "./components/billing/RequireSubscription";
 import RequireOnboarding from "./components/onboarding/RequireOnboarding";
 import FullScreenLoader from "./components/ui/FullScreenLoader";
@@ -61,24 +61,24 @@ export default function AppRouter() {
           <Route path="/pricing" element={<Pricing />} />
 
           {/* Paywall page: only for logged-in users who are NOT Pro/Founder */}
-          <Route
-            path="/paywall"
-            element={
-              <RequireAuth>
-                <RequireSubscription mode="require-not-subscribed">
-                  <Pricing />
-                </RequireSubscription>
-              </RequireAuth>
-            }
-          />
+        <Route
+          path="/paywall"
+          element={
+            <RequirePro>
+              <RequireSubscription mode="require-not-subscribed">
+                <Pricing />
+              </RequireSubscription>
+            </RequirePro>
+          }
+        />
 
           {/* Onboarding: allow all logged-in users (starter/free included) */}
           <Route
             path="/app/onboarding/*"
             element={
-              <RequireAuth>
+              <RequirePro>
                 <Onboarding />
-              </RequireAuth>
+              </RequirePro>
             }
           />
 
@@ -86,66 +86,66 @@ export default function AppRouter() {
           <Route
             path="/app"
             element={
-              <RequireAuth>
+              <RequirePro>
                 <RequireOnboarding>
                   <App />
                 </RequireOnboarding>
-              </RequireAuth>
+              </RequirePro>
             }
           />
 
           <Route
             path="/app/calendar"
             element={
-              <RequireAuth>
+              <RequirePro>
                 <RequireOnboarding>
                   <Calendar />
                 </RequireOnboarding>
-              </RequireAuth>
+              </RequirePro>
             }
           />
 
           <Route
             path="/app/profile"
             element={
-              <RequireAuth>
+              <RequirePro>
                 <RequireOnboarding>
                   <Profile />
                 </RequireOnboarding>
-              </RequireAuth>
+              </RequirePro>
             }
           />
 
           <Route
             path="/app/settings"
             element={
-              <RequireAuth>
+              <RequirePro>
                 <RequireOnboarding>
                   <Settings />
                 </RequireOnboarding>
-              </RequireAuth>
+              </RequirePro>
             }
           />
 
           <Route
             path="/app/services"
             element={
-              <RequireAuth>
+              <RequirePro>
                 <RequireOnboarding>
                   <Services />
                 </RequireOnboarding>
-              </RequireAuth>
+              </RequirePro>
             }
           />
 
           <Route
             path="/app/payouts"
             element={
-              <RequireAuth>
+              <RequirePro>
                 <RequireOnboarding>
                   <Payouts />
                 </RequireOnboarding>
-              </RequireAuth>
+              </RequirePro>
             }
           />
 

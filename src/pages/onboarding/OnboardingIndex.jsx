@@ -14,6 +14,13 @@ const STEP_TO_ROUTE = {
   complete: "/app",
 };
 
+function normalizeRole(value) {
+  const v = String(value || "").trim().toLowerCase();
+  if (v === "pro" || v === "professional") return "pro";
+  if (v === "client") return "client";
+  return null;
+}
+
 export default function OnboardingIndex() {
   const nav = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -42,8 +49,16 @@ export default function OnboardingIndex() {
 
       if (!mounted) return;
 
-      // 3) If profile doesn't exist yet, create a forgiving default
+      const metaRole = normalizeRole(user?.user_metadata?.role);
+
+      // 3) If profile doesn't exist yet, create it only for pro accounts
       if (profileErr || !profile) {
+        if (metaRole !== "pro") {
+          nav("/login?blocked=client");
+          setLoading(false);
+          return;
+        }
+
         await supabase
           .from("profiles")
           .upsert(
@@ -60,9 +75,12 @@ export default function OnboardingIndex() {
         return;
       }
 
-      // 4) Force professional role for pro portal
-      if (profile.role !== "professional") {
-        await supabase.from("profiles").update({ role: "professional" }).eq("id", user.id);
+      // 4) Block non-pro profiles from entering pro onboarding
+      const profileRole = normalizeRole(profile.role);
+      if (profileRole === "client") {
+        nav("/login?blocked=client");
+        setLoading(false);
+        return;
       }
 
       // 5) Route by onboarding_step

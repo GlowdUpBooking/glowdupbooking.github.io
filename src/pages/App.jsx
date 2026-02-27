@@ -32,6 +32,13 @@ function countEnabledAvailabilityDays(raw) {
   return count;
 }
 
+function normalizeRole(value) {
+  const v = String(value || "").trim().toLowerCase();
+  if (v === "pro" || v === "professional") return "pro";
+  if (v === "client") return "client";
+  return null;
+}
+
 export default function App() {
   const nav = useNavigate();
 
@@ -128,8 +135,15 @@ export default function App() {
           setErr("Couldn’t load all profile details yet. Showing what we can.");
         }
 
-        // If missing, create a forgiving default then send to onboarding
+        const metaRole = normalizeRole(u?.user_metadata?.role);
+
+        // If missing, only create for pro accounts
         if (!prof) {
+          if (metaRole !== "pro") {
+            nav("/login?blocked=client", { replace: true });
+            return;
+          }
+
           await supabase
             .from("profiles")
             .upsert({ id: u.id, role: "professional", onboarding_step: "basics" }, { onConflict: "id" });
@@ -138,8 +152,14 @@ export default function App() {
           return;
         }
 
+        const profileRole = normalizeRole(prof?.role);
+        if (profileRole === "client") {
+          nav("/login?blocked=client", { replace: true });
+          return;
+        }
+
         // Gate: pros must finish onboarding
-        if (prof?.role === "professional" && prof?.onboarding_step !== "complete") {
+        if (profileRole === "pro" && prof?.onboarding_step !== "complete") {
           nav("/app/onboarding", { replace: true });
           return;
         }
