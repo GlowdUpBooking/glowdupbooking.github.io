@@ -10,6 +10,13 @@ import {
 } from "../lib/siteFlags";
 import "../styles/signup.css";
 
+function normalizeRole(value) {
+  const v = String(value || "").trim().toLowerCase();
+  if (v === "pro" || v === "professional") return "pro";
+  if (v === "client") return "client";
+  return null;
+}
+
 export default function Login() {
   const nav = useNavigate();
   const location = useLocation();
@@ -18,6 +25,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [roleCheckBusy, setRoleCheckBusy] = useState(false);
   const signinPaused = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return isSigninPaused() || params.get("signin") === "paused";
@@ -36,8 +44,35 @@ export default function Login() {
   }, [location.search]);
 
   useEffect(() => {
-    if (session?.access_token) nav(nextPath, { replace: true });
-  }, [session?.access_token, nav, nextPath]);
+    let active = true;
+    async function verifySessionRole() {
+      if (!session?.access_token || !session?.user) return;
+      setRoleCheckBusy(true);
+      const metaRole = normalizeRole(session.user.user_metadata?.role);
+      if (metaRole === "client") {
+        await supabase.auth.signOut();
+        if (active) nav("/login?blocked=client", { replace: true });
+        setRoleCheckBusy(false);
+        return;
+      }
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", session.user.id)
+        .maybeSingle();
+      if (!active) return;
+      if (normalizeRole(profile?.role) === "client") {
+        await supabase.auth.signOut();
+        nav("/login?blocked=client", { replace: true });
+        setRoleCheckBusy(false);
+        return;
+      }
+      setRoleCheckBusy(false);
+      nav(nextPath, { replace: true });
+    }
+    verifySessionRole();
+    return () => { active = false; };
+  }, [session?.access_token, session?.user, nav, nextPath]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -50,7 +85,7 @@ export default function Login() {
 
     setBusy(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     setBusy(false);
 
@@ -64,6 +99,26 @@ export default function Login() {
       }
       setMsg(error.message);
       return;
+    }
+
+    const authedUser = data?.user ?? null;
+    if (authedUser) {
+      const metaRole = normalizeRole(authedUser.user_metadata?.role);
+      if (metaRole === "client") {
+        await supabase.auth.signOut();
+        nav("/login?blocked=client", { replace: true });
+        return;
+      }
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", authedUser.id)
+        .maybeSingle();
+      if (normalizeRole(profile?.role) === "client") {
+        await supabase.auth.signOut();
+        nav("/login?blocked=client", { replace: true });
+        return;
+      }
     }
 
     nav(nextPath, { replace: true });
@@ -139,7 +194,7 @@ export default function Login() {
                     onChange={(e) => setEmail(e.target.value)}
                     type="email"
                     autoComplete="email"
-                    disabled={signinPaused}
+                    disabled={signinPaused || roleCheckBusy}
                     required
                   />
                 </div>
@@ -154,7 +209,7 @@ export default function Login() {
                     onChange={(e) => setPassword(e.target.value)}
                     type="password"
                     autoComplete="current-password"
-                    disabled={signinPaused}
+                    disabled={signinPaused || roleCheckBusy}
                     required
                   />
                 </div>
@@ -164,8 +219,14 @@ export default function Login() {
             {msg ? <div className="authFormError">{msg}</div> : null}
 
             <div className="authActions">
-              <button className="authPrimaryBtn" disabled={busy || signinPaused} type="submit">
-                {signinPaused ? "Sign in unavailable" : busy ? "Signing in..." : "Sign in"}
+              <button className="authPrimaryBtn" disabled={busy || signinPaused || roleCheckBusy} type="submit">
+                {signinPaused
+                  ? "Sign in unavailable"
+                  : roleCheckBusy
+                    ? "Checking account..."
+                    : busy
+                      ? "Signing in..."
+                      : "Sign in"}
               </button>
             </div>
           </form>
