@@ -448,6 +448,182 @@
   opacity: 0.85;
 }
 
+/* ─── Subscription Page ─────────────────────────────────────────────────── */
+.sub-page {
+  gap: 18px;
+}
+
+.sub-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.sub-heroCopy {
+  max-width: 620px;
+}
+
+.sub-current {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  min-width: 200px;
+}
+
+.sub-currentLabel {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.sub-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sub-alert {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.sub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.sub-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.sub-cardFeatured {
+  border-color: rgba(255, 214, 120, 0.75);
+  background: linear-gradient(160deg, rgba(255, 214, 120, 0.18), rgba(255, 255, 255, 0.04));
+  box-shadow: 0 12px 36px rgba(255, 214, 120, 0.18), 0 10px 28px rgba(0, 0, 0, 0.3);
+}
+
+.sub-cardCurrent {
+  border-color: rgba(108, 255, 179, 0.35);
+}
+
+.sub-cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sub-cardTitle {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.sub-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.sub-badge {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.sub-badgeFeatured {
+  border-color: rgba(255, 214, 120, 0.62);
+  background: rgba(255, 214, 120, 0.14);
+  color: #ffe2a2;
+}
+
+.sub-badgeCurrent {
+  border-color: rgba(108, 255, 179, 0.5);
+  background: rgba(108, 255, 179, 0.12);
+  color: #c9ffe2;
+}
+
+.sub-desc {
+  font-size: 13px;
+  opacity: 0.75;
+  margin-top: 4px;
+}
+
+.sub-priceRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.sub-price {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.sub-term {
+  font-size: 14px;
+  opacity: 0.7;
+  margin-left: 6px;
+}
+
+.sub-remaining {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.sub-list {
+  display: grid;
+  gap: 6px;
+  padding-left: 18px;
+  margin: 0;
+}
+
+.sub-ctaRow {
+  display: flex;
+  gap: 8px;
+}
+
+.sub-faqCard {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.sub-faqTitle {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.sub-faqItem {
+  display: grid;
+  gap: 4px;
+}
+
+.sub-faqQ {
+  font-weight: 700;
+}
+
+.sub-faqA {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
 .sv-grid {
   display: grid;
   grid-template-columns: 320px 1fr;
