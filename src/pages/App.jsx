@@ -5,60 +5,12 @@ import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
 import { fetchStripeConnectStatus } from "../lib/stripeConnect";
-
-function money(n) {
-  const num = Number(n ?? 0);
-  try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(num);
-  } catch {
-    return `$${num}`;
-  }
-}
-
-function durationLabel(mins) {
-  const m = Number(mins ?? 0);
-  const h = Math.floor(m / 60);
-  const mm = m % 60;
-  if (h && mm) return `${h}h ${mm}m`;
-  if (h) return `${h}h`;
-  return `${mm}m`;
-}
-
-function formatNextAppt(dateStr, timeStr) {
-  if (!dateStr) return "n/a";
-  try {
-    const [y, m, d] = dateStr.split("-").map(Number);
-    const date = new Date(y, m - 1, d);
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-    let dayLabel;
-    if (date.getTime() === today.getTime()) dayLabel = "Today";
-    else if (date.getTime() === tomorrow.getTime()) dayLabel = "Tomorrow";
-    else dayLabel = date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-    if (!timeStr) return dayLabel;
-    const [h, min] = timeStr.split(":").map(Number);
-    const timeLabel = new Date(y, m - 1, d, h, min).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-    return `${dayLabel} · ${timeLabel}`;
-  } catch {
-    return dateStr;
-  }
-}
+import { money, durationLabel, formatNextAppt, normalizePlanKey } from "../lib/format";
 
 function safeFirstName(fullName, fallback = "there") {
   const v = (fullName || fallback).trim();
   const first = v.split(" ")[0]?.trim();
   return first || fallback;
-}
-
-function normalizePlanKey(raw) {
-  const v = String(raw || "").trim().toLowerCase();
-  if (!v) return null;
-  if (v === "free") return "free";
-  if (v === "starter" || v === "starter_monthly") return "starter";
-  if (v === "pro" || v === "pro_monthly") return "pro";
-  if (v === "founder" || v === "founder_annual") return "founder";
-  if (v === "elite" || v === "elite_monthly") return "elite";
-  return null;
 }
 
 function extractAvailabilityRaw(profile) {
@@ -85,6 +37,7 @@ export default function App() {
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
 
   // Auth / subscription
   const [user, setUser] = useState(null);
@@ -312,7 +265,7 @@ export default function App() {
     return () => {
       mounted = false;
     };
-  }, [nav]);
+  }, [nav, retryKey]);
 
   const firstName = useMemo(() => {
     if (profile?.full_name) return safeFirstName(profile.full_name, "there");
@@ -641,7 +594,7 @@ export default function App() {
 
                         <div className="g-serviceInfo">
                           <div className="g-serviceTitle">{s.title}</div>
-                          <div className="g-serviceSub">{durationLabel(s.duration_minutes)}</div>
+                          <div className="g-serviceSub">{durationLabel(s.duration_minutes) || "—"}</div>
                         </div>
                       </div>
 
@@ -728,6 +681,13 @@ export default function App() {
               {err ? (
                 <div className="u-muted" style={{ marginTop: 12 }}>
                   {err}
+                  <button
+                    className="g-pillBtn"
+                    style={{ marginLeft: 8 }}
+                    onClick={() => setRetryKey((k) => k + 1)}
+                  >
+                    Retry
+                  </button>
                 </div>
               ) : null}
             </Card>

@@ -4,8 +4,14 @@ import AppShell from "../components/layout/AppShell";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
+import { normalizePlanKey } from "../lib/format";
+import { compressImage } from "../lib/imageUtils";
 
 const BUCKET = "service-photos";
+const FREE_SERVICE_LIMIT = 5;       // Free plan allows up to 5 services
+const MAX_PHOTO_SIZE_MB = 8;        // Per-file size cap before upload
+const MAX_PHOTO_SIZE_BYTES = MAX_PHOTO_SIZE_MB * 1024 * 1024;
+const MAX_PHOTOS_PER_SERVICE = 20;  // Total photos per service
 
 function moneyToNumber(v) {
   if (v === "" || v == null) return null;
@@ -53,8 +59,13 @@ export default function Services() {
 
   const [photos, setPhotos] = useState([]);
   const [newFiles, setNewFiles] = useState([]);
+  const [compressing, setCompressing] = useState(false);
+  const [origSizeBytes, setOrigSizeBytes] = useState(0);
   const [err, setErr] = useState("");
   const [okMsg, setOkMsg] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [planKey, setPlanKey] = useState(null);
 
   async function loadServices(userId) {
     const { data: svc, error: svcErr } = await supabase
@@ -95,6 +106,16 @@ export default function Services() {
       if (!mounted) return;
       setUser(u);
 
+      // Fetch plan to enforce Free-plan service limit
+      const { data: subRow } = await supabase
+        .from("pro_subscriptions")
+        .select("status, plan")
+        .eq("user_id", u.id)
+        .maybeSingle();
+      const isActiveSub = subRow?.status === "active";
+      const pk = normalizePlanKey(subRow?.plan);
+      if (mounted) setPlanKey(isActiveSub && pk ? pk : "free");
+
       await loadServices(u.id);
       if (!mounted) return;
       setLoading(false);
@@ -111,6 +132,7 @@ export default function Services() {
     (async () => {
       setErr("");
       setNewFiles([]);
+      setDeleteConfirm(false);
 
       if (!selected) {
         setDescription("");
@@ -152,6 +174,10 @@ export default function Services() {
   }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function startNewService() {
+    if (planKey === "free" && services.length >= FREE_SERVICE_LIMIT) {
+      setErr(`Free plan is limited to ${FREE_SERVICE_LIMIT} services. Upgrade to Starter or higher for unlimited services.`);
+      return;
+    }
     setSelectedId(null);
     setDescription("");
     setPrice("");
@@ -325,9 +351,81 @@ export default function Services() {
       .eq("stylist_id", user.id);
   }
 
-  function onPickFiles(e) {
-    const files = Array.from(e.target.files || []);
-    setNewFiles(files);
+  async function deleteService() {
+    if (!user || !selectedId) return;
+    setDeleting(true);
+    setErr("");
+    try {
+      await supabase.from("service_photos").delete().eq("service_id", selectedId);
+      const { error } = await supabase
+        .from("services")
+        .delete()
+        .eq("id", selectedId)
+        .eq("stylist_id", user.id);
+      if (error) throw error;
+      setDeleteConfirm(false);
+      setSelectedId(null);
+      await loadServices(user.id);
+      setOkMsg("Service deleted.");
+    } catch (e) {
+      setErr(e?.message || "Could not delete service.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function movePhoto(photoId, direction) {
+    const idx = photos.findIndex((p) => p.id === photoId);
+    if (direction === "up" && idx === 0) return;
+    if (direction === "down" && idx === photos.length - 1) return;
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    const reordered = [...photos];
+    [reordered[idx], reordered[swapIdx]] = [reordered[swapIdx], reordered[idx]];
+    const updated = reordered.map((p, i) => ({ ...p, sort_order: i }));
+    setPhotos(updated);
+    await supabase.from("service_photos").update({ sort_order: updated[idx].sort_order }).eq("id", updated[idx].id);
+    await supabase.from("service_photos").update({ sort_order: updated[swapIdx].sort_order }).eq("id", updated[swapIdx].id);
+  }
+
+  async function onPickFiles(e) {
+    const picked = Array.from(e.target.files || []);
+    // Reset so the same file can be re-picked after a rejection
+    e.target.value = "";
+    if (!picked.length) return;
+
+    const notImages = picked.filter((f) => !f.type.startsWith("image/"));
+    const tooBig    = picked.filter((f) =>  f.type.startsWith("image/") && f.size > MAX_PHOTO_SIZE_BYTES);
+    const valid     = picked.filter((f) =>  f.type.startsWith("image/") && f.size <= MAX_PHOTO_SIZE_BYTES);
+
+    // Enforce per-service photo cap
+    const remaining  = MAX_PHOTOS_PER_SERVICE - photos.length;
+    const toProcess  = valid.slice(0, Math.max(0, remaining));
+
+    const msgs = [];
+    if (notImages.length > 0) {
+      msgs.push(`${notImages.length} file${notImages.length > 1 ? "s" : ""} skipped — images only (JPEG, PNG, WebP, etc.).`);
+    }
+    if (tooBig.length > 0) {
+      msgs.push(`${tooBig.length} file${tooBig.length > 1 ? "s" : ""} skipped — max ${MAX_PHOTO_SIZE_MB} MB each.`);
+    }
+    if (valid.length > toProcess.length) {
+      const extra = valid.length - toProcess.length;
+      if (remaining <= 0) {
+        msgs.push(`This service already has the maximum of ${MAX_PHOTOS_PER_SERVICE} photos.`);
+      } else {
+        msgs.push(`Only ${remaining} more photo${remaining > 1 ? "s" : ""} allowed (max ${MAX_PHOTOS_PER_SERVICE} per service); ${extra} file${extra > 1 ? "s" : ""} dropped.`);
+      }
+    }
+
+    setErr(msgs.length > 0 ? msgs.join(" ") : "");
+    if (!toProcess.length) { setNewFiles([]); return; }
+
+    // Compress images client-side before queuing for upload
+    setCompressing(true);
+    setOrigSizeBytes(toProcess.reduce((s, f) => s + f.size, 0));
+    const compressed = await Promise.all(toProcess.map((f) => compressImage(f)));
+    setCompressing(false);
+    setNewFiles(compressed);
   }
 
   async function signOut() {
@@ -358,7 +456,12 @@ export default function Services() {
           <div className="sv-grid">
             <div className="sv-panel">
               <div className="sv-head">
-                <strong>Your services</strong>
+                <strong>
+                  Your services
+                  {planKey === "free"
+                    ? ` (${services.length}/${FREE_SERVICE_LIMIT})`
+                    : services.length > 0 ? ` (${services.length})` : ""}
+                </strong>
                 <Button variant="primary" onClick={startNewService}>
                   + New
                 </Button>
@@ -456,25 +559,56 @@ export default function Services() {
                     <div className="u-muted">Save the service first, then upload photos.</div>
                   ) : (
                     <>
-                      <input type="file" accept="image/*" multiple onChange={onPickFiles} />
-                      {newFiles.length > 0 ? (
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={onPickFiles}
+                        disabled={compressing}
+                      />
+                      <div style={{ marginTop: 4, fontSize: 11, opacity: 0.55 }}>
+                        Images only · max {MAX_PHOTO_SIZE_MB} MB each · up to {MAX_PHOTOS_PER_SERVICE} photos per service
+                      </div>
+                      {compressing ? (
                         <div style={{ marginTop: 8, fontSize: 12, opacity: 0.85 }}>
-                          Selected {newFiles.length} file(s). Click <b>Save service</b> to upload.
+                          Compressing…
                         </div>
-                      ) : null}
+                      ) : newFiles.length > 0 ? (() => {
+                        const compressedMB = (newFiles.reduce((s, f) => s + f.size, 0) / (1024 * 1024)).toFixed(1);
+                        const origMB       = (origSizeBytes / (1024 * 1024)).toFixed(1);
+                        const didCompress  = origSizeBytes > 0 && origSizeBytes !== newFiles.reduce((s, f) => s + f.size, 0);
+                        return (
+                          <div style={{ marginTop: 8, fontSize: 12, opacity: 0.85 }}>
+                            {newFiles.length} photo{newFiles.length > 1 ? "s" : ""} ready to upload
+                            {" "}({compressedMB} MB{didCompress ? `, compressed from ${origMB} MB` : ""}).
+                            {" "}Click <b>Save service</b> to upload.
+                          </div>
+                        );
+                      })() : null}
 
                       {photos.length > 0 ? (
                         <div className="sv-photoGrid">
-                          {photos.map((p) => (
+                          {photos.map((p, i) => (
                             <div key={p.id} className="sv-photoCard">
                               <img src={p.url} alt="service" className="sv-photoImg" />
                               <div className="sv-photoActions">
                                 <Button variant="outline" onClick={() => setAsCover(p.url)}>
-                                  Set cover
+                                  {coverUrl === p.url ? "✓ Cover" : "Set cover"}
                                 </Button>
-                                {coverUrl === p.url ? (
-                                  <span style={{ fontSize: 12, opacity: 0.8, alignSelf: "center" }}>Cover</span>
-                                ) : null}
+                                <div className="sv-photoOrder">
+                                  <button
+                                    className="sv-orderBtn"
+                                    onClick={() => movePhoto(p.id, "up")}
+                                    disabled={i === 0}
+                                    title="Move up"
+                                  >↑</button>
+                                  <button
+                                    className="sv-orderBtn"
+                                    onClick={() => movePhoto(p.id, "down")}
+                                    disabled={i === photos.length - 1}
+                                    title="Move down"
+                                  >↓</button>
+                                </div>
                               </div>
                             </div>
                           ))}
@@ -487,6 +621,28 @@ export default function Services() {
                     </>
                   )}
                 </div>
+
+                {selectedId && (
+                  <div className="sv-deleteZone">
+                    {!deleteConfirm ? (
+                      <button className="sv-deleteBtn" onClick={() => setDeleteConfirm(true)}>
+                        Delete service
+                      </button>
+                    ) : (
+                      <div className="sv-deleteConfirm">
+                        <div className="sv-deleteWarning">Delete "{description}"? This cannot be undone.</div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <Button variant="primary" onClick={deleteService} disabled={deleting}>
+                            {deleting ? "Deleting..." : "Yes, delete"}
+                          </Button>
+                          <Button variant="outline" onClick={() => setDeleteConfirm(false)}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div style={{ marginTop: 16, display: "flex", gap: 10, justifyContent: "flex-end" }}>
                   <Button variant="outline" onClick={() => nav("/app")}>

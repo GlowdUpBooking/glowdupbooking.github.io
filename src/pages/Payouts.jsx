@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../components/layout/AppShell";
 import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
 import {
   fetchStripeConnectStatus,
@@ -10,15 +11,7 @@ import {
   getStripeLoginLink,
   createStripeConnectOnboardingLink,
 } from "../lib/stripeConnect";
-
-function money(n) {
-  const num = Number(n ?? 0);
-  try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(num);
-  } catch {
-    return `$${num.toFixed(2)}`;
-  }
-}
+import { money } from "../lib/format";
 
 function StatusDot({ ok, pending }) {
   const cls = ok ? "py-dotGreen" : pending ? "py-dotYellow" : "py-dotGray";
@@ -28,35 +21,48 @@ function StatusDot({ ok, pending }) {
 export default function Payouts() {
   const nav = useNavigate();
 
-  const [loading, setLoading]           = useState(true);
+  const [loading, setLoading]             = useState(true);
+  const [loadErr, setLoadErr]             = useState("");
+  const [retryKey, setRetryKey]           = useState(0);
   const [connectStatus, setConnectStatus] = useState(null);
-  const [balance, setBalance]           = useState(null);
+  const [balance, setBalance]             = useState(null);
   const [payoutLoading, setPayoutLoading] = useState(false);
   const [loginLoading, setLoginLoading]   = useState(false);
   const [connectLoading, setConnectLoading] = useState(false);
-  const [msg, setMsg]                   = useState("");
-  const [err, setErr]                   = useState("");
+  const [msg, setMsg]                     = useState("");
+  const [err, setErr]                     = useState("");
 
   useEffect(() => {
     let mounted = true;
+    setLoadErr("");
+    setLoading(true);
+
     async function load() {
-      const { data: authRes, error: authErr } = await supabase.auth.getUser();
-      if (authErr || !authRes?.user) { nav("/login", { replace: true }); return; }
+      try {
+        const { data: authRes, error: authErr } = await supabase.auth.getUser();
+        if (authErr || !authRes?.user) { nav("/login", { replace: true }); return; }
 
-      const status = await fetchStripeConnectStatus();
-      if (!mounted) return;
-      setConnectStatus(status);
+        const status = await fetchStripeConnectStatus();
+        if (!mounted) return;
+        setConnectStatus(status);
 
-      if (status?.connected) {
-        const bal = await fetchStripeConnectBalance();
-        if (mounted) setBalance(bal);
+        if (status?.connected) {
+          const bal = await fetchStripeConnectBalance();
+          if (mounted) setBalance(bal);
+        }
+
+        if (mounted) setLoading(false);
+      } catch (e) {
+        if (mounted) {
+          setLoadErr(e?.message || "Failed to load payout status. Please try again.");
+          setLoading(false);
+        }
       }
-
-      if (mounted) setLoading(false);
     }
+
     load();
     return () => { mounted = false; };
-  }, [nav]);
+  }, [nav, retryKey]);
 
   async function handleInstantPayout() {
     setPayoutLoading(true);
@@ -115,6 +121,21 @@ export default function Payouts() {
           <div className="ap-loadingGrid">
             {[1, 2].map((i) => <div key={i} className="ap-skeleton" style={{ height: 160 }} />)}
           </div>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (loadErr) {
+    return (
+      <AppShell title="Payouts" onSignOut={signOut}>
+        <div className="g-page">
+          <Card style={{ padding: 28, textAlign: "center" }}>
+            <div style={{ marginBottom: 14, color: "#ff6b6b" }}>{loadErr}</div>
+            <Button variant="outline" onClick={() => setRetryKey((k) => k + 1)}>
+              Retry
+            </Button>
+          </Card>
         </div>
       </AppShell>
     );
