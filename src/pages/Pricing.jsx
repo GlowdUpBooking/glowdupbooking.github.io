@@ -366,13 +366,14 @@ export default function Pricing() {
             <div className="lpSub">Two simple options: Free 7-Day and Pro.</div>
           </div>
 
-          <div className="lpGrid lpGrid4">
-            <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "0ms" }}>
+          <div className="lpGrid lpGrid2">
+            <Card className="lpPriceCard lpPlanCard lpPlanCardCompact lpReveal" style={{ animationDelay: "0ms" }}>
               <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Free 7-Day</div>
               <div className="lpPriceLine">
                 <span className="lpPrice">$0</span>
                 <span className="lpTerm">/7 days</span>
               </div>
+              <div className="lpCardPath">Day 1-7: free trial. After day 7, stay on Free or upgrade to Pro.</div>
               <ul className="lpList">
                 <li>✓ 7-day free trial to launch fast</li>
                 <li>✓ Professional booking link</li>
@@ -399,7 +400,7 @@ export default function Pricing() {
               </div>
             </Card>
 
-            <Card className="lpPriceCard lpPlanCard lpFeatured lpReveal" style={{ animationDelay: "70ms" }}>
+            <Card className="lpPriceCard lpPlanCard lpPlanCardCompact lpFeatured lpReveal" style={{ animationDelay: "70ms" }}>
               <div className="lpTierRow">
                 <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Pro</div>
                 <div className="lpBadge">Most chosen</div>
@@ -408,6 +409,7 @@ export default function Pricing() {
                 <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : proPrice || "$19.99"}</span>
                 <span className="lpTerm">{proTerm || "/month"}</span>
               </div>
+              <div className="lpCardPath">Upgrade anytime during trial. Pro is billed at $19.99/month.</div>
               <ul className="lpList">
                 <li>✓ Everything in Free 7-Day</li>
                 <li>✓ Advanced deposits + optional full prepay</li>
@@ -430,6 +432,48 @@ export default function Pricing() {
                   {sessionLoading ? "Redirecting..." : "Choose Pro"}
                 </Button>
               </div>
+            </Card>
+          </div>
+
+          <div className="lpCompareWrap lpReveal">
+            <Card className="lpPriceCard lpCompareCard">
+              <div className="lpCompareTitle">Feature comparison</div>
+              <table className="lpCompareTable">
+                <thead>
+                  <tr>
+                    <th>Feature</th>
+                    <th>Free 7-Day</th>
+                    <th>Pro</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Professional booking link</td>
+                    <td>✓</td>
+                    <td>✓</td>
+                  </tr>
+                  <tr>
+                    <td>Core scheduling + bookings</td>
+                    <td>✓</td>
+                    <td>✓</td>
+                  </tr>
+                  <tr>
+                    <td>Advanced deposits + prepay</td>
+                    <td>—</td>
+                    <td>✓</td>
+                  </tr>
+                  <tr>
+                    <td>Advanced availability rules</td>
+                    <td>—</td>
+                    <td>✓</td>
+                  </tr>
+                  <tr>
+                    <td>Portfolio polish + priority support</td>
+                    <td>—</td>
+                    <td>✓</td>
+                  </tr>
+                </tbody>
+              </table>
             </Card>
           </div>
 
