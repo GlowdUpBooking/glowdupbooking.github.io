@@ -433,7 +433,6 @@ export default function Pricing() {
             <Card className="lpPriceCard lpPlanCard lpPlanCardCompact lpFeatured lpReveal" style={{ animationDelay: "70ms" }}>
               <div className="lpTierRow">
                 <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Pro</div>
-                <div className="lpBadge">Most chosen</div>
               </div>
               <div className="lpPriceLine">
                 <span className="lpPrice">{proPrice}</span>

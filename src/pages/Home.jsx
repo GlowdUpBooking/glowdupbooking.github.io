@@ -435,7 +435,6 @@ export default function Home() {
             <Card className="lpPriceCard lpPlanCard lpFeatured lpReveal" style={{ animationDelay: "70ms" }}>
               <div className="lpTierRow">
                 <div className="lpTier">Pro</div>
-                <div className="lpBadge">Most chosen</div>
               </div>
               <div className="lpPriceLine">
                 <span className="lpPrice">$19.99</span>
