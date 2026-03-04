@@ -8,8 +8,6 @@ import { normalizePlanKey } from "../lib/format";
 import {
   DEFAULT_PRICES,
   mergeLivePrices,
-  formatMoneyFromStripe,
-  formatTerm,
 } from "../lib/pricing";
 
 const PLAN_CARDS = [
@@ -429,15 +427,11 @@ export default function Subscription() {
             const priceLabel =
               card.key === "free"
                 ? "$0"
-                : pricesLoading
-                ? "$--"
-                : formatMoneyFromStripe(priceObj, "monthly") || "$19.99";
+                : "$19.99";
             const termLabel =
               card.key === "free"
                 ? "/7 days"
-                : pricesLoading
-                ? ""
-                : formatTerm(priceObj, "monthly") || "/month";
+                : "/month";
             return (
               <Card
                 key={card.key}

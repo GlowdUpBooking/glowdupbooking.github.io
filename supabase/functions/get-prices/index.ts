@@ -59,7 +59,8 @@ function pickFallbackPrice(listData: any, tier: Tier) {
 
   if (!candidates.length) return null;
   const exactAmount = candidates.filter((p: any) => priceAmountCents(p) === spec.expected_amount);
-  const pool = exactAmount.length ? exactAmount : candidates;
+  if (!exactAmount.length) return null;
+  const pool = exactAmount;
   pool.sort((a: any, b: any) => Number(b?.created ?? 0) - Number(a?.created ?? 0));
   return pool[0];
 }

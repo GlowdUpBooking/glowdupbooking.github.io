@@ -8,8 +8,6 @@ import { getSignupPath } from "../lib/siteFlags";
 import {
   DEFAULT_PRICES,
   mergeLivePrices,
-  formatMoneyFromStripe,
-  formatTerm,
 } from "../lib/pricing";
 
 const WHY_PROS = [
@@ -35,6 +33,7 @@ export default function Pricing() {
 
   const [session, setSession] = useState(null);
   const [sessionLoading, setSessionLoading] = useState(false);
+  const [showStickyCta, setShowStickyCta] = useState(false);
   const [toast, setToast] = useState("");
 
   const [pricesLoading, setPricesLoading] = useState(true);
@@ -165,6 +164,21 @@ export default function Pricing() {
   }, []);
 
   useEffect(() => {
+    const updateStickyVisibility = () => {
+      const isMobile = window.matchMedia("(max-width: 760px)").matches;
+      setShowStickyCta(isMobile && window.scrollY > 260);
+    };
+
+    updateStickyVisibility();
+    window.addEventListener("scroll", updateStickyVisibility, { passive: true });
+    window.addEventListener("resize", updateStickyVisibility);
+    return () => {
+      window.removeEventListener("scroll", updateStickyVisibility);
+      window.removeEventListener("resize", updateStickyVisibility);
+    };
+  }, []);
+
+  useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get("checkout") === "success") setToast("Payment complete. Your access will update shortly.");
     if (params.get("checkout") === "cancel") setToast("Payment canceled. You can try again anytime.");
@@ -260,11 +274,25 @@ export default function Pricing() {
     }
   }
 
-  const proPrice = prices ? formatMoneyFromStripe(prices.pro_monthly, "monthly") : null;
-  const proTerm = prices ? formatTerm(prices.pro_monthly, "monthly") : null;
+  function signupWithPlan(plan) {
+    const joiner = signupPath.includes("?") ? "&" : "?";
+    return `${signupPath}${joiner}plan=${encodeURIComponent(plan)}`;
+  }
+
+  function onStickyProClick() {
+    trackEvent("plan_cta_click", { page: "pricing", plan: "pro", cta: "sticky_choose_pro" });
+    if (!session) {
+      nav(signupWithPlan("pro"), { replace: false });
+      return;
+    }
+    void startCheckout("pro_monthly");
+  }
+
+  const proPrice = "$19.99";
+  const proTerm = "/month";
 
   return (
-    <div className="lp">
+    <div className="lp lpPricingPage">
       <header className="lpNav">
         <div className="lpNavInner">
           <Link className="lpBrand" to="/">
@@ -311,8 +339,8 @@ export default function Pricing() {
             <p className="lpLead">Clients book free. Pros pay only for tools and growth.</p>
 
             <div className="lpHeroBtns">
-              <Link to={signupPath} onClick={() => trackEvent("cta_click", { page: "pricing", cta: "start_free_hero" })}>
-                <Button variant="outline" className="lpBtn">Start Free</Button>
+              <Link className="lpBtn" to={signupPath} onClick={() => trackEvent("cta_click", { page: "pricing", cta: "start_free_hero" })}>
+                Start Free
               </Link>
               <Button
                 variant="outline"
@@ -385,16 +413,18 @@ export default function Pricing() {
                 {!session ? (
                   <Link
                     to={signupPath}
+                    className="lpChoose"
                     onClick={() => trackEvent("plan_cta_click", { page: "pricing", plan: "free_7_day", cta: "start_free" })}
                   >
-                    <Button variant="outline" className="lpChoose">Start Free Trial</Button>
+                    Start Free Trial
                   </Link>
                 ) : (
                   <Link
                     to="/app"
+                    className="lpChoose"
                     onClick={() => trackEvent("plan_cta_click", { page: "pricing", plan: "free_7_day", cta: "go_to_dashboard" })}
                   >
-                    <Button variant="outline" className="lpChoose">Go to Dashboard</Button>
+                    Go to Dashboard
                   </Link>
                 )}
               </div>
@@ -406,8 +436,8 @@ export default function Pricing() {
                 <div className="lpBadge">Most chosen</div>
               </div>
               <div className="lpPriceLine">
-                <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : proPrice || "$19.99"}</span>
-                <span className="lpTerm">{proTerm || "/month"}</span>
+                <span className="lpPrice">{proPrice}</span>
+                <span className="lpTerm">{proTerm}</span>
               </div>
               <div className="lpCardPath">Upgrade anytime during trial. Pro is billed at $19.99/month.</div>
               <ul className="lpList">
@@ -438,42 +468,44 @@ export default function Pricing() {
           <div className="lpCompareWrap lpReveal">
             <Card className="lpPriceCard lpCompareCard">
               <div className="lpCompareTitle">Feature comparison</div>
-              <table className="lpCompareTable">
-                <thead>
-                  <tr>
-                    <th>Feature</th>
-                    <th>Free 7-Day</th>
-                    <th>Pro</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Professional booking link</td>
-                    <td>✓</td>
-                    <td>✓</td>
-                  </tr>
-                  <tr>
-                    <td>Core scheduling + bookings</td>
-                    <td>✓</td>
-                    <td>✓</td>
-                  </tr>
-                  <tr>
-                    <td>Advanced deposits + prepay</td>
-                    <td>—</td>
-                    <td>✓</td>
-                  </tr>
-                  <tr>
-                    <td>Advanced availability rules</td>
-                    <td>—</td>
-                    <td>✓</td>
-                  </tr>
-                  <tr>
-                    <td>Portfolio polish + priority support</td>
-                    <td>—</td>
-                    <td>✓</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div className="lpCompareScroll" role="region" aria-label="Plan comparison" tabIndex={0}>
+                <table className="lpCompareTable">
+                  <thead>
+                    <tr>
+                      <th>Feature</th>
+                      <th>Free 7-Day</th>
+                      <th>Pro</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Professional booking link</td>
+                      <td>✓</td>
+                      <td>✓</td>
+                    </tr>
+                    <tr>
+                      <td>Core scheduling + bookings</td>
+                      <td>✓</td>
+                      <td>✓</td>
+                    </tr>
+                    <tr>
+                      <td>Advanced deposits + prepay</td>
+                      <td>—</td>
+                      <td>✓</td>
+                    </tr>
+                    <tr>
+                      <td>Advanced availability rules</td>
+                      <td>—</td>
+                      <td>✓</td>
+                    </tr>
+                    <tr>
+                      <td>Portfolio polish + priority support</td>
+                      <td>—</td>
+                      <td>✓</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </Card>
           </div>
 
@@ -502,6 +534,24 @@ export default function Pricing() {
           </div>
         </div>
       </section>
+
+      {showStickyCta ? (
+        <div className="lpStickyCta" role="region" aria-label="Quick plan actions">
+          <div className="lpStickyCopy">Free 7-Day to Pro $19.99/month</div>
+          <div className="lpStickyActions">
+            <Link
+              className="lpStickyBtn lpStickyBtnGhost"
+              to={session ? "/app" : signupPath}
+              onClick={() => trackEvent("plan_cta_click", { page: "pricing", plan: "free_7_day", cta: "sticky_start_free" })}
+            >
+              {session ? "Dashboard" : "Start Free"}
+            </Link>
+            <button className="lpStickyBtn" type="button" onClick={onStickyProClick} disabled={sessionLoading}>
+              {sessionLoading ? "Redirecting..." : "Choose Pro"}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
