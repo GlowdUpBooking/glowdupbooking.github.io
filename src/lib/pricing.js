@@ -1,8 +1,6 @@
 const DEFAULT_PRICES = Object.freeze({
-  free_monthly:    { id: "free",            unit_amount: 0,    currency: "USD", interval: "month", interval_count: 1, product_name: "Free"    },
-  starter_monthly: { id: "starter_default", unit_amount: 999,  currency: "USD", interval: "month", interval_count: 1, product_name: "Starter" },
-  pro_monthly:     { id: "pro_default",     unit_amount: 1999, currency: "USD", interval: "month", interval_count: 1, product_name: "Pro"     },
-  founder_annual:  { id: "founder_default", unit_amount: 9900, currency: "USD", interval: "year",  interval_count: 1, product_name: "Founder" },
+  free_monthly: { id: "free", unit_amount: 0, currency: "USD", interval: "month", interval_count: 1, product_name: "Free" },
+  pro_monthly: { id: "pro_default", unit_amount: 1999, currency: "USD", interval: "month", interval_count: 1, product_name: "Pro" },
 });
 
 function toCents(priceObj) {
@@ -37,10 +35,8 @@ function mergeLivePrices(livePrices) {
   };
 
   return {
-    free_monthly:    DEFAULT_PRICES.free_monthly,
-    starter_monthly: pick("starter_monthly"),
-    pro_monthly:     pick("pro_monthly"),
-    founder_annual:  pick("founder_annual"),
+    free_monthly: DEFAULT_PRICES.free_monthly,
+    pro_monthly: pick("pro_monthly"),
   };
 }
 

@@ -419,27 +419,23 @@ export default function App() {
 
   const currentPlanKey = useMemo(() => {
     const fromDb = normalizePlanKey(plan);
-    if (fromDb) return fromDb;
+    if (fromDb === "pro" || fromDb === "starter" || fromDb === "founder" || fromDb === "elite") return "pro";
+    if (fromDb === "free") return "free";
 
     const fromMeta = normalizePlanKey(user?.user_metadata?.selected_plan);
-    if (fromMeta) return fromMeta;
+    if (fromMeta === "pro" || fromMeta === "starter" || fromMeta === "founder" || fromMeta === "elite") return "pro";
+    if (fromMeta === "free") return "free";
 
-    if (isActive && interval === "annual") return "founder";
+    if (isActive && interval === "annual") return "pro";
     if (!isActive) return "free";
-    return "paid";
+    return "pro";
   }, [plan, user, isActive, interval]);
 
   const planLabel = useMemo(() => {
-    if (currentPlanKey === "free") return "Free";
-    if (currentPlanKey === "starter") return "Starter";
+    if (currentPlanKey === "free") return "Free 7-Day";
     if (currentPlanKey === "pro") return "Pro";
-    if (currentPlanKey === "founder") return "Founder";
-    if (currentPlanKey === "elite") return "Elite";
-    if (currentPlanKey === "paid") return "Paid";
-    return "Free";
+    return "Free 7-Day";
   }, [currentPlanKey]);
-
-  const isFounder = currentPlanKey === "founder";
 
   const subscriptionLine = useMemo(() => {
     if (!isActive) return `${planLabel} plan`;
@@ -571,7 +567,6 @@ export default function App() {
                 <div className="g-profileMain">
                   <div className="g-profileNameRow">
                     <div className="g-profileName">{displayBusinessName}</div>
-                    {isFounder ? <span className="g-founderBadge">Founder</span> : null}
                   </div>
                   <div className="g-profileType">{displayType}</div>
 

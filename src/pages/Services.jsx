@@ -175,7 +175,7 @@ export default function Services() {
 
   function startNewService() {
     if (planKey === "free" && services.length >= FREE_SERVICE_LIMIT) {
-      setErr(`Free plan is limited to ${FREE_SERVICE_LIMIT} services. Upgrade to Starter or higher for unlimited services.`);
+      setErr(`Free plan is limited to ${FREE_SERVICE_LIMIT} services. Upgrade to Pro for unlimited services.`);
       return;
     }
     setSelectedId(null);

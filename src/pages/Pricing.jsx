@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import Button from "../components/ui/Button";
@@ -21,13 +21,12 @@ const WHY_PROS = [
 ];
 
 const FAQ_ITEMS = [
-  { q: "Do clients pay to book?", a: "No. Booking is free for clients." },
-  { q: "When does the Free plan booking limit reset?", a: "On the 1st of every month." },
+  { q: "Do clients pay to book?", a: "No. Booking is always free for clients." },
+  { q: "How long is the free trial?", a: "Every pro account starts with a free 7-day trial." },
+  { q: "What happens after the trial?", a: "You can stay on Free or upgrade to Pro at $19.99/month." },
   { q: "How do deposits and payments work?", a: "Deposits and payments are processed through Stripe when enabled." },
   { q: "Can I change plans later?", a: "Yes. Upgrade or downgrade anytime." },
-  { q: "What is instant payout?", a: "An optional payout method with an additional fee for immediate access to funds." },
 ];
-
 
 export default function Pricing() {
   const nav = useNavigate();
@@ -35,25 +34,12 @@ export default function Pricing() {
   const signupPath = getSignupPath();
 
   const [session, setSession] = useState(null);
-  const [billingCycle, setBillingCycle] = useState("monthly");
-
-  const [loading, setLoading] = useState(true);
-  const [maxSpots, setMaxSpots] = useState(500);
-  const [claimed, setClaimed] = useState(0);
-  const [err, setErr] = useState("");
-
   const [sessionLoading, setSessionLoading] = useState(false);
   const [toast, setToast] = useState("");
 
   const [pricesLoading, setPricesLoading] = useState(true);
   const [pricesErr, setPricesErr] = useState("");
   const [prices, setPrices] = useState(DEFAULT_PRICES);
-
-  const remaining = useMemo(() => {
-    const max = typeof maxSpots === "number" ? maxSpots : 500;
-    const used = typeof claimed === "number" ? claimed : 0;
-    return Math.max(0, max - used);
-  }, [maxSpots, claimed]);
 
   useEffect(() => {
     let mounted = true;
@@ -71,46 +57,6 @@ export default function Pricing() {
     return () => {
       mounted = false;
       sub?.subscription?.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadFounderCounter() {
-      setLoading(true);
-      setErr("");
-
-      try {
-        const { data, error } = await supabase
-          .from("founding_offer")
-          .select("max_spots, claimed_spots")
-          .eq("id", 1)
-          .maybeSingle();
-
-        if (error) throw error;
-
-        const max = typeof data?.max_spots === "number" ? data.max_spots : 500;
-        const used = typeof data?.claimed_spots === "number" ? data.claimed_spots : 0;
-
-        if (!mounted) return;
-        setMaxSpots(max);
-        setClaimed(used);
-      } catch (e) {
-        console.error("[FounderCounter] load failed:", e);
-
-        if (!mounted) return;
-        setMaxSpots(500);
-        setClaimed(0);
-        setErr("Availability counter unavailable (still fine to sign up).");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-
-    loadFounderCounter();
-    return () => {
-      mounted = false;
     };
   }, []);
 
@@ -212,8 +158,8 @@ export default function Pricing() {
 
   // Nav darken on scroll
   useEffect(() => {
-    const nav = document.querySelector(".lpNav");
-    const onScroll = () => nav?.classList.toggle("is-scrolled", window.scrollY > 30);
+    const navEl = document.querySelector(".lpNav");
+    const onScroll = () => navEl?.classList.toggle("is-scrolled", window.scrollY > 30);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -227,7 +173,7 @@ export default function Pricing() {
     const focusPlans = params.get("focus") === "plans" || location.hash === "#plans";
 
     if (fromBillingSetup) {
-      setToast("You’re on Free. Choose a paid plan first, then billing management opens automatically.");
+      setToast("You’re on Free. Choose Pro when you’re ready.");
     }
 
     if (fromBillingSetup || focusPlans) {
@@ -243,7 +189,7 @@ export default function Pricing() {
   }
 
   async function startCheckout(tier) {
-    trackEvent("checkout_start", { page: "pricing", tier, billing_cycle: billingCycle });
+    trackEvent("checkout_start", { page: "pricing", tier, billing_cycle: "monthly" });
     setToast("");
     setSessionLoading(true);
 
@@ -314,15 +260,8 @@ export default function Pricing() {
     }
   }
 
-  const starterPrice = prices ? formatMoneyFromStripe(prices.starter_monthly, billingCycle) : null;
-  const proPrice     = prices ? formatMoneyFromStripe(prices.pro_monthly,     billingCycle) : null;
-  const founderPrice = prices ? formatMoneyFromStripe(prices.founder_annual,  "annual")     : null;
-
-  const starterTerm  = prices ? formatTerm(prices.starter_monthly, billingCycle) : null;
-  const proTerm      = prices ? formatTerm(prices.pro_monthly,     billingCycle) : null;
-  const founderTerm  = prices ? formatTerm(prices.founder_annual,  "annual")     : null;
-
-  const showFounderPlan = loading || remaining > 0;
+  const proPrice = prices ? formatMoneyFromStripe(prices.pro_monthly, "monthly") : null;
+  const proTerm = prices ? formatTerm(prices.pro_monthly, "monthly") : null;
 
   return (
     <div className="lp">
@@ -392,9 +331,7 @@ export default function Pricing() {
               <span>Cancel anytime</span>
             </div>
 
-            <div className={`lpLiveChip ${loading ? "is-loading" : ""}`}>
-              {loading ? "Loading founder availability..." : showFounderPlan ? `${remaining} Founder spots left` : "Founder spots filled"}
-            </div>
+            <div className="lpLiveChip">Free 7-day trial available</div>
 
             {toast ? <div className="lpToast">{toast}</div> : null}
             {pricesErr ? <div className="lpToast">{pricesErr}</div> : null}
@@ -426,62 +363,35 @@ export default function Pricing() {
         <div className="lpPricingInner">
           <div className="lpPricingHead">
             <h2 className="lpH2">Plans</h2>
-            <div className="lpSub">Choose what fits your workflow.</div>
-
-            <div className="lpToggleWrap" role="radiogroup" aria-label="Billing cycle">
-              <button
-                className={`lpToggleBtn ${billingCycle === "monthly" ? "is-active" : ""}`}
-                onClick={() => {
-                  setBillingCycle("monthly");
-                  trackEvent("billing_cycle_change", { page: "pricing", billing_cycle: "monthly" });
-                }}
-                role="radio"
-                aria-checked={billingCycle === "monthly"}
-              >
-                Monthly
-              </button>
-              <button
-                className={`lpToggleBtn ${billingCycle === "annual" ? "is-active" : ""}`}
-                onClick={() => {
-                  setBillingCycle("annual");
-                  trackEvent("billing_cycle_change", { page: "pricing", billing_cycle: "annual" });
-                }}
-                role="radio"
-                aria-checked={billingCycle === "annual"}
-              >
-                Annual
-              </button>
-            </div>
-
-            <div className={`lpCounter lpCounterTop ${loading ? "lpSkeleton" : ""}`}>
-              {loading ? "Founder spots left" : showFounderPlan ? `${remaining} Founder spots left` : "Founder spots filled"}
-            </div>
+            <div className="lpSub">Two simple options: Free 7-Day and Pro.</div>
           </div>
 
           <div className="lpGrid lpGrid4">
             <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "0ms" }}>
-              <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Free</div>
-              <div className="lpPriceLine"><span className="lpPrice">$0</span></div>
+              <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Free 7-Day</div>
+              <div className="lpPriceLine">
+                <span className="lpPrice">$0</span>
+                <span className="lpTerm">/7 days</span>
+              </div>
               <ul className="lpList">
-                <li>✓ Basic booking link</li>
-                <li>✓ Up to 5 services</li>
-                <li>✓ Up to 20 bookings per month (resets on the 1st)</li>
-                <li>✓ No deposits or full prepay</li>
-                <li>✓ No service photos</li>
-                <li>✓ Basic profile + standard support</li>
+                <li>✓ 7-day free trial to launch fast</li>
+                <li>✓ Professional booking link</li>
+                <li>✓ Core scheduling and booking workflow</li>
+                <li>✓ Stripe-secured payment setup</li>
+                <li>✓ Upgrade to Pro anytime</li>
               </ul>
               <div className="lpChooseWrap">
                 {!session ? (
                   <Link
                     to={signupPath}
-                    onClick={() => trackEvent("plan_cta_click", { page: "pricing", plan: "free", cta: "start_free" })}
+                    onClick={() => trackEvent("plan_cta_click", { page: "pricing", plan: "free_7_day", cta: "start_free" })}
                   >
-                    <Button variant="outline" className="lpChoose">Start Free</Button>
+                    <Button variant="outline" className="lpChoose">Start Free Trial</Button>
                   </Link>
                 ) : (
                   <Link
                     to="/app"
-                    onClick={() => trackEvent("plan_cta_click", { page: "pricing", plan: "free", cta: "go_to_dashboard" })}
+                    onClick={() => trackEvent("plan_cta_click", { page: "pricing", plan: "free_7_day", cta: "go_to_dashboard" })}
                   >
                     <Button variant="outline" className="lpChoose">Go to Dashboard</Button>
                   </Link>
@@ -489,49 +399,17 @@ export default function Pricing() {
               </div>
             </Card>
 
-            <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "70ms" }}>
-              <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Starter</div>
-              <div className="lpPriceLine">
-                <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : starterPrice || "-"}</span>
-                <span className="lpTerm">{starterTerm || ""}</span>
-              </div>
-              {billingCycle === "annual" ? <div className="lpTinyNote">Annual cost equivalent — billed monthly.</div> : null}
-              <ul className="lpList">
-                <li>✓ Everything in Free</li>
-                <li>✓ Unlimited accepted bookings</li>
-                <li>✓ Unlimited services</li>
-                <li>✓ Fixed-amount deposits</li>
-                <li>✓ Service photos</li>
-                <li>✓ Better booking controls + reminders</li>
-                <li>✓ Basic reporting</li>
-              </ul>
-              <div className="lpChooseWrap">
-                <Button
-                  variant="outline"
-                  className="lpChoose"
-                  onClick={() => {
-                    trackEvent("plan_cta_click", { page: "pricing", plan: "starter", cta: "choose_starter", billing_cycle: billingCycle });
-                    startCheckout("starter_monthly");
-                  }}
-                  disabled={sessionLoading || pricesLoading}
-                >
-                  {sessionLoading ? "Redirecting..." : "Choose Starter"}
-                </Button>
-              </div>
-            </Card>
-
-            <Card className="lpPriceCard lpPlanCard lpFeatured lpReveal" style={{ animationDelay: "140ms" }}>
+            <Card className="lpPriceCard lpPlanCard lpFeatured lpReveal" style={{ animationDelay: "70ms" }}>
               <div className="lpTierRow">
                 <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Pro</div>
                 <div className="lpBadge">Most chosen</div>
               </div>
               <div className="lpPriceLine">
-                <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : proPrice || "-"}</span>
-                <span className="lpTerm">{proTerm || ""}</span>
+                <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : proPrice || "$19.99"}</span>
+                <span className="lpTerm">{proTerm || "/month"}</span>
               </div>
-              {billingCycle === "annual" ? <div className="lpTinyNote">Annual cost equivalent — billed monthly.</div> : null}
               <ul className="lpList">
-                <li>✓ Everything in Starter</li>
+                <li>✓ Everything in Free 7-Day</li>
                 <li>✓ Advanced deposits + optional full prepay</li>
                 <li>✓ Advanced availability/scheduling rules</li>
                 <li>✓ Social/payment profile fields (IG/X/Cash App)</li>
@@ -544,7 +422,7 @@ export default function Pricing() {
                   variant="outline"
                   className="lpChoose"
                   onClick={() => {
-                    trackEvent("plan_cta_click", { page: "pricing", plan: "pro", cta: "choose_pro", billing_cycle: billingCycle });
+                    trackEvent("plan_cta_click", { page: "pricing", plan: "pro", cta: "choose_pro", billing_cycle: "monthly" });
                     startCheckout("pro_monthly");
                   }}
                   disabled={sessionLoading || pricesLoading}
@@ -553,82 +431,12 @@ export default function Pricing() {
                 </Button>
               </div>
             </Card>
-
-            {showFounderPlan ? (
-              <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "210ms" }}>
-                <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Founder</div>
-                <div className="lpPriceLine">
-                  <span className={`lpPrice ${pricesLoading ? "lpSkeleton" : ""}`}>{pricesLoading ? "$--" : founderPrice || "-"}</span>
-                  <span className="lpTerm">{founderTerm || ""}</span>
-                </div>
-
-                <div className="lpFounderBox">
-                  <div className="lpFounderTop">
-                    <div className="lpFounderTitle">Founder Annual</div>
-                    <div className="lpFounderRule">Price locked while active</div>
-                  </div>
-                </div>
-
-                <div className="lpFounderText">First 500 pros only. Same feature access as Pro with locked annual pricing.</div>
-
-                <div className={`lpCounter ${loading ? "lpSkeleton" : ""}`}>
-                  {loading ? "Checking founder spots..." : <><strong>{remaining}</strong> Founder spots left</>}
-                  {err ? <div className="lpCounterErr">{err}</div> : null}
-                </div>
-
-                <ul className="lpList">
-                  <li>✓ Everything in Pro</li>
-                  <li>✓ Founder badge + early feature access</li>
-                  <li>✓ Founder pricing locked while active</li>
-                  <li>✓ Priority support</li>
-                  <li>✓ Best long-term value</li>
-                </ul>
-
-                <div className="lpChooseWrap">
-                  <Button
-                    variant="outline"
-                    className="lpChoose"
-                    onClick={() => {
-                      trackEvent("plan_cta_click", { page: "pricing", plan: "founder", cta: "choose_founder", billing_cycle: "annual" });
-                      startCheckout("founder_annual");
-                    }}
-                    disabled={sessionLoading || pricesLoading}
-                  >
-                    {sessionLoading ? "Redirecting..." : "Choose Founder"}
-                  </Button>
-                </div>
-              </Card>
-            ) : (
-              <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "210ms", opacity: 0.6 }}>
-                <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Founder</div>
-                <div className="lpPriceLine">
-                  <span className="lpPrice">$99</span>
-                  <span className="lpTerm">/year</span>
-                </div>
-                <div className="lpFounderBox">
-                  <div className="lpFounderTop">
-                    <div className="lpFounderTitle">Sold Out</div>
-                    <div className="lpFounderRule">All spots have been claimed</div>
-                  </div>
-                </div>
-                <div className="lpFounderText">The Founder offer is no longer available. Upgrade to Pro to access all Pro features.</div>
-                <div className="lpChooseWrap">
-                  <Button
-                    variant="outline"
-                    className="lpChoose"
-                    disabled
-                  >
-                    Sold Out
-                  </Button>
-                </div>
-              </Card>
-            )}
           </div>
 
           <div className="lpFooterLine">
-            <div className="lpFooterSmall">Free plan accepted-booking limits reset on the 1st of each month.</div>
+            <div className="lpFooterSmall">All pro accounts begin with a free 7-day trial.</div>
+            <div className="lpFooterSmall">Pro is billed at $19.99/month after trial.</div>
             <div className="lpFooterSmall">Deposits and payments are processed via Stripe when enabled.</div>
-            <div className="lpFooterSmall">Instant payout is optional and includes an additional fee.</div>
             <div className="lpFooterSmall">You can upgrade or downgrade at any time.</div>
           </div>
         </div>

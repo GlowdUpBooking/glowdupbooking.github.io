@@ -14,17 +14,17 @@ import {
 
 const PLAN_CARDS = [
   {
-    key: "starter",
-    tier: "starter_monthly",
-    title: "Starter",
-    priceKey: "starter_monthly",
-    billingCycle: "monthly",
-    description: "Great for getting started with unlimited services and bookings.",
+    key: "free",
+    tier: null,
+    title: "Free 7-Day",
+    priceKey: "free_monthly",
+    billingCycle: "trial",
+    description: "Start fast with a free 7-day trial and core booking workflow.",
     bullets: [
-      "Unlimited services",
-      "Unlimited accepted bookings",
-      "Deposits (fixed amount)",
-      "Service photos",
+      "7-day free trial",
+      "Professional booking link",
+      "Core scheduling and booking workflow",
+      "Stripe-secured payment setup",
     ],
   },
   {
@@ -39,20 +39,6 @@ const PLAN_CARDS = [
       "Advanced availability rules",
       "Portfolio/gallery polish",
       "Priority support",
-    ],
-  },
-  {
-    key: "founder",
-    tier: "founder_annual",
-    title: "Founder",
-    priceKey: "founder_annual",
-    billingCycle: "annual",
-    description: "First 500 pros only. Lock in Pro features at a founding price.",
-    bullets: [
-      "Everything in Pro",
-      "Founder pricing locked while active",
-      "Founder badge + early access",
-      "Best long-term value",
     ],
   },
 ];
@@ -71,8 +57,6 @@ export default function Subscription() {
   const [interval, setInterval] = useState(null);
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState(null);
 
-  const [maxSpots, setMaxSpots] = useState(500);
-  const [claimed, setClaimed] = useState(0);
   const [pricesLoading, setPricesLoading] = useState(true);
   const [pricesErr, setPricesErr] = useState("");
   const [prices, setPrices] = useState(DEFAULT_PRICES);
@@ -109,16 +93,6 @@ export default function Subscription() {
         setPlan(subRow?.plan ?? null);
         setInterval(subRow?.interval ?? null);
         setCurrentPeriodEnd(subRow?.current_period_end ?? null);
-
-        const { data: offer, error: offerErr } = await supabase
-          .from("founding_offer")
-          .select("max_spots, claimed_spots")
-          .eq("id", 1)
-          .maybeSingle();
-        if (!offerErr && offer) {
-          setMaxSpots(typeof offer.max_spots === "number" ? offer.max_spots : 500);
-          setClaimed(typeof offer.claimed_spots === "number" ? offer.claimed_spots : 0);
-        }
       } catch (e) {
         console.error("[Subscription] load error:", e);
         if (mounted) setErr("Couldn’t load subscription details.");
@@ -202,31 +176,25 @@ export default function Subscription() {
     };
   }, []);
 
-  const remaining = useMemo(() => Math.max(0, Number(maxSpots || 0) - Number(claimed || 0)), [maxSpots, claimed]);
-
   const currentPlanKey = useMemo(() => {
     const fromDb = normalizePlanKey(plan);
-    if (fromDb) return fromDb;
+    if (fromDb === "pro" || fromDb === "starter" || fromDb === "founder" || fromDb === "elite") return "pro";
+    if (fromDb === "free") return "free";
 
     const fromMeta = normalizePlanKey(user?.user_metadata?.selected_plan);
-    if (fromMeta) return fromMeta;
+    if (fromMeta === "pro" || fromMeta === "starter" || fromMeta === "founder" || fromMeta === "elite") return "pro";
+    if (fromMeta === "free") return "free";
 
-    if (isActive && interval === "annual") return "founder";
+    if (isActive && interval === "annual") return "pro";
     if (!isActive) return "free";
-    return "paid";
+    return "pro";
   }, [plan, user, isActive, interval]);
 
   const planLabel = useMemo(() => {
-    if (currentPlanKey === "free") return "Free";
-    if (currentPlanKey === "starter") return "Starter";
+    if (currentPlanKey === "free") return "Free 7-Day";
     if (currentPlanKey === "pro") return "Pro";
-    if (currentPlanKey === "founder") return "Founder";
-    if (currentPlanKey === "elite") return "Elite";
-    if (currentPlanKey === "paid") return "Paid";
-    return "Free";
+    return "Free 7-Day";
   }, [currentPlanKey]);
-
-  const showFounder = remaining > 0 || currentPlanKey === "founder";
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -388,19 +356,17 @@ export default function Subscription() {
 
   function planActionLabel(card) {
     if (card.key === currentPlanKey) return "Current plan";
+    if (card.key === "free") return "Downgrade in billing";
     if (!isActive || currentPlanKey === "free") return "Choose plan";
-
-    const order = { starter: 1, pro: 2, founder: 3, elite: 4 };
-    const currentRank = order[currentPlanKey] ?? 0;
-    const targetRank = order[card.key] ?? 0;
-    if (!currentRank || !targetRank) return "Change plan";
-    if (targetRank > currentRank) return "Upgrade";
-    if (targetRank < currentRank) return "Downgrade";
     return "Change plan";
   }
 
   function handlePlanAction(card) {
     if (card.key === currentPlanKey) return;
+    if (card.key === "free") {
+      openBillingPortal();
+      return;
+    }
     if (isActive) {
       openBillingPortal();
       return;
@@ -456,13 +422,22 @@ export default function Subscription() {
         {pricesErr ? <div className="u-muted sub-alert">{pricesErr}</div> : null}
 
         <div className="sub-grid">
-          {PLAN_CARDS.filter((c) => (c.key === "founder" ? showFounder : true)).map((card) => {
+          {PLAN_CARDS.map((card) => {
             const isCurrent = card.key === currentPlanKey;
             const isFeatured = card.key === "pro";
-            const showRemaining = card.key === "founder" && remaining > 0 && currentPlanKey !== "founder";
-            const priceObj = prices?.[card.priceKey] || null;
-            const priceLabel = pricesLoading ? "$--" : formatMoneyFromStripe(priceObj, card.billingCycle) || card.priceKey;
-            const termLabel = pricesLoading ? "" : formatTerm(priceObj, card.billingCycle) || "";
+            const priceObj = card.priceKey ? prices?.[card.priceKey] || null : null;
+            const priceLabel =
+              card.key === "free"
+                ? "$0"
+                : pricesLoading
+                ? "$--"
+                : formatMoneyFromStripe(priceObj, "monthly") || "$19.99";
+            const termLabel =
+              card.key === "free"
+                ? "/7 days"
+                : pricesLoading
+                ? ""
+                : formatTerm(priceObj, "monthly") || "/month";
             return (
               <Card
                 key={card.key}
@@ -485,10 +460,6 @@ export default function Subscription() {
                     <span className="sub-term">{termLabel}</span>
                   </div>
                 </div>
-
-                {showRemaining ? (
-                  <div className="sub-remaining">{remaining} Founder spots left</div>
-                ) : null}
 
                 <ul className="sub-list">
                   {card.bullets.map((b) => (
@@ -517,8 +488,8 @@ export default function Subscription() {
             <div className="sub-faqA">Yes. You can change plans in the billing portal and your new plan applies immediately.</div>
           </div>
           <div className="sub-faqItem">
-            <div className="sub-faqQ">How does the Founder plan work?</div>
-            <div className="sub-faqA">Founder is limited to the first {maxSpots} pros and is hidden once spots are filled.</div>
+            <div className="sub-faqQ">How does Free 7-Day work?</div>
+            <div className="sub-faqA">Your account starts on Free 7-Day, then you can move to Pro at $19.99/month when ready.</div>
           </div>
           <div className="sub-faqItem">
             <div className="sub-faqQ">What happens if I cancel?</div>

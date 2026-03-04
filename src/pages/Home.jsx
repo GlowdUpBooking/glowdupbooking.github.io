@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-import { getFounderSpotsLeft } from "../lib/foundingOffer";
 import { trackEvent } from "../lib/analytics";
 import { getSignupPath } from "../lib/siteFlags";
 
@@ -23,7 +22,7 @@ const METRICS = [
 const FAQS = [
   {
     q: "Is it free to get started?",
-    a: "Yes. The Free plan requires no credit card. You get a booking link, up to 5 services, and up to 20 bookings per month at no cost.",
+    a: "Yes. Every pro account starts with a free 7-day trial and no credit card required.",
   },
   {
     q: "Do my clients need to create an account?",
@@ -50,8 +49,8 @@ const FAQS = [
     a: "No. You get a ready-to-share booking link. Paste it in your Instagram bio, send it in a DM, or add it anywhere. No website or coding required.",
   },
   {
-    q: "What is the Founder plan?",
-    a: "The Founder plan is available to the first 500 pros at $99/year. It includes everything in Pro with your price locked for as long as the plan stays active.",
+    q: "What happens after 7 days?",
+    a: "After your free 7-day period, you can stay on Free or move to Pro at $19.99/month.",
   },
 ];
 
@@ -83,7 +82,7 @@ const PREVIEW_TABS = [
       {
         label: "Step 1",
         title: "Choose service",
-        detail: "Starter Loc Retwist · 75 min · $85",
+        detail: "Loc Retwist · 75 min · $85",
         tags: ["Mobile + web", "Realtime availability"],
         cta: "Continue",
       },
@@ -165,8 +164,6 @@ const PREVIEW_TABS = [
 
 export default function Home() {
   const signupPath = getSignupPath();
-  const [founderLeft, setFounderLeft] = useState(500);
-  const [loadingFounder, setLoadingFounder] = useState(true);
   const [activeTab, setActiveTab] = useState("book");
   const [activeStep, setActiveStep] = useState(0);
   const [openFaq, setOpenFaq] = useState(null);
@@ -175,7 +172,6 @@ export default function Home() {
     () => PREVIEW_TABS.find((tab) => tab.id === activeTab) || PREVIEW_TABS[0],
     [activeTab]
   );
-  const showFounderPlan = loadingFounder || founderLeft > 0;
   const activeFlow = activePreview.flow || [];
   const activeFlowStep = activeFlow[activeStep] || activeFlow[0];
 
@@ -191,22 +187,6 @@ export default function Home() {
       document.head.appendChild(link);
       return link;
     });
-
-    async function loadFounderLeft() {
-      setLoadingFounder(true);
-      try {
-        const left = await getFounderSpotsLeft();
-        if (!mounted) return;
-        setFounderLeft(typeof left === "number" ? left : 500);
-      } catch {
-        if (!mounted) return;
-        setFounderLeft(500);
-      } finally {
-        if (mounted) setLoadingFounder(false);
-      }
-    }
-
-    loadFounderLeft();
 
     return () => {
       mounted = false;
@@ -319,13 +299,7 @@ export default function Home() {
               <span>Cancel anytime</span>
             </div>
 
-            <div className={`lpLiveChip ${loadingFounder ? "is-loading" : ""}`}>
-              {loadingFounder
-                ? "Loading founder availability..."
-                : showFounderPlan
-                ? `${founderLeft} Founder spots left`
-                : "Founder spots filled · Elite now available"}
-            </div>
+            <div className="lpLiveChip">Free 7-day trial available</div>
           </div>
 
           <div className="lpHeroPhotos" aria-hidden="true">
@@ -429,71 +403,36 @@ export default function Home() {
           <div className="lpPricingHead">
             <h2 className="lpH2">Simple pricing for professionals.</h2>
             <div className="lpSub">Choose what fits your workflow.</div>
-            <div className={`lpCounter lpCounterTop ${loadingFounder ? "lpSkeleton" : ""}`}>
-              {loadingFounder
-                ? "Founder spots left"
-                : showFounderPlan
-                ? `${founderLeft} Founder spots left`
-                : "Founder spots filled · Elite now available"}
-            </div>
           </div>
 
           <div className="lpGrid lpGrid4">
             <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "0ms" }}>
-              <div className="lpTier">Free</div>
+              <div className="lpTier">Free 7-Day</div>
               <div className="lpPriceLine">
                 <span className="lpPrice">$0</span>
+                <span className="lpTerm">/7 days</span>
               </div>
 
               <ul className="lpList">
-                <li>✓ Basic booking link</li>
-                <li>✓ Up to 5 services</li>
-                <li>✓ Up to 20 bookings per month</li>
-                <li>✓ No deposits or full prepay</li>
-                <li>✓ No service photos</li>
-                <li>✓ Basic profile + standard support</li>
+                <li>✓ 7-day free trial to launch fast</li>
+                <li>✓ Professional booking link</li>
+                <li>✓ Core scheduling and booking workflow</li>
+                <li>✓ Stripe-secured payment setup</li>
+                <li>✓ Upgrade to Pro anytime</li>
               </ul>
 
               <Link
                 to="/pricing#plans"
                 className="lpChooseWrap"
-                onClick={() => trackEvent("plan_cta_click", { page: "home", plan: "free", cta: "start_free" })}
+                onClick={() => trackEvent("plan_cta_click", { page: "home", plan: "free_7_day", cta: "start_free" })}
               >
                 <Button variant="outline" className="lpChoose">
-                  Start Free
+                  Start Free Trial
                 </Button>
               </Link>
             </Card>
 
-            <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "70ms" }}>
-              <div className="lpTier">Starter</div>
-              <div className="lpPriceLine">
-                <span className="lpPrice">$9.99</span>
-                <span className="lpTerm">/month</span>
-              </div>
-
-              <ul className="lpList">
-                <li>✓ Everything in Free</li>
-                <li>✓ Unlimited accepted bookings</li>
-                <li>✓ Unlimited services</li>
-                <li>✓ Fixed-amount deposits</li>
-                <li>✓ Service photos</li>
-                <li>✓ Better booking controls + reminders</li>
-                <li>✓ Basic reporting</li>
-              </ul>
-
-              <Link
-                to="/pricing#plans"
-                className="lpChooseWrap"
-                onClick={() => trackEvent("plan_cta_click", { page: "home", plan: "starter", cta: "choose_starter" })}
-              >
-                <Button variant="outline" className="lpChoose">
-                  Choose Starter
-                </Button>
-              </Link>
-            </Card>
-
-            <Card className="lpPriceCard lpPlanCard lpFeatured lpReveal" style={{ animationDelay: "140ms" }}>
+            <Card className="lpPriceCard lpPlanCard lpFeatured lpReveal" style={{ animationDelay: "70ms" }}>
               <div className="lpTierRow">
                 <div className="lpTier">Pro</div>
                 <div className="lpBadge">Most chosen</div>
@@ -504,7 +443,7 @@ export default function Home() {
               </div>
 
               <ul className="lpList">
-                <li>✓ Everything in Starter</li>
+                <li>✓ Everything in Free 7-Day</li>
                 <li>✓ Advanced deposits + optional full prepay</li>
                 <li>✓ Advanced availability/scheduling rules</li>
                 <li>✓ Social/payment profile fields (IG/X/Cash App)</li>
@@ -523,78 +462,6 @@ export default function Home() {
                 </Button>
               </Link>
             </Card>
-
-            {showFounderPlan ? (
-              <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "210ms" }}>
-                <div className="lpTier">Founder</div>
-                <div className="lpPriceLine">
-                  <span className="lpPrice">$99</span>
-                  <span className="lpTerm">/year</span>
-                </div>
-
-                <div className="lpFounderBox">
-                  <div className="lpFounderTop">
-                    <div className="lpFounderTitle">Founder Annual</div>
-                    <div className="lpFounderRule">Price locked while active</div>
-                  </div>
-                </div>
-
-                <div className="lpFounderText">First 500 pros only. Same feature access as Pro with locked annual pricing.</div>
-
-                <div className={`lpCounter ${loadingFounder ? "lpSkeleton" : ""}`}>
-                  {loadingFounder ? (
-                    "Checking founder spots..."
-                  ) : (
-                    <>
-                      <strong>{founderLeft}</strong> Founder spots left
-                    </>
-                  )}
-                </div>
-
-                <ul className="lpList">
-                  <li>✓ Everything in Pro</li>
-                  <li>✓ Founder pricing locked while active</li>
-                  <li>✓ Founder badge + early feature access</li>
-                  <li>✓ Priority support</li>
-                  <li>✓ Best long-term value</li>
-                </ul>
-
-                <Link
-                  to="/pricing#plans"
-                  className="lpChooseWrap"
-                  onClick={() => trackEvent("plan_cta_click", { page: "home", plan: "founder", cta: "choose_founder" })}
-                >
-                  <Button variant="outline" className="lpChoose">
-                    Choose Founder
-                  </Button>
-                </Link>
-              </Card>
-            ) : (
-              <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "210ms" }}>
-                <div className="lpTier">Elite</div>
-                <div className="lpPriceLine">
-                  <span className="lpPrice">$29.99</span>
-                  <span className="lpTerm">/month</span>
-                </div>
-                <ul className="lpList">
-                  <li>✓ Everything in Pro</li>
-                  <li>✓ Team/staff workflows</li>
-                  <li>✓ +1 member included</li>
-                  <li>✓ Additional members +$10 each (max 10 total)</li>
-                  <li>✓ Multi-location + advanced business controls</li>
-                  <li>✓ Advanced analytics + concierge support</li>
-                </ul>
-                <Link
-                  to="/pricing#plans"
-                  className="lpChooseWrap"
-                  onClick={() => trackEvent("plan_cta_click", { page: "home", plan: "elite", cta: "choose_elite" })}
-                >
-                  <Button variant="outline" className="lpChoose">
-                    Choose Elite
-                  </Button>
-                </Link>
-              </Card>
-            )}
           </div>
         </div>
       </section>

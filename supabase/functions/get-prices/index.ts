@@ -25,13 +25,13 @@ function isNoSuchPriceError(err: unknown) {
   return msg.includes("no such price");
 }
 
-type Tier = "starter_monthly" | "pro_monthly" | "founder_annual" | "elite_monthly";
+type Tier = "pro_monthly";
 
 function specForTier(tier: Tier) {
-  if (tier === "starter_monthly") return { token: "starter", interval: "month" as const, expected_amount: 999 };
-  if (tier === "pro_monthly") return { token: "pro", interval: "month" as const, expected_amount: 1999 };
-  if (tier === "founder_annual") return { token: "founder", interval: "year" as const, expected_amount: 9900 };
-  return { token: "elite", interval: "month" as const, expected_amount: 2999 };
+  if (tier === "pro_monthly") {
+    return { token: "pro", interval: "month" as const, expected_amount: 1999 };
+  }
+  return { token: "pro", interval: "month" as const, expected_amount: 1999 };
 }
 
 function priceAmountCents(p: any): number | null {
@@ -180,34 +180,24 @@ serve(async (req) => {
   }
 
   const stripeKey = getEnv("STRIPE_SECRET_KEY");
-  const priceStarter = getEnv("STRIPE_PRICE_STARTER_MONTHLY");
   const pricePro = getEnv("STRIPE_PRICE_PRO_MONTHLY");
-  const priceFounder = getEnv("STRIPE_PRICE_FOUNDER_ANNUAL");
-  const priceElite = getEnv("STRIPE_PRICE_ELITE_MONTHLY"); // optional (falls back by product token)
 
   if (!stripeKey) return json(500, { error: "Missing STRIPE_SECRET_KEY" });
-
-  const starterRes = await resolvePrice(stripeKey, priceStarter, "starter_monthly");
-  const proRes = await resolvePrice(stripeKey, pricePro, "pro_monthly");
-  const founderRes = await resolvePrice(stripeKey, priceFounder, "founder_annual");
-  const eliteRes = await resolvePrice(stripeKey, priceElite, "elite_monthly");
-
-  const eliteNorm: any = eliteRes.ok ? normalizePrice(eliteRes.price) : null;
-  if (!eliteRes.ok) {
-    console.warn("[get-prices] elite price lookup failed; returning null for elite_monthly", {
-      status: eliteRes.status,
-      error: eliteRes.error,
+  if (!pricePro) {
+    return json(500, {
+      error: "Missing Stripe price env vars",
+      missing: {
+        STRIPE_PRICE_PRO_MONTHLY: !pricePro,
+      },
     });
   }
 
-  if (!starterRes.ok || !proRes.ok || !founderRes.ok) {
+  const proRes = await resolvePrice(stripeKey, pricePro, "pro_monthly");
+  if (!proRes.ok) {
     return json(500, {
       error: "stripe_price_fetch_failed",
       details: {
-        starter: starterRes.ok ? null : { status: starterRes.status, error: starterRes.error },
-        pro: proRes.ok ? null : { status: proRes.status, error: proRes.error },
-        founder: founderRes.ok ? null : { status: founderRes.status, error: founderRes.error },
-        elite: eliteRes.ok ? null : { status: eliteRes.status, error: eliteRes.error },
+        pro: { status: proRes.status, error: proRes.error },
       },
     });
   }
@@ -217,17 +207,10 @@ serve(async (req) => {
     prices: {
       // Free is $0 and not a Stripe price
       free_monthly: { id: "free", unit_amount: 0, currency: "USD", interval: "month", interval_count: 1, product_name: "Free", livemode: null },
-
-      starter_monthly: normalizePrice(starterRes.price),
       pro_monthly: normalizePrice(proRes.price),
-      founder_annual: normalizePrice(founderRes.price),
-      elite_monthly: eliteNorm,
     },
     sources: {
-      starter_monthly: starterRes.source,
       pro_monthly: proRes.source,
-      founder_annual: founderRes.source,
-      elite_monthly: eliteRes.ok ? eliteRes.source : null,
     },
   });
 });
