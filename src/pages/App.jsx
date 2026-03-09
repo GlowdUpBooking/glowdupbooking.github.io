@@ -419,10 +419,12 @@ export default function App() {
 
   const currentPlanKey = useMemo(() => {
     const fromDb = normalizePlanKey(plan);
+    if (fromDb === "studio") return "studio";
     if (fromDb === "pro" || fromDb === "starter" || fromDb === "founder" || fromDb === "elite") return "pro";
     if (fromDb === "free") return "free";
 
     const fromMeta = normalizePlanKey(user?.user_metadata?.selected_plan);
+    if (fromMeta === "studio") return "studio";
     if (fromMeta === "pro" || fromMeta === "starter" || fromMeta === "founder" || fromMeta === "elite") return "pro";
     if (fromMeta === "free") return "free";
 
@@ -433,6 +435,7 @@ export default function App() {
 
   const planLabel = useMemo(() => {
     if (currentPlanKey === "free") return "Free 7-Day";
+    if (currentPlanKey === "studio") return "Studio";
     if (currentPlanKey === "pro") return "Pro";
     return "Free 7-Day";
   }, [currentPlanKey]);

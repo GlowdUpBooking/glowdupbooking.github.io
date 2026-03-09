@@ -11,6 +11,7 @@ const WHY_PROS = [
   "Get paid faster with reliable payout options",
   "Build your brand with a premium booking experience",
   "Grow with tools designed for independent pros",
+  "Scale into a shared Studio workspace when you are ready for team seats",
 ];
 
 const METRICS = [
@@ -50,7 +51,7 @@ const FAQS = [
   },
   {
     q: "What happens after 7 days?",
-    a: "After your free 7-day period, you can stay on Free or move to Pro at $19.99/month.",
+    a: "After your free 7-day period, you can stay on Free or move to Pro at $19.99/month. Studio is available on the web at $39.99/month for team businesses.",
   },
 ];
 
@@ -176,8 +177,6 @@ export default function Home() {
   const activeFlowStep = activeFlow[activeStep] || activeFlow[0];
 
   useEffect(() => {
-    let mounted = true;
-
     const preload = ["/assets/hero-1.jpg", "/assets/hero-2.jpg", "/assets/hero-3.jpg", "/assets/hero-4.jpg"];
     const links = preload.map((href) => {
       const link = document.createElement("link");
@@ -189,7 +188,6 @@ export default function Home() {
     });
 
     return () => {
-      mounted = false;
       links.forEach((link) => link.remove());
     };
   }, []);
@@ -225,10 +223,6 @@ export default function Home() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  useEffect(() => {
-    setActiveStep(0);
-  }, [activeTab]);
 
   useEffect(() => {
     if (!activeFlow.length) return undefined;
@@ -351,6 +345,7 @@ export default function Home() {
                 className={`lpTab ${activeTab === tab.id ? "is-active" : ""}`}
                 onClick={() => {
                   setActiveTab(tab.id);
+                  setActiveStep(0);
                   trackEvent("preview_tab_click", { page: "home", tab_id: tab.id });
                 }}
                 role="tab"
@@ -402,10 +397,10 @@ export default function Home() {
         <div className="lpPricingInner">
           <div className="lpPricingHead">
             <h2 className="lpH2">Simple pricing for professionals.</h2>
-            <div className="lpSub">Choose what fits your workflow.</div>
+            <div className="lpSub">Choose Free 7-Day, Pro, or Studio.</div>
           </div>
 
-          <div className="lpGrid lpGrid4">
+          <div className="lpGrid">
             <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "0ms" }}>
               <div className="lpTier">Free 7-Day</div>
               <div className="lpPriceLine">
@@ -418,7 +413,7 @@ export default function Home() {
                 <li>✓ Professional booking link</li>
                 <li>✓ Core scheduling and booking workflow</li>
                 <li>✓ Stripe-secured payment setup</li>
-                <li>✓ Upgrade to Pro anytime</li>
+                <li>✓ Upgrade to Pro or Studio anytime</li>
               </ul>
 
               <Link
@@ -458,6 +453,35 @@ export default function Home() {
               >
                 <Button variant="outline" className="lpChoose">
                   Choose Pro
+                </Button>
+              </Link>
+            </Card>
+
+            <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "140ms" }}>
+              <div className="lpTierRow">
+                <div className="lpTier">Studio</div>
+              </div>
+              <div className="lpPriceLine">
+                <span className="lpPrice">$39.99</span>
+                <span className="lpTerm">/month</span>
+              </div>
+
+              <ul className="lpList">
+                <li>✓ Everything in Pro</li>
+                <li>✓ Shared Studio workspace and team seats</li>
+                <li>✓ Chairs, rooms, and shared resource calendars</li>
+                <li>✓ Owner-managed seat billing and payout reporting</li>
+                <li>✓ Mobile Studio tools unlock after web checkout</li>
+                <li>✓ Includes 3 accounts, with extra seats available up to 10 total</li>
+              </ul>
+
+              <Link
+                to="/pricing#plans"
+                className="lpChooseWrap"
+                onClick={() => trackEvent("plan_cta_click", { page: "home", plan: "studio", cta: "start_studio" })}
+              >
+                <Button variant="outline" className="lpChoose">
+                  Start Studio
                 </Button>
               </Link>
             </Card>

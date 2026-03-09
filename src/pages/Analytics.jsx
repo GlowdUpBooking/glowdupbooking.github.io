@@ -165,7 +165,12 @@ export default function Analytics() {
     return "paid";
   }, [plan, isActive, interval]);
 
-  const isPro = currentPlanKey === "pro" || currentPlanKey === "founder" || currentPlanKey === "elite" || (isActive && currentPlanKey === "paid");
+  const isPro =
+    currentPlanKey === "pro" ||
+    currentPlanKey === "studio" ||
+    currentPlanKey === "founder" ||
+    currentPlanKey === "elite" ||
+    (isActive && currentPlanKey === "paid");
 
   const thisMonthStart = useMemo(() => monthStart(new Date()), []);
   const lastMonthStart = useMemo(() => monthStart(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1)), []);

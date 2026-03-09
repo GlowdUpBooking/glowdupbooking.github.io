@@ -1,12 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import AppShell from "../components/layout/AppShell";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
 import { normalizePlanKey } from "../lib/format";
+import { createStudioBillingSession, syncStudioSubscription } from "../lib/studioBilling";
 import {
   DEFAULT_PRICES,
+  formatMoneyFromStripe,
+  formatTerm,
   mergeLivePrices,
 } from "../lib/pricing";
 
@@ -39,15 +42,32 @@ const PLAN_CARDS = [
       "Priority support",
     ],
   },
+  {
+    key: "studio",
+    tier: "studio_monthly",
+    title: "Studio",
+    priceKey: null,
+    billingCycle: "monthly",
+    description: "Shared team workspace and owner-managed billing for multi-account studios.",
+    bullets: [
+      "Everything in Pro",
+      "3 included accounts",
+      "Shared chairs, rooms, and resources",
+      "Owner-managed seat billing and payout reporting",
+    ],
+  },
 ];
 
 export default function Subscription() {
   const nav = useNavigate();
+  const location = useLocation();
 
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+  const [reloadNonce, setReloadNonce] = useState(0);
+  const handledStudioResultRef = useRef("");
 
   const [user, setUser] = useState(null);
   const [subStatus, setSubStatus] = useState(null);
@@ -103,7 +123,7 @@ export default function Subscription() {
     return () => {
       mounted = false;
     };
-  }, [nav]);
+  }, [nav, reloadNonce]);
 
   useEffect(() => {
     let mounted = true;
@@ -176,10 +196,12 @@ export default function Subscription() {
 
   const currentPlanKey = useMemo(() => {
     const fromDb = normalizePlanKey(plan);
+    if (fromDb === "studio") return "studio";
     if (fromDb === "pro" || fromDb === "starter" || fromDb === "founder" || fromDb === "elite") return "pro";
     if (fromDb === "free") return "free";
 
     const fromMeta = normalizePlanKey(user?.user_metadata?.selected_plan);
+    if (fromMeta === "studio") return "studio";
     if (fromMeta === "pro" || fromMeta === "starter" || fromMeta === "founder" || fromMeta === "elite") return "pro";
     if (fromMeta === "free") return "free";
 
@@ -190,9 +212,48 @@ export default function Subscription() {
 
   const planLabel = useMemo(() => {
     if (currentPlanKey === "free") return "Free 7-Day";
+    if (currentPlanKey === "studio") return "Studio";
     if (currentPlanKey === "pro") return "Pro";
     return "Free 7-Day";
   }, [currentPlanKey]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const studioResult = params.get("studio");
+    if (!studioResult) return;
+
+    const sessionId = params.get("session_id") || "";
+    const marker = `${studioResult}:${sessionId}`;
+    if (handledStudioResultRef.current === marker) return;
+    handledStudioResultRef.current = marker;
+
+    const nextParams = new URLSearchParams(location.search);
+    nextParams.delete("studio");
+    nextParams.delete("session_id");
+    const nextSearch = nextParams.toString();
+    nav(`${location.pathname}${nextSearch ? `?${nextSearch}` : ""}`, { replace: true });
+
+    if (studioResult === "cancel") {
+      setMsg("Studio checkout canceled.");
+      return;
+    }
+
+    if (studioResult !== "success") return;
+
+    setMsg("Studio checkout received. Syncing your access...");
+    setErr("");
+
+    void (async () => {
+      try {
+        await syncStudioSubscription(sessionId || null);
+        setMsg("Studio is active on this account.");
+        setReloadNonce((value) => value + 1);
+      } catch (syncError) {
+        console.error("[Subscription] studio sync failed:", syncError);
+        setErr(syncError?.message || "Studio checkout completed, but we could not sync access yet.");
+      }
+    })();
+  }, [location.pathname, location.search, nav]);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -352,15 +413,42 @@ export default function Subscription() {
     }
   }
 
+  async function startStudioCheckout() {
+    if (busy) return;
+    setBusy(true);
+    setMsg("");
+    setErr("");
+
+    try {
+      const billingSession = await createStudioBillingSession({
+        intent: "checkout",
+        returnPath: "/app/subscription",
+        successPath: "/app/subscription?studio=success&session_id={CHECKOUT_SESSION_ID}",
+        cancelPath: "/app/subscription?studio=cancel",
+      });
+      window.location.assign(billingSession.url);
+    } catch (checkoutError) {
+      console.error("[Subscription] studio checkout failed:", checkoutError);
+      setErr(checkoutError?.message || "Studio checkout failed. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function planActionLabel(card) {
     if (card.key === currentPlanKey) return "Current plan";
     if (card.key === "free") return "Downgrade in billing";
+    if (card.key === "studio") return currentPlanKey === "pro" ? "Upgrade to Studio" : "Choose plan";
     if (!isActive || currentPlanKey === "free") return "Choose plan";
     return "Change plan";
   }
 
   function handlePlanAction(card) {
     if (card.key === currentPlanKey) return;
+    if (card.key === "studio") {
+      startStudioCheckout();
+      return;
+    }
     if (card.key === "free") {
       openBillingPortal();
       return;
@@ -427,11 +515,15 @@ export default function Subscription() {
             const priceLabel =
               card.key === "free"
                 ? "$0"
-                : "$19.99";
+                : card.key === "studio"
+                  ? "$39.99"
+                  : formatMoneyFromStripe(priceObj, "monthly") || "$19.99";
             const termLabel =
               card.key === "free"
                 ? "/7 days"
-                : "/month";
+                : card.key === "studio"
+                  ? "/month"
+                  : formatTerm(priceObj, "monthly") || "/month";
             return (
               <Card
                 key={card.key}
@@ -465,7 +557,7 @@ export default function Subscription() {
                   <Button
                     variant={isCurrent ? "outline" : "primary"}
                     onClick={() => handlePlanAction(card)}
-                    disabled={busy || isCurrent}
+                    disabled={busy || isCurrent || (card.key === "pro" && pricesLoading)}
                   >
                     {planActionLabel(card)}
                   </Button>

@@ -82,6 +82,7 @@ export function normalizePlanKey(raw) {
   const v = String(raw || "").trim().toLowerCase();
   if (!v) return null;
   if (v === "free") return "free";
+  if (v === "studio" || v === "studio_monthly" || v === "studio_annual") return "studio";
   if (v === "starter" || v === "starter_monthly" || v === "starter_annual") return "starter";
   if (v === "pro" || v === "pro_monthly" || v === "pro_annual") return "pro";
   if (v === "founder" || v === "founder_annual") return "founder";

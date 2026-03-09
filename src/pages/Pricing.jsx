@@ -5,8 +5,11 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import { trackEvent } from "../lib/analytics";
 import { getSignupPath } from "../lib/siteFlags";
+import { createStudioBillingSession } from "../lib/studioBilling";
 import {
   DEFAULT_PRICES,
+  formatMoneyFromStripe,
+  formatTerm,
   mergeLivePrices,
 } from "../lib/pricing";
 
@@ -16,14 +19,16 @@ const WHY_PROS = [
   "Get paid faster with reliable payout options",
   "Build your brand with a premium booking experience",
   "Grow with tools designed for independent pros",
+  "Scale into a team workspace when you are ready for Studio",
 ];
 
 const FAQ_ITEMS = [
   { q: "Do clients pay to book?", a: "No. Booking is always free for clients." },
   { q: "How long is the free trial?", a: "Every pro account starts with a free 7-day trial." },
-  { q: "What happens after the trial?", a: "You can stay on Free or upgrade to Pro at $19.99/month." },
+  { q: "What happens after the trial?", a: "You can stay on Free or move to Pro at $19.99/month. Studio is available on the web at $39.99/month for team businesses." },
   { q: "How do deposits and payments work?", a: "Deposits and payments are processed through Stripe when enabled." },
   { q: "Can I change plans later?", a: "Yes. Upgrade or downgrade anytime." },
+  { q: "What does Studio include?", a: "Studio includes the Pro toolkit plus shared team seats, studio resources, and payout reporting for multi-account businesses." },
 ];
 
 export default function Pricing() {
@@ -274,6 +279,39 @@ export default function Pricing() {
     }
   }
 
+  async function startStudioCheckout() {
+    trackEvent("checkout_start", { page: "pricing", tier: "studio_monthly", billing_cycle: "monthly" });
+    setToast("");
+    setSessionLoading(true);
+
+    try {
+      const { data: authData, error: sessErr } = await supabase.auth.getSession();
+      if (sessErr) throw sessErr;
+
+      if (!authData?.session?.access_token) {
+        trackEvent("checkout_requires_auth", { page: "pricing", tier: "studio_monthly" });
+        nav(signupWithPlan("studio"), { replace: false });
+        return;
+      }
+
+      const billingSession = await createStudioBillingSession({
+        intent: "checkout",
+        returnPath: "/app/subscription",
+        successPath: "/app/subscription?studio=success&session_id={CHECKOUT_SESSION_ID}",
+        cancelPath: "/app/subscription?studio=cancel",
+      });
+
+      trackEvent("checkout_redirect", { page: "pricing", tier: "studio_monthly", source: "studio_checkout" });
+      window.location.assign(billingSession.url);
+    } catch (e) {
+      console.error("[Pricing] studio checkout failed:", e);
+      trackEvent("checkout_error", { page: "pricing", tier: "studio_monthly", message: e?.message || "unknown_error" });
+      setToast(`Studio checkout failed: ${e?.message || "Please try again."}`);
+    } finally {
+      setSessionLoading(false);
+    }
+  }
+
   function signupWithPlan(plan) {
     const joiner = signupPath.includes("?") ? "&" : "?";
     return `${signupPath}${joiner}plan=${encodeURIComponent(plan)}`;
@@ -288,8 +326,10 @@ export default function Pricing() {
     void startCheckout("pro_monthly");
   }
 
-  const proPrice = "$19.99";
-  const proTerm = "/month";
+  const proPrice = formatMoneyFromStripe(prices?.pro_monthly, "monthly") || "$19.99";
+  const proTerm = formatTerm(prices?.pro_monthly, "monthly") || "/month";
+  const studioPrice = "$39.99";
+  const studioTerm = "/month";
 
   return (
     <div className="lp lpPricingPage">
@@ -391,23 +431,23 @@ export default function Pricing() {
         <div className="lpPricingInner">
           <div className="lpPricingHead">
             <h2 className="lpH2">Plans</h2>
-            <div className="lpSub">Two simple options: Free 7-Day and Pro.</div>
+            <div className="lpSub">Three paths: Free 7-Day, Pro, and Studio.</div>
           </div>
 
-          <div className="lpGrid lpGrid2">
+          <div className="lpGrid">
             <Card className="lpPriceCard lpPlanCard lpPlanCardCompact lpReveal" style={{ animationDelay: "0ms" }}>
               <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Free 7-Day</div>
               <div className="lpPriceLine">
                 <span className="lpPrice">$0</span>
                 <span className="lpTerm">/7 days</span>
               </div>
-              <div className="lpCardPath">Day 1-7: free trial. After day 7, stay on Free or upgrade to Pro.</div>
+              <div className="lpCardPath">Day 1-7: free trial. After day 7, stay on Free, upgrade to Pro, or start Studio on the web.</div>
               <ul className="lpList">
                 <li>✓ 7-day free trial to launch fast</li>
                 <li>✓ Professional booking link</li>
                 <li>✓ Core scheduling and booking workflow</li>
                 <li>✓ Stripe-secured payment setup</li>
-                <li>✓ Upgrade to Pro anytime</li>
+                <li>✓ Upgrade to Pro or Studio anytime</li>
               </ul>
               <div className="lpChooseWrap">
                 {!session ? (
@@ -462,6 +502,47 @@ export default function Pricing() {
                 </Button>
               </div>
             </Card>
+
+            <Card className="lpPriceCard lpPlanCard lpPlanCardCompact lpReveal" style={{ animationDelay: "140ms" }}>
+              <div className="lpTierRow">
+                <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Studio</div>
+              </div>
+              <div className="lpPriceLine">
+                <span className="lpPrice">{studioPrice}</span>
+                <span className="lpTerm">{studioTerm}</span>
+              </div>
+              <div className="lpCardPath">Studio checkout runs on the web. Includes 3 accounts, with extra seats at $9.99/month each up to 10 total accounts.</div>
+              <ul className="lpList">
+                <li>✓ Everything in Pro</li>
+                <li>✓ Shared Studio workspace and team seats</li>
+                <li>✓ Chairs, rooms, and shared resource calendars</li>
+                <li>✓ Owner-managed seat billing and payout reporting</li>
+                <li>✓ Mobile Studio tools unlock after web checkout</li>
+              </ul>
+              <div className="lpChooseWrap">
+                {!session ? (
+                  <Link
+                    to={signupWithPlan("studio")}
+                    className="lpChoose"
+                    onClick={() => trackEvent("plan_cta_click", { page: "pricing", plan: "studio", cta: "start_studio_signup" })}
+                  >
+                    Start Studio
+                  </Link>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="lpChoose"
+                    onClick={() => {
+                      trackEvent("plan_cta_click", { page: "pricing", plan: "studio", cta: "choose_studio", billing_cycle: "monthly" });
+                      startStudioCheckout();
+                    }}
+                    disabled={sessionLoading}
+                  >
+                    {sessionLoading ? "Redirecting..." : "Start Studio"}
+                  </Button>
+                )}
+              </div>
+            </Card>
           </div>
 
           <div className="lpCompareWrap lpReveal">
@@ -474,6 +555,7 @@ export default function Pricing() {
                       <th>Feature</th>
                       <th>Free 7-Day</th>
                       <th>Pro</th>
+                      <th>Studio</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -481,9 +563,11 @@ export default function Pricing() {
                       <td>Professional booking link</td>
                       <td>✓</td>
                       <td>✓</td>
+                      <td>✓</td>
                     </tr>
                     <tr>
                       <td>Core scheduling + bookings</td>
+                      <td>✓</td>
                       <td>✓</td>
                       <td>✓</td>
                     </tr>
@@ -491,14 +575,29 @@ export default function Pricing() {
                       <td>Advanced deposits + prepay</td>
                       <td>—</td>
                       <td>✓</td>
+                      <td>✓</td>
                     </tr>
                     <tr>
                       <td>Advanced availability rules</td>
                       <td>—</td>
                       <td>✓</td>
+                      <td>✓</td>
                     </tr>
                     <tr>
                       <td>Portfolio polish + priority support</td>
+                      <td>—</td>
+                      <td>✓</td>
+                      <td>✓</td>
+                    </tr>
+                    <tr>
+                      <td>Shared team seats + studio resources</td>
+                      <td>—</td>
+                      <td>—</td>
+                      <td>✓</td>
+                    </tr>
+                    <tr>
+                      <td>Studio payout reporting + seat billing</td>
+                      <td>—</td>
                       <td>—</td>
                       <td>✓</td>
                     </tr>
@@ -511,6 +610,7 @@ export default function Pricing() {
           <div className="lpFooterLine">
             <div className="lpFooterSmall">All pro accounts begin with a free 7-day trial.</div>
             <div className="lpFooterSmall">Pro is billed at $19.99/month after trial.</div>
+            <div className="lpFooterSmall">Studio is billed on the web at $39.99/month and includes 3 accounts.</div>
             <div className="lpFooterSmall">Deposits and payments are processed via Stripe when enabled.</div>
             <div className="lpFooterSmall">You can upgrade or downgrade at any time.</div>
           </div>
@@ -536,7 +636,7 @@ export default function Pricing() {
 
       {showStickyCta ? (
         <div className="lpStickyCta" role="region" aria-label="Quick plan actions">
-          <div className="lpStickyCopy">Free 7-Day to Pro $19.99/month</div>
+          <div className="lpStickyCopy">Free 7-Day, Pro, or Studio on web</div>
           <div className="lpStickyActions">
             <Link
               className="lpStickyBtn lpStickyBtnGhost"

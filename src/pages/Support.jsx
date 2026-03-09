@@ -27,10 +27,11 @@ const SUPPORT_CARDS = [
   },
   {
     title: "Account + subscription",
-    lead: "Login, profile, and plan settings for pros.",
+    lead: "Login, profile, App Store billing, and Studio web billing for pros.",
     items: [
       "Reset password or update email",
-      "Change plan or billing details",
+      "Change Pro billing or Studio web billing",
+      "Studio seat access and workspace support",
       "Account deletion requests",
     ],
   },
@@ -61,6 +62,10 @@ const FAQ_ITEMS = [
   {
     q: "Why can’t I sign in?",
     a: "Double-check your email and password. If you forgot your password, use the reset link on the sign-in screen.",
+  },
+  {
+    q: "How does Studio billing work?",
+    a: "Studio is purchased and managed on the web. Once Studio is active, the app will sync Studio access for team workspaces, shared resources, and reporting.",
   },
 ];
 
@@ -107,7 +112,7 @@ export default function Support() {
         <div className="lpHeroInner">
           <h1 className="lpH1">Support</h1>
           <p className="lpLead">
-            Pro support for bookings, deposits, payouts, and subscriptions.
+            Support for bookings, deposits, payouts, App Store Pro billing, and Studio web subscriptions.
           </p>
 
           <div className="lpHeroBtns">

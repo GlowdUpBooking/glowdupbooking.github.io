@@ -46,6 +46,7 @@ function isValidPhone(v) {
 function planLabel(p) {
   const v = (p || "").toLowerCase();
   if (v === "free") return "Free 7-Day";
+  if (v === "studio") return "Studio";
   if (v === "pro" || v === "starter" || v === "founder" || v === "elite") return "Pro";
   return null;
 }
