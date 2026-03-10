@@ -4,7 +4,7 @@ import { supabase } from "../lib/supabase";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import { trackEvent } from "../lib/analytics";
-import { getSignupPath } from "../lib/siteFlags";
+import { getSignupPath, isStudioWebBillingRestricted } from "../lib/siteFlags";
 import { createStudioBillingSession } from "../lib/studioBilling";
 import {
   DEFAULT_PRICES,
@@ -13,28 +13,14 @@ import {
   mergeLivePrices,
 } from "../lib/pricing";
 
-const WHY_PROS = [
-  "Keep more of what you earn with clear, transparent pricing",
-  "Reduce no-shows with deposits and optional prepay",
-  "Get paid faster with reliable payout options",
-  "Build your brand with a premium booking experience",
-  "Grow with tools designed for independent pros",
-  "Scale into a team workspace when you are ready for Studio",
-];
-
-const FAQ_ITEMS = [
-  { q: "Do clients pay to book?", a: "No. Booking is always free for clients." },
-  { q: "How long is the free trial?", a: "Every pro account starts with a free 7-day trial." },
-  { q: "What happens after the trial?", a: "You can stay on Free or move to Pro at $19.99/month. Studio is available on the web at $39.99/month for team businesses." },
-  { q: "How do deposits and payments work?", a: "Deposits and payments are processed through Stripe when enabled." },
-  { q: "Can I change plans later?", a: "Yes. Upgrade or downgrade anytime." },
-  { q: "What does Studio include?", a: "Studio includes the Pro toolkit plus shared team seats, studio resources, and payout reporting for multi-account businesses." },
-];
+const IOS_APP_URL = "https://apps.apple.com/us/app/glowd-up-booking/id6758881771";
 
 export default function Pricing() {
   const nav = useNavigate();
   const location = useLocation();
   const signupPath = getSignupPath();
+  const studioBillingRestricted = isStudioWebBillingRestricted();
+  const showStudioPlan = !studioBillingRestricted;
 
   const [session, setSession] = useState(null);
   const [sessionLoading, setSessionLoading] = useState(false);
@@ -280,6 +266,11 @@ export default function Pricing() {
   }
 
   async function startStudioCheckout() {
+    if (studioBillingRestricted) {
+      setToast("Studio checkout is not available from this device. Use the desktop web app.");
+      return;
+    }
+
     trackEvent("checkout_start", { page: "pricing", tier: "studio_monthly", billing_cycle: "monthly" });
     setToast("");
     setSessionLoading(true);
@@ -330,6 +321,34 @@ export default function Pricing() {
   const proTerm = formatTerm(prices?.pro_monthly, "monthly") || "/month";
   const studioPrice = "$39.99";
   const studioTerm = "/month";
+  const whyPros = [
+    "Keep more of what you earn with clear, transparent pricing",
+    "Reduce no-shows with deposits and optional prepay",
+    "Get paid faster with reliable payout options",
+    "Build your brand with a premium booking experience",
+    "Grow with tools designed for independent pros",
+    ...(showStudioPlan ? ["Scale into a team workspace when you are ready for Studio"] : []),
+  ];
+  const faqItems = [
+    { q: "Do clients pay to book?", a: "No. Booking is always free for clients." },
+    { q: "How long is the free trial?", a: "Every pro account starts with a free 7-day trial." },
+    {
+      q: "What happens after the trial?",
+      a: showStudioPlan
+        ? "You can stay on Free or move to Pro at $19.99/month. Studio is available on the web at $39.99/month for team businesses."
+        : "You can stay on Free or move to Pro at $19.99/month.",
+    },
+    { q: "How do deposits and payments work?", a: "Deposits and payments are processed through Stripe when enabled." },
+    { q: "Can I change plans later?", a: "Yes. Upgrade or downgrade anytime." },
+    ...(showStudioPlan
+      ? [
+          {
+            q: "What does Studio include?",
+            a: "Studio includes the Pro toolkit plus shared team seats, studio resources, and payout reporting for multi-account businesses.",
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div className="lp lpPricingPage">
@@ -392,11 +411,21 @@ export default function Pricing() {
               >
                 View Plans
               </Button>
+              <a
+                className="lpBtn lpBtnGold"
+                href={IOS_APP_URL}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => trackEvent("cta_click", { page: "pricing", cta: "download_ios_hero" })}
+              >
+                Download for iPhone
+              </a>
             </div>
 
             <div className="lpTrustRow">
               <span>Stripe-secured payments</span>
               <span>Cancel anytime</span>
+              <span>Now on the App Store</span>
             </div>
 
             <div className="lpLiveChip">Free 7-day trial available</div>
@@ -420,7 +449,7 @@ export default function Pricing() {
             <h2 className="lpH2">Why Pros Choose Glow’d Up Booking</h2>
           </div>
           <ul className="lpList lpWhyList">
-            {WHY_PROS.map((item) => (
+            {whyPros.map((item) => (
               <li key={item}>✓ {item}</li>
             ))}
           </ul>
@@ -431,7 +460,7 @@ export default function Pricing() {
         <div className="lpPricingInner">
           <div className="lpPricingHead">
             <h2 className="lpH2">Plans</h2>
-            <div className="lpSub">Three paths: Free 7-Day, Pro, and Studio.</div>
+            <div className="lpSub">{showStudioPlan ? "Three paths: Free 7-Day, Pro, and Studio." : "Two paths: Free 7-Day and Pro."}</div>
           </div>
 
           <div className="lpGrid">
@@ -441,13 +470,17 @@ export default function Pricing() {
                 <span className="lpPrice">$0</span>
                 <span className="lpTerm">/7 days</span>
               </div>
-              <div className="lpCardPath">Day 1-7: free trial. After day 7, stay on Free, upgrade to Pro, or start Studio on the web.</div>
+              <div className="lpCardPath">
+                {showStudioPlan
+                  ? "Day 1-7: free trial. After day 7, stay on Free, upgrade to Pro, or start Studio on the web."
+                  : "Day 1-7: free trial. After day 7, stay on Free or upgrade to Pro."}
+              </div>
               <ul className="lpList">
                 <li>✓ 7-day free trial to launch fast</li>
                 <li>✓ Professional booking link</li>
                 <li>✓ Core scheduling and booking workflow</li>
                 <li>✓ Stripe-secured payment setup</li>
-                <li>✓ Upgrade to Pro or Studio anytime</li>
+                <li>{showStudioPlan ? "✓ Upgrade to Pro or Studio anytime" : "✓ Upgrade to Pro anytime"}</li>
               </ul>
               <div className="lpChooseWrap">
                 {!session ? (
@@ -503,46 +536,48 @@ export default function Pricing() {
               </div>
             </Card>
 
-            <Card className="lpPriceCard lpPlanCard lpPlanCardCompact lpReveal" style={{ animationDelay: "140ms" }}>
-              <div className="lpTierRow">
-                <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Studio</div>
-              </div>
-              <div className="lpPriceLine">
-                <span className="lpPrice">{studioPrice}</span>
-                <span className="lpTerm">{studioTerm}</span>
-              </div>
-              <div className="lpCardPath">Studio checkout runs on the web. Includes 3 accounts, with extra seats at $9.99/month each up to 10 total accounts.</div>
-              <ul className="lpList">
-                <li>✓ Everything in Pro</li>
-                <li>✓ Shared Studio workspace and team seats</li>
-                <li>✓ Chairs, rooms, and shared resource calendars</li>
-                <li>✓ Owner-managed seat billing and payout reporting</li>
-                <li>✓ Mobile Studio tools unlock after web checkout</li>
-              </ul>
-              <div className="lpChooseWrap">
-                {!session ? (
-                  <Link
-                    to={signupWithPlan("studio")}
-                    className="lpChoose"
-                    onClick={() => trackEvent("plan_cta_click", { page: "pricing", plan: "studio", cta: "start_studio_signup" })}
-                  >
-                    Start Studio
-                  </Link>
-                ) : (
-                  <Button
-                    variant="outline"
-                    className="lpChoose"
-                    onClick={() => {
-                      trackEvent("plan_cta_click", { page: "pricing", plan: "studio", cta: "choose_studio", billing_cycle: "monthly" });
-                      startStudioCheckout();
-                    }}
-                    disabled={sessionLoading}
-                  >
-                    {sessionLoading ? "Redirecting..." : "Start Studio"}
-                  </Button>
-                )}
-              </div>
-            </Card>
+            {showStudioPlan ? (
+              <Card className="lpPriceCard lpPlanCard lpPlanCardCompact lpReveal" style={{ animationDelay: "140ms" }}>
+                <div className="lpTierRow">
+                  <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>Studio</div>
+                </div>
+                <div className="lpPriceLine">
+                  <span className="lpPrice">{studioPrice}</span>
+                  <span className="lpTerm">{studioTerm}</span>
+                </div>
+                <div className="lpCardPath">Studio checkout runs on the web. Includes 3 accounts, with extra seats at $9.99/month each up to 10 total accounts.</div>
+                <ul className="lpList">
+                  <li>✓ Everything in Pro</li>
+                  <li>✓ Shared Studio workspace and team seats</li>
+                  <li>✓ Chairs, rooms, and shared resource calendars</li>
+                  <li>✓ Owner-managed seat billing and payout reporting</li>
+                  <li>✓ Mobile Studio tools unlock after web checkout</li>
+                </ul>
+                <div className="lpChooseWrap">
+                  {!session ? (
+                    <Link
+                      to={signupWithPlan("studio")}
+                      className="lpChoose"
+                      onClick={() => trackEvent("plan_cta_click", { page: "pricing", plan: "studio", cta: "start_studio_signup" })}
+                    >
+                      Start Studio
+                    </Link>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="lpChoose"
+                      onClick={() => {
+                        trackEvent("plan_cta_click", { page: "pricing", plan: "studio", cta: "choose_studio", billing_cycle: "monthly" });
+                        startStudioCheckout();
+                      }}
+                      disabled={sessionLoading}
+                    >
+                      {sessionLoading ? "Redirecting..." : "Start Studio"}
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            ) : null}
           </div>
 
           <div className="lpCompareWrap lpReveal">
@@ -555,7 +590,7 @@ export default function Pricing() {
                       <th>Feature</th>
                       <th>Free 7-Day</th>
                       <th>Pro</th>
-                      <th>Studio</th>
+                      {showStudioPlan ? <th>Studio</th> : null}
                     </tr>
                   </thead>
                   <tbody>
@@ -563,44 +598,48 @@ export default function Pricing() {
                       <td>Professional booking link</td>
                       <td>✓</td>
                       <td>✓</td>
-                      <td>✓</td>
+                      {showStudioPlan ? <td>✓</td> : null}
                     </tr>
                     <tr>
                       <td>Core scheduling + bookings</td>
                       <td>✓</td>
                       <td>✓</td>
-                      <td>✓</td>
+                      {showStudioPlan ? <td>✓</td> : null}
                     </tr>
                     <tr>
                       <td>Advanced deposits + prepay</td>
                       <td>—</td>
                       <td>✓</td>
-                      <td>✓</td>
+                      {showStudioPlan ? <td>✓</td> : null}
                     </tr>
                     <tr>
                       <td>Advanced availability rules</td>
                       <td>—</td>
                       <td>✓</td>
-                      <td>✓</td>
+                      {showStudioPlan ? <td>✓</td> : null}
                     </tr>
                     <tr>
                       <td>Portfolio polish + priority support</td>
                       <td>—</td>
                       <td>✓</td>
-                      <td>✓</td>
+                      {showStudioPlan ? <td>✓</td> : null}
                     </tr>
-                    <tr>
-                      <td>Shared team seats + studio resources</td>
-                      <td>—</td>
-                      <td>—</td>
-                      <td>✓</td>
-                    </tr>
-                    <tr>
-                      <td>Studio payout reporting + seat billing</td>
-                      <td>—</td>
-                      <td>—</td>
-                      <td>✓</td>
-                    </tr>
+                    {showStudioPlan ? (
+                      <tr>
+                        <td>Shared team seats + studio resources</td>
+                        <td>—</td>
+                        <td>—</td>
+                        <td>✓</td>
+                      </tr>
+                    ) : null}
+                    {showStudioPlan ? (
+                      <tr>
+                        <td>Studio payout reporting + seat billing</td>
+                        <td>—</td>
+                        <td>—</td>
+                        <td>✓</td>
+                      </tr>
+                    ) : null}
                   </tbody>
                 </table>
               </div>
@@ -610,9 +649,42 @@ export default function Pricing() {
           <div className="lpFooterLine">
             <div className="lpFooterSmall">All pro accounts begin with a free 7-day trial.</div>
             <div className="lpFooterSmall">Pro is billed at $19.99/month after trial.</div>
-            <div className="lpFooterSmall">Studio is billed on the web at $39.99/month and includes 3 accounts.</div>
+            {showStudioPlan ? <div className="lpFooterSmall">Studio is billed on the web at $39.99/month and includes 3 accounts.</div> : null}
             <div className="lpFooterSmall">Deposits and payments are processed via Stripe when enabled.</div>
             <div className="lpFooterSmall">You can upgrade or downgrade at any time.</div>
+          </div>
+        </div>
+      </section>
+
+      <section className="lpPricing lpReveal lpSectionLazy">
+        <div className="lpPricingInner">
+          <div className="lpAppPromo">
+            <div className="lpAppPromoCopy">
+              <div className="lpMobileBadge">Also on iPhone</div>
+              <h2 className="lpH2">Download the app after you pick your plan.</h2>
+              <p className="lpSub">
+                Manage appointments, services, availability, and payouts from your phone with the live iOS app.
+              </p>
+              <a
+                href={IOS_APP_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="lpStoreButton"
+                onClick={() => trackEvent("cta_click", { page: "pricing", cta: "download_ios_section" })}
+              >
+                <span className="lpStoreButtonOverline">Download on the</span>
+                <span className="lpStoreButtonLabel">App Store</span>
+              </a>
+            </div>
+
+            <div className="lpAppPromoShots" aria-hidden="true">
+              <figure className="lpScreenshotCard lpScreenshotCard1">
+                <img className="lpScreenshotImage" src="/assets/app-store/dashboard.jpg" alt="" loading="lazy" />
+              </figure>
+              <figure className="lpScreenshotCard lpScreenshotCard2">
+                <img className="lpScreenshotImage" src="/assets/app-store/appointments.jpg" alt="" loading="lazy" />
+              </figure>
+            </div>
           </div>
         </div>
       </section>
@@ -624,7 +696,7 @@ export default function Pricing() {
           </div>
 
           <div className="lpFaqList">
-            {FAQ_ITEMS.map((item) => (
+            {faqItems.map((item) => (
               <Card key={item.q} className="lpPriceCard">
                 <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>{item.q}</div>
                 <div className="lpSub" style={{ marginTop: 8 }}>{item.a}</div>
@@ -636,7 +708,7 @@ export default function Pricing() {
 
       {showStickyCta ? (
         <div className="lpStickyCta" role="region" aria-label="Quick plan actions">
-          <div className="lpStickyCopy">Free 7-Day, Pro, or Studio on web</div>
+          <div className="lpStickyCopy">{showStudioPlan ? "Free 7-Day, Pro, or Studio on web" : "Free 7-Day or Pro"}</div>
           <div className="lpStickyActions">
             <Link
               className="lpStickyBtn lpStickyBtnGhost"

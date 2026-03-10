@@ -384,6 +384,19 @@
   transform: translateY(-1px);
 }
 
+.lpBtnGold {
+  border-color: #ddb56a !important;
+  background: linear-gradient(135deg, #f1d197, #c99848) !important;
+  color: #120d06 !important;
+  box-shadow: 0 12px 32px rgba(201, 152, 72, 0.22);
+}
+
+.lpBtnGold:hover {
+  background: #070707 !important;
+  color: #f4deb0 !important;
+  border-color: #ddb56a !important;
+}
+
 .lpTrustRow {
   margin-top: 16px;
   display: flex;
@@ -715,52 +728,253 @@
 }
 
 .lpMobileTeaserInner {
-  display: flex;
-  align-items: flex-start;
-  gap: 32px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 24px;
-  padding: 40px 44px;
-}
-
-.lpMobileTeaserIcon {
-  font-size: 52px;
-  line-height: 1;
-  flex-shrink: 0;
-  margin-top: 4px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 420px);
+  align-items: center;
+  gap: 36px;
+  background:
+    radial-gradient(420px 240px at 10% 15%, rgba(201, 152, 72, 0.18), transparent 70%),
+    radial-gradient(340px 260px at 100% 100%, rgba(201, 152, 72, 0.12), transparent 72%),
+    rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  padding: 44px;
+  overflow: hidden;
 }
 
 .lpMobileTeaserText {
   flex: 1;
 }
 
+.lpMobileBadge {
+  width: fit-content;
+  margin-bottom: 14px;
+  border: 1px solid rgba(221, 181, 106, 0.36);
+  background: rgba(221, 181, 106, 0.1);
+  color: #f1d197;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .lpMobileTeaserText .lpH2 {
   margin-bottom: 12px;
+  max-width: 540px;
 }
 
 .lpMobileTeaserLead {
-  font-size: 16px;
+  font-size: 17px;
   line-height: 1.65;
-  color: rgba(242, 242, 242, 0.72);
-  margin-bottom: 14px;
-  max-width: 640px;
+  color: rgba(242, 242, 242, 0.8);
+  margin-bottom: 20px;
+  max-width: 680px;
+}
+
+.lpMobileFeatureGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.lpMobileFeatureCard {
+  padding: 18px;
+  border-radius: 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(0, 0, 0, 0.3) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.lpMobileFeatureEyebrow {
+  margin-bottom: 10px;
+  color: #ddb56a;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lpMobileFeatureCard h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.lpMobileFeatureCard p {
+  margin: 0;
+  color: rgba(242, 242, 242, 0.68);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.lpMobileTeaserActions {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.lpStoreButton {
+  min-width: 188px;
+  border-radius: 18px;
+  padding: 12px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02));
+  color: #ffffff;
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.05;
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.32);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lpStoreButton:hover {
+  transform: translateY(-2px);
+  border-color: rgba(221, 181, 106, 0.5);
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.4);
+}
+
+.lpStoreButtonOverline {
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.76;
+}
+
+.lpStoreButtonLabel {
+  margin-top: 2px;
+  font-size: 28px;
+  font-weight: 900;
 }
 
 .lpMobileTeaserSub {
   font-size: 14px;
-  color: rgba(242, 242, 242, 0.44);
+  color: rgba(242, 242, 242, 0.54);
   font-weight: 600;
+  margin: 0;
 }
 
 .lpMobileTeaserLink {
-  color: rgba(242, 242, 242, 0.72);
+  color: rgba(242, 242, 242, 0.84);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .lpMobileTeaserLink:hover {
   color: #f2f2f2;
+}
+
+.lpMobileShowcase {
+  position: relative;
+  min-height: 700px;
+}
+
+.lpScreenshotCard {
+  position: absolute;
+  margin: 0;
+  width: 220px;
+  padding: 10px;
+  border-radius: 34px;
+  background:
+    linear-gradient(180deg, rgba(112, 112, 112, 0.88), rgba(18, 18, 18, 1) 10%, rgba(6, 6, 6, 1) 92%),
+    #000;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 24px 70px rgba(0, 0, 0, 0.5);
+}
+
+.lpScreenshotCard::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  width: 84px;
+  height: 20px;
+  border-radius: 999px;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.94);
+  z-index: 1;
+}
+
+.lpScreenshotImage {
+  display: block;
+  width: 100%;
+  border-radius: 26px;
+  object-fit: cover;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.lpScreenshotCard1 {
+  top: 18px;
+  left: 0;
+  transform: rotate(-8deg);
+}
+
+.lpScreenshotCard2 {
+  top: 0;
+  right: 14px;
+  z-index: 2;
+}
+
+.lpScreenshotCard3 {
+  top: 282px;
+  left: 32px;
+  transform: rotate(-4deg);
+}
+
+.lpScreenshotCard4 {
+  top: 322px;
+  right: 0;
+  transform: rotate(7deg);
+}
+
+.lpAppPromo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+  gap: 28px;
+  align-items: center;
+  padding: 36px;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(360px 180px at 12% 10%, rgba(201, 152, 72, 0.14), transparent 72%),
+    rgba(255, 255, 255, 0.04);
+}
+
+.lpAppPromoCopy .lpH2,
+.lpAppPromoCopy .lpSub {
+  text-align: left;
+}
+
+.lpAppPromoCopy .lpSub {
+  margin-left: 0;
+  margin-right: 0;
+  max-width: 560px;
+}
+
+.lpAppPromoCopy .lpStoreButton {
+  margin-top: 18px;
+}
+
+.lpAppPromoShots {
+  position: relative;
+  min-height: 360px;
+}
+
+.lpAppPromoShots .lpScreenshotCard {
+  width: 210px;
+}
+
+.lpAppPromoShots .lpScreenshotCard1 {
+  top: 28px;
+  left: 0;
+}
+
+.lpAppPromoShots .lpScreenshotCard2 {
+  top: 0;
+  right: 0;
 }
 
 /* ── FAQ ── */
@@ -1217,6 +1431,29 @@
     grid-template-columns: 1fr;
   }
 
+  .lpMobileTeaserInner {
+    grid-template-columns: 1fr;
+  }
+
+  .lpMobileFeatureGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .lpMobileShowcase {
+    min-height: 700px;
+    width: min(100%, 520px);
+    margin: 0 auto;
+  }
+
+  .lpAppPromo {
+    grid-template-columns: 1fr;
+  }
+
+  .lpAppPromoShots {
+    width: min(100%, 460px);
+    margin: 0 auto;
+  }
+
   .lpNavRight {
     gap: 8px;
   }
@@ -1397,6 +1634,50 @@
     min-width: 500px;
   }
 
+  .lpMobileTeaserInner {
+    padding: 28px 20px;
+    gap: 24px;
+  }
+
+  .lpMobileBadge {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .lpMobileTeaserText .lpH2,
+  .lpMobileTeaserLead,
+  .lpMobileTeaserSub {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .lpMobileTeaserActions {
+    justify-content: center;
+  }
+
+  .lpMobileShowcase {
+    min-height: 620px;
+  }
+
+  .lpScreenshotCard {
+    width: 210px;
+  }
+
+  .lpAppPromo {
+    padding: 28px 20px;
+  }
+
+  .lpAppPromoCopy .lpH2,
+  .lpAppPromoCopy .lpSub {
+    text-align: center;
+  }
+
+  .lpAppPromoCopy .lpStoreButton {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
   .lpStickyCta {
     position: fixed;
     left: 10px;
@@ -1485,6 +1766,55 @@
 
   .lpHeroPhotos {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .lpMobileShowcase {
+    min-height: auto;
+    width: 100%;
+    display: grid;
+    gap: 16px;
+  }
+
+  .lpScreenshotCard {
+    position: relative;
+    width: min(100%, 290px);
+    top: auto;
+    left: auto;
+    right: auto;
+    transform: none;
+    margin: 0 auto;
+  }
+
+  .lpScreenshotCard1,
+  .lpScreenshotCard2,
+  .lpScreenshotCard3,
+  .lpScreenshotCard4 {
+    top: auto;
+    left: auto;
+    right: auto;
+  }
+
+  .lpStoreButton {
+    width: 100%;
+    max-width: 260px;
+    align-items: center;
+  }
+
+  .lpAppPromoShots {
+    min-height: auto;
+    display: grid;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .lpAppPromoShots .lpScreenshotCard {
+    position: relative;
+    width: min(100%, 290px);
+    top: auto;
+    left: auto;
+    right: auto;
+    transform: none;
+    margin: 0 auto;
   }
 
   .lpLead {

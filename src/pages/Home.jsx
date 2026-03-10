@@ -3,56 +3,12 @@ import { Link } from "react-router-dom";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import { trackEvent } from "../lib/analytics";
-import { getSignupPath } from "../lib/siteFlags";
-
-const WHY_PROS = [
-  "Keep more of what you earn with clear, transparent pricing",
-  "Reduce no-shows with deposits and optional prepay",
-  "Get paid faster with reliable payout options",
-  "Build your brand with a premium booking experience",
-  "Grow with tools designed for independent pros",
-  "Scale into a shared Studio workspace when you are ready for team seats",
-];
+import { getSignupPath, isStudioWebBillingRestricted } from "../lib/siteFlags";
 
 const METRICS = [
   { value: "< 10 min", label: "Average setup" },
   { value: "24/7", label: "Booking availability" },
   { value: "Same day", label: "Fast payout option" },
-];
-
-const FAQS = [
-  {
-    q: "Is it free to get started?",
-    a: "Yes. Every pro account starts with a free 7-day trial and no credit card required.",
-  },
-  {
-    q: "Do my clients need to create an account?",
-    a: "No. Clients book directly through your link without signing up for anything.",
-  },
-  {
-    q: "How do deposits work?",
-    a: "Deposits are collected from the client at the time of booking through Stripe. The funds are paid out to your connected Stripe account on your standard payout schedule.",
-  },
-  {
-    q: "How fast do I get paid?",
-    a: "Standard payouts arrive the next business day. An instant payout option is also available when you need funds sooner — the fee is shown before you confirm.",
-  },
-  {
-    q: "What payment methods do clients use?",
-    a: "All major credit and debit cards are accepted through Stripe. No additional setup required on your end.",
-  },
-  {
-    q: "Can I cancel my plan anytime?",
-    a: "Yes. No contracts, no lock-in. You can upgrade, downgrade, or cancel from your dashboard at any time.",
-  },
-  {
-    q: "Do I need a website or technical experience?",
-    a: "No. You get a ready-to-share booking link. Paste it in your Instagram bio, send it in a DM, or add it anywhere. No website or coding required.",
-  },
-  {
-    q: "What happens after 7 days?",
-    a: "After your free 7-day period, you can stay on Free or move to Pro at $19.99/month. Studio is available on the web at $39.99/month for team businesses.",
-  },
 ];
 
 const TESTIMONIALS = [
@@ -163,11 +119,84 @@ const PREVIEW_TABS = [
   },
 ];
 
+const IOS_APP_URL = "https://apps.apple.com/us/app/glowd-up-booking/id6758881771";
+
+const MOBILE_FEATURES = [
+  {
+    eyebrow: "Dashboard",
+    title: "Run your day from your phone",
+    text: "Check today’s numbers, upcoming appointments, rebook prompts, and payout health without opening a laptop.",
+  },
+  {
+    eyebrow: "Appointments",
+    title: "Review bookings in real time",
+    text: "See completed and upcoming appointments, confirm deposit status, and keep your calendar moving while you are in the chair.",
+  },
+  {
+    eyebrow: "Services",
+    title: "Update pricing and deposits fast",
+    text: "Edit services, control deposit amounts, and keep your booking menu polished directly from iPhone.",
+  },
+];
+
+const MOBILE_SCREENSHOTS = [
+  { src: "/assets/app-store/dashboard.jpg", alt: "Glow'd Up Booking iPhone dashboard screen" },
+  { src: "/assets/app-store/appointments.jpg", alt: "Glow'd Up Booking iPhone appointments screen" },
+  { src: "/assets/app-store/services.jpg", alt: "Glow'd Up Booking iPhone services screen" },
+  { src: "/assets/app-store/login.jpg", alt: "Glow'd Up Booking iPhone login screen" },
+];
+
 export default function Home() {
   const signupPath = getSignupPath();
+  const studioBillingRestricted = isStudioWebBillingRestricted();
+  const showStudioPlan = !studioBillingRestricted;
   const [activeTab, setActiveTab] = useState("book");
   const [activeStep, setActiveStep] = useState(0);
   const [openFaq, setOpenFaq] = useState(null);
+  const whyPros = [
+    "Keep more of what you earn with clear, transparent pricing",
+    "Reduce no-shows with deposits and optional prepay",
+    "Get paid faster with reliable payout options",
+    "Build your brand with a premium booking experience",
+    "Grow with tools designed for independent pros",
+    ...(showStudioPlan ? ["Scale into a shared Studio workspace when you are ready for team seats"] : []),
+  ];
+  const faqs = [
+    {
+      q: "Is it free to get started?",
+      a: "Yes. Every pro account starts with a free 7-day trial and no credit card required.",
+    },
+    {
+      q: "Do my clients need to create an account?",
+      a: "No. Clients book directly through your link without signing up for anything.",
+    },
+    {
+      q: "How do deposits work?",
+      a: "Deposits are collected from the client at the time of booking through Stripe. The funds are paid out to your connected Stripe account on your standard payout schedule.",
+    },
+    {
+      q: "How fast do I get paid?",
+      a: "Standard payouts arrive the next business day. An instant payout option is also available when you need funds sooner - the fee is shown before you confirm.",
+    },
+    {
+      q: "What payment methods do clients use?",
+      a: "All major credit and debit cards are accepted through Stripe. No additional setup required on your end.",
+    },
+    {
+      q: "Can I cancel my plan anytime?",
+      a: "Yes. No contracts, no lock-in. You can upgrade, downgrade, or cancel from your dashboard at any time.",
+    },
+    {
+      q: "Do I need a website or technical experience?",
+      a: "No. You get a ready-to-share booking link. Paste it in your Instagram bio, send it in a DM, or add it anywhere. No website or coding required.",
+    },
+    {
+      q: "What happens after 7 days?",
+      a: showStudioPlan
+        ? "After your free 7-day period, you can stay on Free or move to Pro at $19.99/month. Studio is available on the web at $39.99/month for team businesses."
+        : "After your free 7-day period, you can stay on Free or move to Pro at $19.99/month.",
+    },
+  ];
 
   const activePreview = useMemo(
     () => PREVIEW_TABS.find((tab) => tab.id === activeTab) || PREVIEW_TABS[0],
@@ -286,11 +315,22 @@ export default function Home() {
                   View Plans
                 </Button>
               </Link>
+              <a
+                href={IOS_APP_URL}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => trackEvent("cta_click", { page: "home", cta: "download_ios_hero" })}
+              >
+                <Button variant="outline" className="lpBtn lpBtnGold">
+                  Download for iPhone
+                </Button>
+              </a>
             </div>
 
             <div className="lpTrustRow">
               <span>Stripe-secured payments</span>
               <span>Cancel anytime</span>
+              <span>Now on the App Store</span>
             </div>
 
             <div className="lpLiveChip">Free 7-day trial available</div>
@@ -311,7 +351,7 @@ export default function Home() {
             <h2 className="lpH2">Why Pros Choose Glow’d Up Booking</h2>
           </div>
           <ul className="lpList lpWhyList">
-            {WHY_PROS.map((item) => (
+            {whyPros.map((item) => (
               <li key={item}>✓ {item}</li>
             ))}
           </ul>
@@ -397,7 +437,7 @@ export default function Home() {
         <div className="lpPricingInner">
           <div className="lpPricingHead">
             <h2 className="lpH2">Simple pricing for professionals.</h2>
-            <div className="lpSub">Choose Free 7-Day, Pro, or Studio.</div>
+            <div className="lpSub">{showStudioPlan ? "Choose Free 7-Day, Pro, or Studio." : "Choose Free 7-Day or Pro."}</div>
           </div>
 
           <div className="lpGrid">
@@ -413,7 +453,7 @@ export default function Home() {
                 <li>✓ Professional booking link</li>
                 <li>✓ Core scheduling and booking workflow</li>
                 <li>✓ Stripe-secured payment setup</li>
-                <li>✓ Upgrade to Pro or Studio anytime</li>
+                <li>{showStudioPlan ? "✓ Upgrade to Pro or Studio anytime" : "✓ Upgrade to Pro anytime"}</li>
               </ul>
 
               <Link
@@ -457,34 +497,36 @@ export default function Home() {
               </Link>
             </Card>
 
-            <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "140ms" }}>
-              <div className="lpTierRow">
-                <div className="lpTier">Studio</div>
-              </div>
-              <div className="lpPriceLine">
-                <span className="lpPrice">$39.99</span>
-                <span className="lpTerm">/month</span>
-              </div>
+            {showStudioPlan ? (
+              <Card className="lpPriceCard lpPlanCard lpReveal" style={{ animationDelay: "140ms" }}>
+                <div className="lpTierRow">
+                  <div className="lpTier">Studio</div>
+                </div>
+                <div className="lpPriceLine">
+                  <span className="lpPrice">$39.99</span>
+                  <span className="lpTerm">/month</span>
+                </div>
 
-              <ul className="lpList">
-                <li>✓ Everything in Pro</li>
-                <li>✓ Shared Studio workspace and team seats</li>
-                <li>✓ Chairs, rooms, and shared resource calendars</li>
-                <li>✓ Owner-managed seat billing and payout reporting</li>
-                <li>✓ Mobile Studio tools unlock after web checkout</li>
-                <li>✓ Includes 3 accounts, with extra seats available up to 10 total</li>
-              </ul>
+                <ul className="lpList">
+                  <li>✓ Everything in Pro</li>
+                  <li>✓ Shared Studio workspace and team seats</li>
+                  <li>✓ Chairs, rooms, and shared resource calendars</li>
+                  <li>✓ Owner-managed seat billing and payout reporting</li>
+                  <li>✓ Mobile Studio tools unlock after web checkout</li>
+                  <li>✓ Includes 3 accounts, with extra seats available up to 10 total</li>
+                </ul>
 
-              <Link
-                to="/pricing#plans"
-                className="lpChooseWrap"
-                onClick={() => trackEvent("plan_cta_click", { page: "home", plan: "studio", cta: "start_studio" })}
-              >
-                <Button variant="outline" className="lpChoose">
-                  Start Studio
-                </Button>
-              </Link>
-            </Card>
+                <Link
+                  to="/pricing#plans"
+                  className="lpChooseWrap"
+                  onClick={() => trackEvent("plan_cta_click", { page: "home", plan: "studio", cta: "start_studio" })}
+                >
+                  <Button variant="outline" className="lpChoose">
+                    Start Studio
+                  </Button>
+                </Link>
+              </Card>
+            ) : null}
           </div>
         </div>
       </section>
@@ -495,7 +537,7 @@ export default function Home() {
             <h2 className="lpH2">Common questions</h2>
           </div>
           <ul className="lpFaqList">
-            {FAQS.map((item, i) => (
+            {faqs.map((item, i) => (
               <li
                 key={i}
                 className={`lpFaqItem ${openFaq === i ? "is-open" : ""}`}
@@ -538,20 +580,48 @@ export default function Home() {
       <section className="lpMobileTeaser lpReveal lpSectionLazy">
         <div className="lpPricingInner">
           <div className="lpMobileTeaserInner">
-            <div className="lpMobileTeaserIcon" aria-hidden="true">📱</div>
             <div className="lpMobileTeaserText">
-              <h2 className="lpH2">The full experience, in your pocket.</h2>
+              <div className="lpMobileBadge">Now live on iPhone</div>
+              <h2 className="lpH2">Glow’d Up Booking is on the App Store.</h2>
               <p className="lpMobileTeaserLead">
-                The Glow&apos;d Up Booking mobile app is coming to iPhone. Accept booking requests, manage
-                your schedule, message clients, and track payments — all from your phone. Built for
-                pros who are always on the move.
+                Built for beauty and service pros who move fast. Manage appointments, services, deposits,
+                availability, and payouts with the same dark-luxury experience shown in the app.
               </p>
-              <p className="lpMobileTeaserSub">
-                iOS app coming soon · Web dashboard available now at{" "}
-                <a href="https://glowdupbooking.biz" className="lpMobileTeaserLink">
-                  glowdupbooking.biz
+              <div className="lpMobileFeatureGrid">
+                {MOBILE_FEATURES.map((feature) => (
+                  <Card className="lpMobileFeatureCard" key={feature.title}>
+                    <div className="lpMobileFeatureEyebrow">{feature.eyebrow}</div>
+                    <h3>{feature.title}</h3>
+                    <p>{feature.text}</p>
+                  </Card>
+                ))}
+              </div>
+              <div className="lpMobileTeaserActions">
+                <a
+                  href={IOS_APP_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="lpStoreButton"
+                  onClick={() => trackEvent("cta_click", { page: "home", cta: "download_ios_section" })}
+                >
+                  <span className="lpStoreButtonOverline">Download on the</span>
+                  <span className="lpStoreButtonLabel">App Store</span>
                 </a>
-              </p>
+                <p className="lpMobileTeaserSub">
+                  Web dashboard also available at{" "}
+                  <a href="https://glowdupbooking.biz" className="lpMobileTeaserLink">
+                    glowdupbooking.biz
+                  </a>
+                </p>
+              </div>
+            </div>
+
+            <div className="lpMobileShowcase" aria-hidden="true">
+              {MOBILE_SCREENSHOTS.map((shot, index) => (
+                <figure className={`lpScreenshotCard lpScreenshotCard${index + 1}`} key={shot.src}>
+                  <img className="lpScreenshotImage" src={shot.src} alt={shot.alt} loading="lazy" />
+                </figure>
+              ))}
             </div>
           </div>
         </div>
