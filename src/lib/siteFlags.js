@@ -12,6 +12,19 @@ function isDevHost() {
   return host === "localhost" || host === "127.0.0.1" || host.endsWith(".local");
 }
 
+function isAppleMobileDevice() {
+  if (typeof navigator === "undefined") return false;
+  const ua = String(navigator.userAgent || "");
+  const platform = String(navigator.platform || "");
+  const maxTouchPoints = Number(navigator.maxTouchPoints || 0);
+
+  if (/iPad|iPhone|iPod/i.test(ua) || /iPad|iPhone|iPod/i.test(platform)) {
+    return true;
+  }
+
+  return maxTouchPoints > 1 && (/Macintosh/i.test(ua) || platform === "MacIntel");
+}
+
 // Global lock to keep the pro site offline.
 export function isSiteLocked() {
   const override = parseBool(import.meta.env.VITE_SITE_LOCKED);
@@ -48,6 +61,21 @@ export function isSigninPaused() {
 
 export function getSignupPath() {
   return isSignupPaused() ? "/login?signup=paused" : "/signup";
+}
+
+export function isStudioWebBillingRestricted() {
+  if (typeof window !== "undefined") {
+    const mode = String(new URLSearchParams(window.location.search).get("studio_billing") || "")
+      .trim()
+      .toLowerCase();
+    if (mode === "show") return false;
+    if (mode === "hide") return true;
+  }
+
+  const override = parseBool(import.meta.env.VITE_HIDE_STUDIO_WEB_BILLING_ON_APPLE);
+  if (override === false) return false;
+
+  return isAppleMobileDevice();
 }
 
 export const SIGNUP_PAUSED_MESSAGE =
