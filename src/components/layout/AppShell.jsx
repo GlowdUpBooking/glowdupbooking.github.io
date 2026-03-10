@@ -49,6 +49,11 @@ export default function AppShell({ title, onSignOut, children, pendingCount = 0 
             Subscription
           </NavLink>
 
+          <NavLink to="/app/studio" className={navClass}>
+            <div className="navIcon">👥</div>
+            Studio Team
+          </NavLink>
+
           <NavLink to="/app/analytics" className={navClass}>
             <div className="navIcon">📊</div>
             Analytics
@@ -105,6 +110,11 @@ export default function AppShell({ title, onSignOut, children, pendingCount = 0 
           <NavLink to="/app/payouts" className={navClass}>
             <div className="navIcon">💳</div>
             Payouts
+          </NavLink>
+
+          <NavLink to="/app/studio" className={navClass}>
+            <div className="navIcon">👥</div>
+            Studio
           </NavLink>
 
           <NavLink to="/app/settings" className={navClass}>
