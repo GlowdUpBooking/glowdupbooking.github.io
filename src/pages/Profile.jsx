@@ -4,6 +4,7 @@ import AppShell from "../components/layout/AppShell";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
+import { roleForProfileWrite } from "../lib/roles";
 
 const fieldStyle = {
   width: "100%",
@@ -58,6 +59,7 @@ export default function Profile() {
   const [userId, setUserId]     = useState(null);
   const [err, setErr]           = useState("");
   const [msg, setMsg]           = useState("");
+  const [profileRole, setProfileRole] = useState("professional");
 
   // Public profile
   const [businessName, setBusinessName]   = useState("");
@@ -95,6 +97,7 @@ export default function Profile() {
       if (error) setErr("Could not load profile details.");
 
       setUserId(u.id);
+      setProfileRole(roleForProfileWrite(profile?.role) ?? roleForProfileWrite(u.user_metadata?.role) ?? "professional");
       setBusinessName(profile?.business_name ?? "");
       setBusinessType(profile?.business_type ?? "");
       setBio(profile?.bio ?? "");
@@ -121,7 +124,7 @@ export default function Profile() {
 
       const payload = {
         id:               userId,
-        role:             "professional",
+        role:             profileRole,
         business_name:    businessName.trim() || null,
         business_type:    businessType.trim() || null,
         bio:              bio.trim() || null,

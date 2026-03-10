@@ -13,6 +13,74 @@ const MAX_PHOTO_SIZE_MB = 8;        // Per-file size cap before upload
 const MAX_PHOTO_SIZE_BYTES = MAX_PHOTO_SIZE_MB * 1024 * 1024;
 const MAX_PHOTOS_PER_SERVICE = 20;  // Total photos per service
 
+function isActiveSubscriptionRow(row) {
+  if (!row) return false;
+
+  const status = String(row.status ?? "").toLowerCase();
+  if (status !== "active" && status !== "trialing") return false;
+  if (!row.current_period_end) return true;
+
+  return new Date(row.current_period_end).getTime() > Date.now();
+}
+
+function firstRpcRow(value) {
+  return Array.isArray(value) ? value[0] ?? null : value ?? null;
+}
+
+async function fetchEffectivePlanKey(userId) {
+  const [subRes, profileRes, studioAccessRes] = await Promise.all([
+    supabase
+      .from("pro_subscriptions")
+      .select("status, plan, current_period_end")
+      .eq("user_id", userId)
+      .maybeSingle(),
+    (async () => {
+      const primary = await supabase
+        .from("profiles")
+        .select("billing_tier, plan")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (!primary.error) return primary;
+
+      const lower = String(primary.error.message ?? "").toLowerCase();
+      if (!lower.includes("billing_tier")) return primary;
+
+      const fallback = await supabase
+        .from("profiles")
+        .select("plan")
+        .eq("id", userId)
+        .maybeSingle();
+      return {
+        data: fallback.data ? { ...fallback.data, billing_tier: null } : null,
+        error: fallback.error,
+      };
+    })(),
+    supabase.rpc("get_studio_access_context", { p_user_id: userId }),
+  ]);
+
+  if (subRes.error) {
+    console.warn("[Services] pro_subscriptions warning:", subRes.error);
+  }
+  if (profileRes.error) {
+    console.warn("[Services] profiles plan warning:", profileRes.error);
+  }
+  if (studioAccessRes.error) {
+    console.warn("[Services] studio access warning:", studioAccessRes.error);
+  }
+
+  const studioAccess = firstRpcRow(studioAccessRes.data);
+  if (studioAccess?.has_studio_access) return "studio";
+
+  const subscriptionPlanKey = isActiveSubscriptionRow(subRes.data)
+    ? normalizePlanKey(subRes.data?.plan)
+    : null;
+  if (subscriptionPlanKey) return subscriptionPlanKey;
+
+  const profilePlanKey = normalizePlanKey(profileRes.data?.billing_tier ?? profileRes.data?.plan);
+  return profilePlanKey ?? "free";
+}
+
 function moneyToNumber(v) {
   if (v === "" || v == null) return null;
   const n = Number(v);
@@ -106,15 +174,8 @@ export default function Services() {
       if (!mounted) return;
       setUser(u);
 
-      // Fetch plan to enforce Free-plan service limit
-      const { data: subRow } = await supabase
-        .from("pro_subscriptions")
-        .select("status, plan")
-        .eq("user_id", u.id)
-        .maybeSingle();
-      const isActiveSub = subRow?.status === "active";
-      const pk = normalizePlanKey(subRow?.plan);
-      if (mounted) setPlanKey(isActiveSub && pk ? pk : "free");
+      const nextPlanKey = await fetchEffectivePlanKey(u.id);
+      if (mounted) setPlanKey(nextPlanKey);
 
       await loadServices(u.id);
       if (!mounted) return;

@@ -6,6 +6,7 @@ import Button from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
 import { fetchStripeConnectStatus } from "../lib/stripeConnect";
 import { money, durationLabel, formatNextAppt, normalizePlanKey } from "../lib/format";
+import { isClientRole, isProRole, normalizeRole, roleForProfileWrite } from "../lib/roles";
 
 function safeFirstName(fullName, fallback = "there") {
   const v = (fullName || fallback).trim();
@@ -30,13 +31,6 @@ function countEnabledAvailabilityDays(raw) {
     if (source[key] && source[key].enabled) count += 1;
   }
   return count;
-}
-
-function normalizeRole(value) {
-  const v = String(value || "").trim().toLowerCase();
-  if (v === "pro" || v === "professional") return "pro";
-  if (v === "client") return "client";
-  return null;
 }
 
 export default function App() {
@@ -140,27 +134,30 @@ export default function App() {
 
         // If missing, only create for pro accounts
         if (!prof) {
-          if (metaRole !== "pro") {
+          if (!isProRole(metaRole)) {
             nav("/login?blocked=client", { replace: true });
             return;
           }
 
           await supabase
             .from("profiles")
-            .upsert({ id: u.id, role: "professional", onboarding_step: "basics" }, { onConflict: "id" });
+            .upsert(
+              { id: u.id, role: roleForProfileWrite(metaRole), onboarding_step: "basics" },
+              { onConflict: "id" }
+            );
 
           nav("/app/onboarding", { replace: true });
           return;
         }
 
         const profileRole = normalizeRole(prof?.role);
-        if (profileRole === "client") {
+        if (isClientRole(profileRole)) {
           nav("/login?blocked=client", { replace: true });
           return;
         }
 
         // Gate: pros must finish onboarding
-        if (profileRole === "pro" && prof?.onboarding_step !== "complete") {
+        if (isProRole(profileRole) && prof?.onboarding_step !== "complete") {
           nav("/app/onboarding", { replace: true });
           return;
         }

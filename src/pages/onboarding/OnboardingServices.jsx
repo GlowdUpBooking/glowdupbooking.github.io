@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import { roleForProfileWrite } from "../../lib/roles";
 import OnboardingProgress from "../../components/onboarding/OnboardingProgress";
 import { fetchStripeConnectStatus } from "../../lib/stripeConnect";
 import FullScreenLoader from "../../components/ui/FullScreenLoader";
@@ -93,7 +94,14 @@ export default function OnboardingServices() {
       } else if (!prof) {
         await supabase
           .from("profiles")
-          .upsert({ id: u.id, role: "professional", onboarding_step: "services" }, { onConflict: "id" });
+          .upsert(
+            {
+              id: u.id,
+              role: roleForProfileWrite(u.user_metadata?.role) ?? "professional",
+              onboarding_step: "services",
+            },
+            { onConflict: "id" }
+          );
       }
 
       // services

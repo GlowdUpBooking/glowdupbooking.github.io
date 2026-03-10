@@ -10,14 +10,8 @@ import {
   isSiteLocked,
   SITE_LOCKED_MESSAGE,
 } from "../lib/siteFlags";
+import { isClientRole, normalizeRole } from "../lib/roles";
 import "../styles/signup.css";
-
-function normalizeRole(value) {
-  const v = String(value || "").trim().toLowerCase();
-  if (v === "pro" || v === "professional") return "pro";
-  if (v === "client") return "client";
-  return null;
-}
 
 export default function Login() {
   const nav = useNavigate();
@@ -52,7 +46,7 @@ export default function Login() {
       if (!session?.access_token || !session?.user) return;
       setRoleCheckBusy(true);
       const metaRole = normalizeRole(session.user.user_metadata?.role);
-      if (metaRole === "client") {
+      if (isClientRole(metaRole)) {
         await supabase.auth.signOut();
         if (active) nav("/login?blocked=client", { replace: true });
         setRoleCheckBusy(false);
@@ -64,7 +58,7 @@ export default function Login() {
         .eq("id", session.user.id)
         .maybeSingle();
       if (!active) return;
-      if (normalizeRole(profile?.role) === "client") {
+      if (isClientRole(profile?.role)) {
         await supabase.auth.signOut();
         nav("/login?blocked=client", { replace: true });
         setRoleCheckBusy(false);
@@ -107,7 +101,7 @@ export default function Login() {
     const authedUser = data?.user ?? null;
     if (authedUser) {
       const metaRole = normalizeRole(authedUser.user_metadata?.role);
-      if (metaRole === "client") {
+      if (isClientRole(metaRole)) {
         await supabase.auth.signOut();
         nav("/login?blocked=client", { replace: true });
         return;
@@ -117,7 +111,7 @@ export default function Login() {
         .select("role")
         .eq("id", authedUser.id)
         .maybeSingle();
-      if (normalizeRole(profile?.role) === "client") {
+      if (isClientRole(profile?.role)) {
         await supabase.auth.signOut();
         nav("/login?blocked=client", { replace: true });
         return;
