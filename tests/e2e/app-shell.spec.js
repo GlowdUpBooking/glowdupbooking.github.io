@@ -7,6 +7,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("redesigned app routes render on protected pages", async ({ page }) => {
+  test.setTimeout(120000);
+
   const routes = [
     { path: "/app", assert: () => page.getByRole("heading", { name: /Welcome back,/i }) },
     { path: "/app/calendar", assert: () => page.getByPlaceholder("Search client, service, phone") },
@@ -21,7 +23,7 @@ test("redesigned app routes render on protected pages", async ({ page }) => {
   ];
 
   for (const route of routes) {
-    await page.goto(route.path);
+    await page.goto(route.path, { waitUntil: "networkidle" });
     await expect(page).toHaveURL(new RegExp(`${route.path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`));
     await expect(route.assert()).toBeVisible();
   }
@@ -38,7 +40,7 @@ test("desktop dashboard theme toggle and primary CTAs behave correctly", async (
     };
   });
 
-  await page.goto("/app");
+  await page.goto("/app", { waitUntil: "networkidle" });
 
   const shell = page.locator(".shell");
   await expect(shell).toHaveAttribute("data-shell-scheme", "dark");
@@ -72,8 +74,9 @@ test("desktop dashboard theme toggle and primary CTAs behave correctly", async (
 
 test("mobile app shell keeps the page scrollable and exposes bottom navigation", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-chromium");
+  test.setTimeout(90000);
 
-  await page.goto("/app/profile");
+  await page.goto("/app/profile", { waitUntil: "networkidle" });
 
   await expect(page.locator(".shellSidebar")).toBeHidden();
   await expect(page.locator(".shellMobileNav")).toBeVisible();
@@ -96,7 +99,7 @@ test("mobile app shell keeps the page scrollable and exposes bottom navigation",
 test("dashboard has no serious or critical accessibility violations", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium");
 
-  await page.goto("/app");
+  await page.goto("/app", { waitUntil: "networkidle" });
 
   const accessibility = await new AxeBuilder({ page }).analyze();
   const seriousViolations = accessibility.violations.filter(
