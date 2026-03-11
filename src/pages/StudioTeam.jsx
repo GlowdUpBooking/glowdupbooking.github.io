@@ -306,7 +306,70 @@ export default function StudioTeam() {
     );
   }, [reports]);
 
+  const activeResourceCount = useMemo(
+    () => resources.filter((resource) => resource.is_active).length,
+    [resources]
+  );
+
   const canUseStudioWorkspace = isStudioTier || studioMemberCovered || studioAccess.hasStudioAccess || hasStudioWorkspace;
+
+  const heroSteps = [
+    {
+      label: isStudioTier || studioMemberCovered ? "Status" : "Upgrade",
+      copy:
+        isStudioTier || studioMemberCovered
+          ? "Studio access is active on this account."
+          : "Upgrade to Studio in Subscription to unlock the shared workspace.",
+    },
+    {
+      label: "Invites",
+      copy: "Teammates need their own Glow'd Up professional account before you invite them.",
+    },
+    {
+      label: "Seat billing",
+      copy: `The first ${STUDIO_INCLUDED_ACCOUNTS} active accounts are included. Accounts ${
+        STUDIO_INCLUDED_ACCOUNTS + 1
+      }-${STUDIO_MAX_ACCOUNTS} add ${money(STUDIO_EXTRA_ACCOUNT_MONTHLY_PRICE)}/month each.`,
+    },
+    {
+      label: "Workspace controls",
+      copy: "Studio leads manage seats, resources, and rent tracking. Active teammates can still save appointment assignments.",
+    },
+  ];
+
+  const studioStats = [
+    {
+      label: "Access",
+      value: activeMembership
+        ? formatStudioRoleLabel(activeMembership.member_role)
+        : studioMemberCovered
+          ? "Covered seat"
+          : isStudioTier
+            ? "Owner"
+            : "Member",
+      hint: canManageStudio ? "Studio lead permissions" : studioMemberCovered ? "Covered by workspace owner" : "Workspace member access",
+    },
+    {
+      label: "Active seats",
+      value: `${seatSummary.activeAccounts}/${STUDIO_MAX_ACCOUNTS}`,
+      hint: seatSummary.seatsRemaining === 1 ? "1 seat remaining" : `${seatSummary.seatsRemaining} seats remaining`,
+    },
+    {
+      label: "Active resources",
+      value: activeResourceCount,
+      hint:
+        activeResourceCount === 0
+          ? "Add chairs, rooms, or calendars"
+          : activeResourceCount === 1
+            ? "1 shared resource live"
+            : `${activeResourceCount} shared resources live`,
+    },
+    {
+      label: "Recent report gross",
+      value: money(reportSummary.gross),
+      hint: reportSummary.appointments === 1 ? "1 appointment tracked" : `${reportSummary.appointments} appointments tracked`,
+    },
+  ];
 
   useEffect(() => {
     if (!profile) return;
@@ -1008,7 +1071,7 @@ export default function StudioTeam() {
       <div className="tm-page">
         <Card className="tm-hero">
           <div className="tm-heroTop">
-            <div>
+            <div className="tm-heroIntro">
               <div className="tm-kicker">Studio workspace</div>
               <h1 className="tm-title">{activeStudio?.name ?? "Studio Team"}</h1>
               <p className="tm-sub">
@@ -1031,20 +1094,12 @@ export default function StudioTeam() {
           </div>
 
           <div className="tm-stepList">
-            <div className="tm-step">
-              {isStudioTier || studioMemberCovered
-                ? "Studio access is active on this account."
-                : "Upgrade to Studio in Subscription to unlock the shared workspace."}
-            </div>
-            <div className="tm-step">
-              Teammates need their own Glow&apos;d Up professional account before you invite them.
-            </div>
-            <div className="tm-step">
-              The first {STUDIO_INCLUDED_ACCOUNTS} active accounts are included. Accounts {STUDIO_INCLUDED_ACCOUNTS + 1}-{STUDIO_MAX_ACCOUNTS} add {money(STUDIO_EXTRA_ACCOUNT_MONTHLY_PRICE)}/month each.
-            </div>
-            <div className="tm-step">
-              Studio leads manage seats, resources, and rent tracking. Active teammates can still save appointment assignments.
-            </div>
+            {heroSteps.map((step) => (
+              <div key={step.label} className="tm-step">
+                <div className="tm-stepLabel">{step.label}</div>
+                <div className="tm-stepText">{step.copy}</div>
+              </div>
+            ))}
           </div>
         </Card>
 
@@ -1080,7 +1135,7 @@ export default function StudioTeam() {
             <p className="tm-copy">
               Finish this once to open the shared workspace on web and mobile.
             </p>
-            <div className="tm-formRow">
+            <div className="tm-formRow tm-formSurface">
               <label className="tm-field tm-fieldGrow">
                 <span>Studio name</span>
                 <input
@@ -1089,7 +1144,7 @@ export default function StudioTeam() {
                   placeholder="Glow'd Up Studio"
                 />
               </label>
-              <Button variant="primary" onClick={handleCreateStudio} disabled={createBusy}>
+              <Button className="tm-formAction" variant="primary" onClick={handleCreateStudio} disabled={createBusy}>
                 {createBusy ? "Creating..." : "Create Studio"}
               </Button>
             </div>
@@ -1117,24 +1172,13 @@ export default function StudioTeam() {
             ) : null}
 
             <div className="tm-stats">
-              <Card className="tm-statCard">
-                <div className="tm-statLabel">Access</div>
-                <div className="tm-statValue">
-                  {activeMembership ? formatStudioRoleLabel(activeMembership.member_role) : studioMemberCovered ? "Covered seat" : isStudioTier ? "Owner" : "Member"}
-                </div>
-              </Card>
-              <Card className="tm-statCard">
-                <div className="tm-statLabel">Active seats</div>
-                <div className="tm-statValue">{seatSummary.activeAccounts}/{STUDIO_MAX_ACCOUNTS}</div>
-              </Card>
-              <Card className="tm-statCard">
-                <div className="tm-statLabel">Active resources</div>
-                <div className="tm-statValue">{resources.filter((resource) => resource.is_active).length}</div>
-              </Card>
-              <Card className="tm-statCard">
-                <div className="tm-statLabel">Recent report gross</div>
-                <div className="tm-statValue">{money(reportSummary.gross)}</div>
-              </Card>
+              {studioStats.map((stat) => (
+                <Card key={stat.label} className="tm-statCard">
+                  <div className="tm-statLabel">{stat.label}</div>
+                  <div className="tm-statValue">{stat.value}</div>
+                  <div className="tm-statHint">{stat.hint}</div>
+                </Card>
+              ))}
             </div>
 
             <div className="tm-grid">
@@ -1148,12 +1192,14 @@ export default function StudioTeam() {
                       </div>
                     </div>
                     <div className="tm-panelMeta">
-                      Included {STUDIO_INCLUDED_ACCOUNTS} | Extra seats {seatSummary.extraAccounts} | Est. total {money(seatSummary.monthlyEstimated)}
+                      <span>Included {STUDIO_INCLUDED_ACCOUNTS}</span>
+                      <span>Extra seats {seatSummary.extraAccounts}</span>
+                      <span>Est. total {money(seatSummary.monthlyEstimated)}</span>
                     </div>
                   </div>
 
                   {canManageStudio ? (
-                    <div className="tm-formGrid">
+                    <div className="tm-formGrid tm-formSurface tm-formGridInvite">
                       <label className="tm-field tm-fieldGrow">
                         <span>Invite teammate email</span>
                         <input
@@ -1173,7 +1219,7 @@ export default function StudioTeam() {
                           ))}
                         </select>
                       </label>
-                      <Button variant="primary" onClick={handleInviteMember} disabled={inviteBusy}>
+                      <Button className="tm-formAction" variant="primary" onClick={handleInviteMember} disabled={inviteBusy}>
                         {inviteBusy ? "Inviting..." : "Invite staff"}
                       </Button>
                     </div>
@@ -1286,7 +1332,7 @@ export default function StudioTeam() {
                               </div>
                             </div>
 
-                            <div className="tm-formGrid tm-formGridCompact">
+                            <div className="tm-formGrid tm-formGridCompact tm-formGridAssignment">
                               <label className="tm-field">
                                 <span>Teammate</span>
                                 <select
@@ -1331,6 +1377,7 @@ export default function StudioTeam() {
                                 />
                               </label>
                               <Button
+                                className="tm-formAction"
                                 variant="primary"
                                 onClick={() => void handleSaveAssignment(appointment)}
                                 disabled={!canAssignAppointments || assignmentBusyId === appointment.id}
@@ -1358,7 +1405,7 @@ export default function StudioTeam() {
                   </div>
 
                   {canManageStudio ? (
-                    <div className="tm-formGrid">
+                    <div className="tm-formGrid tm-formSurface tm-formGridResourceCreate">
                       <label className="tm-field tm-fieldGrow">
                         <span>Resource name</span>
                         <input
@@ -1388,7 +1435,7 @@ export default function StudioTeam() {
                           ))}
                         </select>
                       </label>
-                      <Button variant="primary" onClick={handleCreateResource} disabled={resourceBusyId === "__new__"}>
+                      <Button className="tm-formAction" variant="primary" onClick={handleCreateResource} disabled={resourceBusyId === "__new__"}>
                         {resourceBusyId === "__new__" ? "Saving..." : "Create resource"}
                       </Button>
                     </div>
@@ -1406,7 +1453,7 @@ export default function StudioTeam() {
                               {formatStudioResourceTypeLabel(resource.resource_type)} | {resource.is_active ? "Active" : "Inactive"}
                             </div>
                           </div>
-                          <div className="tm-formGrid tm-formGridCompact">
+                          <div className="tm-formGrid tm-formGridCompact tm-formGridResourceEdit">
                             <label className="tm-field tm-fieldGrow">
                               <span>Assigned teammate</span>
                               <select
@@ -1458,7 +1505,7 @@ export default function StudioTeam() {
                   </div>
 
                   {canManageStudio ? (
-                    <div className="tm-formGrid">
+                    <div className="tm-formGrid tm-formSurface tm-formGridRent">
                       <label className="tm-field">
                         <span>Teammate</span>
                         <select value={newRentMemberId} onChange={(event) => setNewRentMemberId(event.target.value)}>
@@ -1533,7 +1580,7 @@ export default function StudioTeam() {
                           type="date"
                         />
                       </label>
-                      <Button variant="primary" onClick={handleCreateRentSchedule} disabled={rentBusyId === "__new__"}>
+                      <Button className="tm-formAction" variant="primary" onClick={handleCreateRentSchedule} disabled={rentBusyId === "__new__"}>
                         {rentBusyId === "__new__" ? "Saving..." : "Save rent schedule"}
                       </Button>
                     </div>
@@ -1629,7 +1676,8 @@ export default function StudioTeam() {
                       </div>
                     </div>
                     <div className="tm-panelMeta">
-                      Gross {money(reportSummary.gross)} | Payout {money(reportSummary.payout)}
+                      <span>Gross {money(reportSummary.gross)}</span>
+                      <span>Payout {money(reportSummary.payout)}</span>
                     </div>
                   </div>
 

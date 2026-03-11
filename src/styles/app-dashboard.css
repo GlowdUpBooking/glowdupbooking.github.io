@@ -2068,14 +2068,38 @@
 /* Studio Team */
 .tm-page {
   display: grid;
-  gap: 14px;
+  gap: 18px;
+  max-width: 1440px;
+  margin: 0 auto 32px;
 }
 
 .tm-hero,
 .tm-panel,
 .tm-statCard {
   display: grid;
-  gap: 14px;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgba(122, 145, 206, 0.16);
+  border-radius: 24px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.24);
+}
+
+.tm-hero {
+  gap: 20px;
+  padding: 24px;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(241, 205, 114, 0.12), transparent 45%),
+    linear-gradient(180deg, rgba(10, 18, 38, 0.92), rgba(4, 10, 24, 0.82));
+}
+
+.tm-panel {
+  background: linear-gradient(180deg, rgba(6, 14, 32, 0.88), rgba(5, 9, 22, 0.78));
+}
+
+.tm-statCard {
+  min-height: 136px;
+  align-content: start;
+  background: linear-gradient(180deg, rgba(7, 17, 39, 0.9), rgba(4, 9, 23, 0.82));
 }
 
 .tm-heroTop,
@@ -2087,20 +2111,30 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.tm-heroIntro {
+  display: grid;
+  gap: 10px;
+  max-width: 880px;
+  min-width: 0;
 }
 
 .tm-kicker {
-  font-size: 12px;
-  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.58);
 }
 
 .tm-title {
-  margin: 6px 0 0;
-  font-size: clamp(28px, 4vw, 42px);
-  line-height: 1;
+  margin: 0;
+  font-size: clamp(38px, 5vw, 64px);
+  line-height: 0.92;
+  letter-spacing: -0.05em;
 }
 
 .tm-sub,
@@ -2110,10 +2144,28 @@
 .tm-rentStatus {
   margin: 0;
   color: rgba(255, 255, 255, 0.72);
-  line-height: 1.5;
+  line-height: 1.6;
+  font-size: 14px;
 }
 
-.tm-heroActions,
+.tm-panelHeader > :first-child,
+.tm-appointmentTop > :first-child,
+.tm-listRow > :first-child {
+  min-width: 0;
+}
+
+.tm-heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  align-self: flex-start;
+}
+
+.tm-heroActions .btn {
+  min-width: 140px;
+}
+
 .tm-stepList,
 .tm-mainCol,
 .tm-sideCol,
@@ -2125,23 +2177,39 @@
 }
 
 .tm-stepList {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .tm-step {
+  display: grid;
+  gap: 8px;
+  min-height: 118px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.025);
-  padding: 12px 14px;
-  color: rgba(255, 255, 255, 0.82);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  padding: 16px;
+}
+
+.tm-stepLabel {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.tm-stepText {
+  color: rgba(255, 255, 255, 0.88);
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .tm-banner {
-  border-radius: 14px;
-  padding: 12px 14px;
+  border-radius: 16px;
+  padding: 14px 16px;
   font-weight: 700;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
 }
 
 .tm-bannerOk {
@@ -2157,51 +2225,103 @@
 }
 
 .tm-panelTitle {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .tm-panelMeta {
-  color: rgba(255, 255, 255, 0.58);
-  font-size: 13px;
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: right;
 }
 
 .tm-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.95fr);
-  gap: 14px;
+  grid-template-columns: minmax(0, 1.18fr) minmax(360px, 0.92fr);
+  gap: 18px;
+  align-items: start;
 }
 
 .tm-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
 .tm-statLabel {
-  font-size: 11px;
-  letter-spacing: 0.07em;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.52);
 }
 
 .tm-statValue {
-  font-size: clamp(22px, 2.2vw, 32px);
-  font-weight: 800;
-  line-height: 1.1;
+  font-size: clamp(30px, 2.8vw, 44px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.tm-statHint {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.66);
+  line-height: 1.5;
+  max-width: 20ch;
 }
 
 .tm-formGrid,
 .tm-formGridCompact {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
+}
+
+.tm-formSurface {
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.02));
+}
+
+.tm-formGridInvite {
+  grid-template-columns: minmax(0, 1.7fr) 180px auto;
+  align-items: end;
+}
+
+.tm-formGridResourceCreate {
+  grid-template-columns: minmax(0, 1.3fr) 180px minmax(0, 1.1fr) auto;
+  align-items: end;
+}
+
+.tm-formGridAssignment {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(120px, 0.7fr) auto;
+  align-items: end;
+}
+
+.tm-formGridResourceEdit {
+  grid-template-columns: minmax(0, 1.4fr) auto auto;
+  align-items: end;
+}
+
+.tm-formGridRent {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
 }
 
 .tm-formRow {
   display: flex;
   align-items: flex-end;
-  gap: 10px;
+  gap: 12px;
 }
 
 .tm-field {
@@ -2215,20 +2335,23 @@
 }
 
 .tm-field span {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: rgba(255, 255, 255, 0.62);
 }
 
 .tm-field input,
 .tm-field select,
 .tm-inlineSelect {
-  min-height: 42px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(0, 0, 0, 0.35);
+  min-height: 46px;
+  border-radius: 14px;
+  border: 1px solid rgba(116, 138, 200, 0.16);
+  background: rgba(2, 7, 18, 0.84);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   color: #fff;
-  padding: 0 12px;
+  padding: 0 14px;
   font-size: 14px;
   outline: none;
 }
@@ -2236,21 +2359,34 @@
 .tm-field input:focus,
 .tm-field select:focus,
 .tm-inlineSelect:focus {
-  border-color: rgba(255, 255, 255, 0.32);
+  border-color: rgba(241, 205, 114, 0.52);
+  box-shadow: 0 0 0 3px rgba(241, 205, 114, 0.12);
+}
+
+.tm-formAction {
+  min-width: 160px;
+}
+
+.tm-formGridRent .tm-formAction {
+  grid-column: 1 / -1;
+  justify-self: start;
 }
 
 .tm-subsectionTitle {
-  font-size: 13px;
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.16em;
   color: rgba(255, 255, 255, 0.46);
 }
 
 .tm-listRow {
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.02);
-  padding: 12px 14px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.02));
+  padding: 15px 16px;
+  align-items: center;
 }
 
 .tm-listRowStack {
@@ -2259,13 +2395,19 @@
 
 .tm-listTitle {
   font-weight: 800;
-  font-size: 15px;
+  font-size: 17px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .tm-empty {
+  min-height: 78px;
+  display: flex;
+  align-items: center;
   border: 1px dashed rgba(255, 255, 255, 0.14);
-  border-radius: 14px;
-  padding: 14px;
+  border-radius: 18px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.015);
   color: rgba(255, 255, 255, 0.58);
 }
 
@@ -2273,11 +2415,14 @@
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 12px;
-  font-weight: 700;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 163, 126, 0.28);
+  background: rgba(255, 163, 126, 0.12);
+  color: #ffcca8;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .tm-chipRow {
@@ -2291,33 +2436,56 @@
   background: rgba(255, 255, 255, 0.04);
   color: #fff;
   border-radius: 999px;
-  padding: 8px 12px;
+  padding: 9px 14px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+  backdrop-filter: blur(10px);
 }
 
 .tm-chipBtnActive {
-  background: #fff;
-  color: #070707;
-  border-color: #fff;
+  background: #f4efe4;
+  color: #07101d;
+  border-color: #f4efe4;
+  box-shadow: 0 10px 24px rgba(244, 239, 228, 0.18);
 }
 
 .tm-appointment {
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.02);
-  padding: 14px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.02));
+  padding: 16px;
   display: grid;
-  gap: 12px;
+  gap: 14px;
+}
+
+.tm-rowActions {
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.tm-rowActions .btn {
+  min-width: 110px;
+}
+
+.tm-inlineSelect {
+  min-width: 150px;
 }
 
 .tm-rentStatus {
   font-weight: 700;
+  font-size: 14px;
 }
 
 .tm-rentStatusAlert {
   color: #ffb4b4;
+}
+
+@media (max-width: 1320px) {
+  .tm-stepList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 1180px) {
@@ -2333,13 +2501,51 @@
   .tm-formGridCompact {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .tm-formGridInvite,
+  .tm-formGridResourceCreate,
+  .tm-formGridAssignment,
+  .tm-formGridRent {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tm-panelMeta {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .tm-formGridInvite .tm-formAction,
+  .tm-formGridResourceCreate .tm-formAction,
+  .tm-formGridAssignment .tm-formAction,
+  .tm-formGridRent .tm-formAction {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-self: stretch;
+  }
 }
 
 @media (max-width: 760px) {
+  .tm-page {
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .tm-hero,
+  .tm-panel,
+  .tm-statCard {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
   .tm-stepList,
   .tm-stats,
   .tm-formGrid,
-  .tm-formGridCompact {
+  .tm-formGridCompact,
+  .tm-formGridInvite,
+  .tm-formGridResourceCreate,
+  .tm-formGridAssignment,
+  .tm-formGridResourceEdit,
+  .tm-formGridRent {
     grid-template-columns: 1fr;
   }
 
@@ -2353,10 +2559,34 @@
     align-items: stretch;
   }
 
+  .tm-heroActions,
+  .tm-inlineActions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
   .tm-rowActions {
     width: 100%;
   }
 
+  .tm-panelMeta {
+    width: 100%;
+  }
+
+  .tm-inlineSelect {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .tm-formAction {
+    min-width: 0;
+  }
+
+  .tm-title {
+    font-size: clamp(32px, 13vw, 48px);
+  }
+
+  .tm-heroActions .btn,
   .tm-rowActions .btn,
   .tm-inlineActions .btn,
   .tm-formRow .btn {
