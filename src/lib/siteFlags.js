@@ -25,12 +25,12 @@ function isAppleMobileDevice() {
   return maxTouchPoints > 1 && (/Macintosh/i.test(ua) || platform === "MacIntel");
 }
 
-// Global lock to keep the pro site offline.
+// The pro site should stay live by default. Use VITE_SITE_LOCKED=true
+// only when you intentionally need to take auth offline.
 export function isSiteLocked() {
   const override = parseBool(import.meta.env.VITE_SITE_LOCKED);
   if (override !== null) return override;
-  if (isDevHost()) return false;
-  return true;
+  return false;
 }
 
 // The pro app lives at glowdupbooking.biz — this is the only production host

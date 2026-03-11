@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import { roleForProfileWrite } from "../../lib/roles";
 import OnboardingProgress from "../../components/onboarding/OnboardingProgress";
 import FullScreenLoader from "../../components/ui/FullScreenLoader";
 
@@ -13,6 +14,7 @@ export default function OnboardingBasics() {
   const [businessName, setBusinessName] = useState("");
   const [businessType, setBusinessType] = useState("");
   const [fullName, setFullName] = useState("");
+  const [profileRole, setProfileRole] = useState("professional");
   const hydrated = useRef(false);
 
   useEffect(() => {
@@ -22,12 +24,14 @@ export default function OnboardingBasics() {
       if (!user) return;
       setUserId(user.id);
 
+      const metaRole = roleForProfileWrite(user.user_metadata?.role);
       const { data: profile } = await supabase
         .from("profiles")
-        .select("business_name, business_type, full_name")
+        .select("role, business_name, business_type, full_name")
         .eq("id", user.id)
         .maybeSingle();
 
+      setProfileRole(roleForProfileWrite(profile?.role) ?? metaRole ?? "professional");
       setBusinessName(profile?.business_name ?? "");
       setBusinessType(profile?.business_type ?? "");
       setFullName(profile?.full_name ?? "");
@@ -46,7 +50,7 @@ export default function OnboardingBasics() {
         .upsert(
           {
             id: userId,
-            role: "professional",
+            role: profileRole,
             business_name: businessName || null,
             business_type: businessType || null,
             full_name: fullName || null,
@@ -57,7 +61,7 @@ export default function OnboardingBasics() {
     }, 500);
 
     return () => clearTimeout(t);
-  }, [userId, businessName, businessType, fullName]);
+  }, [userId, profileRole, businessName, businessType, fullName]);
 
   async function next() {
     setSaving(true);
@@ -73,7 +77,7 @@ export default function OnboardingBasics() {
     const { error } = await supabase
       .from("profiles")
       .update({
-        role: "professional",
+        role: profileRole,
         business_name: businessName || null,
         business_type: businessType || null,
         full_name: fullName || null,

@@ -23,6 +23,7 @@ const Payouts = lazy(() => import("./pages/Payouts"));
 const Availability = lazy(() => import("./pages/Availability"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Subscription = lazy(() => import("./pages/Subscription"));
+const StudioTeam = lazy(() => import("./pages/StudioTeam"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 
@@ -180,6 +181,17 @@ export default function AppRouter() {
               <RequirePro>
                 <RequireOnboarding>
                   <Subscription />
+                </RequireOnboarding>
+              </RequirePro>
+            }
+          />
+
+          <Route
+            path="/app/studio"
+            element={
+              <RequirePro>
+                <RequireOnboarding>
+                  <StudioTeam />
                 </RequireOnboarding>
               </RequirePro>
             }

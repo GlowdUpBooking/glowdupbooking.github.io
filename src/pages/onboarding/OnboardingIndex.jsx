@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import FullScreenLoader from "../../components/ui/FullScreenLoader";
+import { isClientRole, isProRole, normalizeRole, roleForProfileWrite } from "../../lib/roles";
 
 const STEP_TO_ROUTE = {
   "role-selection": "/app/onboarding/basics", // legacy default
@@ -13,13 +14,6 @@ const STEP_TO_ROUTE = {
   payouts: "/app/onboarding/payouts",
   complete: "/app",
 };
-
-function normalizeRole(value) {
-  const v = String(value || "").trim().toLowerCase();
-  if (v === "pro" || v === "professional") return "pro";
-  if (v === "client") return "client";
-  return null;
-}
 
 export default function OnboardingIndex() {
   const nav = useNavigate();
@@ -53,7 +47,7 @@ export default function OnboardingIndex() {
 
       // 3) If profile doesn't exist yet, create it only for pro accounts
       if (profileErr || !profile) {
-        if (metaRole !== "pro") {
+        if (!isProRole(metaRole)) {
           nav("/login?blocked=client");
           setLoading(false);
           return;
@@ -64,7 +58,7 @@ export default function OnboardingIndex() {
           .upsert(
             {
               id: user.id,
-              role: "professional",
+              role: roleForProfileWrite(metaRole),
               onboarding_step: "basics",
             },
             { onConflict: "id" }
@@ -77,7 +71,7 @@ export default function OnboardingIndex() {
 
       // 4) Block non-pro profiles from entering pro onboarding
       const profileRole = normalizeRole(profile.role);
-      if (profileRole === "client") {
+      if (isClientRole(profileRole)) {
         nav("/login?blocked=client");
         setLoading(false);
         return;

@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { isStudioWebBillingRestricted } from "./siteFlags";
 
 function getEnvOrThrow(name) {
   const value = import.meta.env[name] || "";
@@ -72,6 +73,10 @@ async function invokeWithFallback(functionName, body) {
 }
 
 export async function createStudioBillingSession(options = {}) {
+  if (isStudioWebBillingRestricted()) {
+    throw new Error("Studio billing is not available from this device. Use the desktop web app.");
+  }
+
   const intent = options.intent === "manage" ? "manage" : "checkout";
   const returnPath = options.returnPath || "/app/subscription";
   const successPath =

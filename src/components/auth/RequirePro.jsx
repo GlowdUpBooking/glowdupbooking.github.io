@@ -3,13 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "./useAuth";
 import FullScreenLoader from "../ui/FullScreenLoader";
-
-function normalizeRole(value) {
-  const v = String(value || "").trim().toLowerCase();
-  if (v === "pro" || v === "professional") return "pro";
-  if (v === "client") return "client";
-  return null;
-}
+import { isClientRole, isProRole, normalizeRole, roleForProfileWrite } from "../../lib/roles";
 
 export default function RequirePro({ children }) {
   const { user } = useAuth();
@@ -30,7 +24,7 @@ export default function RequirePro({ children }) {
       setLoading(true);
 
       const metaRole = normalizeRole(user.user_metadata?.role);
-      if (metaRole === "client") {
+      if (isClientRole(metaRole)) {
         if (mounted) {
           setAllowed(false);
           setLoading(false);
@@ -47,24 +41,24 @@ export default function RequirePro({ children }) {
       if (!mounted) return;
 
       const profileRole = normalizeRole(profile?.role);
-      if (profileRole === "client") {
+      if (isClientRole(profileRole)) {
         setAllowed(false);
         setLoading(false);
         return;
       }
 
-      if (profileRole === "pro") {
+      if (isProRole(profileRole)) {
         setAllowed(true);
         setLoading(false);
         return;
       }
 
       if (!profile || profileErr) {
-        if (metaRole === "pro") {
+        if (isProRole(metaRole)) {
           const { error } = await supabase
             .from("profiles")
             .upsert(
-              { id: user.id, role: "professional", onboarding_step: "basics" },
+              { id: user.id, role: roleForProfileWrite(metaRole), onboarding_step: "basics" },
               { onConflict: "id" }
             );
           if (!mounted) return;
@@ -74,10 +68,10 @@ export default function RequirePro({ children }) {
         }
       }
 
-      if (metaRole === "pro") {
+      if (isProRole(metaRole)) {
         const { error } = await supabase
           .from("profiles")
-          .update({ role: "professional" })
+          .update({ role: roleForProfileWrite(metaRole) })
           .eq("id", user.id);
         if (!mounted) return;
         if (!error) {

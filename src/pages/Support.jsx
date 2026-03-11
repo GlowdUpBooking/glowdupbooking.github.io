@@ -1,76 +1,89 @@
 import { Link } from "react-router-dom";
 import Card from "../components/ui/Card";
 import { trackEvent } from "../lib/analytics";
-import { getSignupPath } from "../lib/siteFlags";
+import { getSignupPath, isStudioWebBillingRestricted } from "../lib/siteFlags";
 
 const SUPPORT_EMAIL = "glowdupbooking@gmail.com";
 
-const SUPPORT_CARDS = [
-  {
-    title: "Contact support",
-    lead: `Email us at ${SUPPORT_EMAIL}. We respond within 2 to 5 business days.`,
-    items: [
-      "Include your account email",
-      "Share the client name + appointment time",
-      "Tell us your device + app version",
-    ],
-    cta: { label: "Email support", href: `mailto:${SUPPORT_EMAIL}` },
-  },
-  {
-    title: "Bookings + deposits",
-    lead: "Need help with booking links or deposit settings? We can help.",
-    items: [
-      "Booking link missing times",
-      "Deposit amount not applying",
-      "Reschedule or cancel rules",
-    ],
-  },
-  {
-    title: "Account + subscription",
-    lead: "Login, profile, App Store billing, and Studio web billing for pros.",
-    items: [
-      "Reset password or update email",
-      "Change Pro billing or Studio web billing",
-      "Studio seat access and workspace support",
-      "Account deletion requests",
-    ],
-  },
-  {
-    title: "Payouts + timing",
-    lead: "Help with Stripe onboarding, payouts, or payment issues.",
-    items: [
-      "Stripe onboarding or verification",
-      "Payout status or delays",
-      "Refund questions",
-    ],
-  },
-];
-
-const FAQ_ITEMS = [
-  {
-    q: "How do I delete my account?",
-    a: "In the app, go to Profile > Settings > Delete Account. If you cannot access the app, email support for help.",
-  },
-  {
-    q: "How do deposits work for pros?",
-    a: "Deposits are collected at booking and applied toward the total service price. You control deposit rules per service.",
-  },
-  {
-    q: "How do payouts work?",
-    a: "Payouts are handled through Stripe. You can view payout status in your Stripe dashboard once connected.",
-  },
-  {
-    q: "Why can’t I sign in?",
-    a: "Double-check your email and password. If you forgot your password, use the reset link on the sign-in screen.",
-  },
-  {
-    q: "How does Studio billing work?",
-    a: "Studio is purchased and managed on the web. Once Studio is active, the app will sync Studio access for team workspaces, shared resources, and reporting.",
-  },
-];
-
 export default function Support() {
   const signupPath = getSignupPath();
+  const studioBillingRestricted = isStudioWebBillingRestricted();
+  const showStudioPlan = !studioBillingRestricted;
+  const supportCards = [
+    {
+      title: "Contact support",
+      lead: `Email us at ${SUPPORT_EMAIL}. We respond within 2 to 5 business days.`,
+      items: [
+        "Include your account email",
+        "Share the client name + appointment time",
+        "Tell us your device + app version",
+      ],
+      cta: { label: "Email support", href: `mailto:${SUPPORT_EMAIL}` },
+    },
+    {
+      title: "Bookings + deposits",
+      lead: "Need help with booking links or deposit settings? We can help.",
+      items: [
+        "Booking link missing times",
+        "Deposit amount not applying",
+        "Reschedule or cancel rules",
+      ],
+    },
+    {
+      title: "Account + subscription",
+      lead: showStudioPlan
+        ? "Login, profile, App Store billing, and Studio web billing for pros."
+        : "Login, profile, App Store billing, and workspace access for pros.",
+      items: showStudioPlan
+        ? [
+            "Reset password or update email",
+            "Change Pro billing or Studio web billing",
+            "Studio seat access and workspace support",
+            "Account deletion requests",
+          ]
+        : [
+            "Reset password or update email",
+            "Change Pro billing",
+            "Workspace access and team support",
+            "Account deletion requests",
+          ],
+    },
+    {
+      title: "Payouts + timing",
+      lead: "Help with Stripe onboarding, payouts, or payment issues.",
+      items: [
+        "Stripe onboarding or verification",
+        "Payout status or delays",
+        "Refund questions",
+      ],
+    },
+  ];
+  const faqItems = [
+    {
+      q: "How do I delete my account?",
+      a: "In the app, go to Profile > Settings > Delete Account. If you cannot access the app, email support for help.",
+    },
+    {
+      q: "How do deposits work for pros?",
+      a: "Deposits are collected at booking and applied toward the total service price. You control deposit rules per service.",
+    },
+    {
+      q: "How do payouts work?",
+      a: "Payouts are handled through Stripe. You can view payout status in your Stripe dashboard once connected.",
+    },
+    {
+      q: "Why can’t I sign in?",
+      a: "Double-check your email and password. If you forgot your password, use the reset link on the sign-in screen.",
+    },
+    ...(showStudioPlan
+      ? [
+          {
+            q: "How does Studio billing work?",
+            a: "Studio is purchased and managed on the web. Once Studio is active, the app will sync Studio access for team workspaces, shared resources, and reporting.",
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div className="lp">
@@ -112,7 +125,9 @@ export default function Support() {
         <div className="lpHeroInner">
           <h1 className="lpH1">Support</h1>
           <p className="lpLead">
-            Support for bookings, deposits, payouts, App Store Pro billing, and Studio web subscriptions.
+            {showStudioPlan
+              ? "Support for bookings, deposits, payouts, App Store Pro billing, and Studio web subscriptions."
+              : "Support for bookings, deposits, payouts, App Store Pro billing, and workspace access."}
           </p>
 
           <div className="lpHeroBtns">
@@ -139,7 +154,7 @@ export default function Support() {
           </div>
 
           <div className="lpGrid">
-            {SUPPORT_CARDS.map((card) => (
+            {supportCards.map((card) => (
               <Card key={card.title} className="lpPriceCard">
                 <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>
                   {card.title}
@@ -172,7 +187,7 @@ export default function Support() {
           </div>
 
           <div className="lpFaqList">
-            {FAQ_ITEMS.map((item) => (
+            {faqItems.map((item) => (
               <Card key={item.q} className="lpPriceCard">
                 <div className="lpTier" style={{ fontWeight: 900, opacity: 0.95 }}>
                   {item.q}

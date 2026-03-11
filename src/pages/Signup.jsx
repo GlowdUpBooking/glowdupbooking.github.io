@@ -10,6 +10,7 @@ import { useAuth } from "../components/auth/useAuth";
 import {
   isSignupPaused,
   isSiteLocked,
+  isStudioWebBillingRestricted,
   SIGNUP_PAUSED_MESSAGE,
   SITE_LOCKED_MESSAGE,
 } from "../lib/siteFlags";
@@ -57,7 +58,13 @@ export default function Signup() {
   const { session: liveSession } = useAuth();
 
   const qs = useMemo(() => new URLSearchParams(location.search), [location.search]);
-  const pickedPlan = planLabel(qs.get("plan"));
+  const studioBillingRestricted = isStudioWebBillingRestricted();
+  const selectedPlanKey = useMemo(() => {
+    const requested = (qs.get("plan") || "free").toLowerCase();
+    if (studioBillingRestricted && requested === "studio") return "free";
+    return requested;
+  }, [qs, studioBillingRestricted]);
+  const pickedPlan = planLabel(selectedPlanKey);
   const next = qs.get("next"); // optional
   const signupPaused = useMemo(() => isSignupPaused() || qs.get("signup") === "paused", [qs]);
   const siteLocked = useMemo(() => isSiteLocked(), []);
@@ -162,7 +169,7 @@ export default function Signup() {
     }
     trackEvent("signup_submit", {
       page: "signup",
-      selected_plan: (qs.get("plan") || "free").toLowerCase(),
+      selected_plan: selectedPlanKey,
     });
 
     const nextErrs = validate({ fullName, businessName, category, city, phone, email, password });
@@ -192,7 +199,7 @@ export default function Signup() {
             category: category.trim(),
             city: normalizeCity(city),
             phone: phone.trim() || null,
-            selected_plan: (qs.get("plan") || "free").toLowerCase(),
+            selected_plan: selectedPlanKey,
           },
         },
       });
@@ -235,14 +242,14 @@ export default function Signup() {
 
       // Store plan locally (simple + reliable), onboarding can read this later if needed.
       try {
-        localStorage.setItem("gub_selected_plan", (qs.get("plan") || "free").toLowerCase());
+        localStorage.setItem("gub_selected_plan", selectedPlanKey);
       } catch {
         // ignore localStorage errors
       }
 
       trackEvent("signup_success", {
         page: "signup",
-        selected_plan: (qs.get("plan") || "free").toLowerCase(),
+        selected_plan: selectedPlanKey,
       });
 
       // If email confirmation is required, Supabase returns no session.

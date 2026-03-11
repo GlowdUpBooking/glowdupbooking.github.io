@@ -4,7 +4,7 @@ import AppShell from "../components/layout/AppShell";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
-import { normalizePlanKey } from "../lib/format";
+import { fetchEffectiveBillingAccess } from "../lib/billingAccess";
 import { compressImage } from "../lib/imageUtils";
 
 const BUCKET = "service-photos";
@@ -106,15 +106,17 @@ export default function Services() {
       if (!mounted) return;
       setUser(u);
 
-      // Fetch plan to enforce Free-plan service limit
-      const { data: subRow } = await supabase
-        .from("pro_subscriptions")
-        .select("status, plan")
-        .eq("user_id", u.id)
-        .maybeSingle();
-      const isActiveSub = subRow?.status === "active";
-      const pk = normalizePlanKey(subRow?.plan);
-      if (mounted) setPlanKey(isActiveSub && pk ? pk : "free");
+      const billingAccess = await fetchEffectiveBillingAccess(u.id);
+      if (billingAccess.warnings.subscription) {
+        console.warn("[Services] pro_subscriptions warning:", billingAccess.warnings.subscription);
+      }
+      if (billingAccess.warnings.profile) {
+        console.warn("[Services] profiles plan warning:", billingAccess.warnings.profile);
+      }
+      if (billingAccess.warnings.studioAccess) {
+        console.warn("[Services] studio access warning:", billingAccess.warnings.studioAccess);
+      }
+      if (mounted) setPlanKey(billingAccess.planKey);
 
       await loadServices(u.id);
       if (!mounted) return;

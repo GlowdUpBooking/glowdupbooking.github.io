@@ -1,19 +1,9 @@
 // src/components/billing/RequireSubscription.jsx
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { supabase } from "../../lib/supabase";
+import { fetchEffectiveBillingAccess } from "../../lib/billingAccess";
 import { useAuth } from "../auth/useAuth";
 import FullScreenLoader from "../ui/FullScreenLoader";
-
-function isActiveRow(row) {
-  if (!row) return false;
-  if (row.status !== "active") return false;
-
-  // If current_period_end is null, treat as active (free/manual/founder flags)
-  if (!row.current_period_end) return true;
-
-  return new Date(row.current_period_end).getTime() > Date.now();
-}
 
 export default function RequireSubscription({ children, mode = "require-subscribed" }) {
   const { user } = useAuth();
@@ -30,19 +20,31 @@ export default function RequireSubscription({ children, mode = "require-subscrib
     let mounted = true;
 
     async function run() {
-      if (!user) return;
+      if (!user) {
+        if (mounted) {
+          setActive(false);
+          setLoading(false);
+        }
+        return;
+      }
       setLoading(true);
-
-      const { data, error } = await supabase
-        .from("pro_subscriptions")
-        .select("status, plan, current_period_end")
-        .eq("user_id", user.id)
-        .maybeSingle();
 
       if (!mounted) return;
 
-      const ok = !error && isActiveRow(data);
-      setActive(ok);
+      const access = await fetchEffectiveBillingAccess(user.id);
+      if (!mounted) return;
+
+      if (access.warnings.subscription) {
+        console.warn("[RequireSubscription] pro_subscriptions warning:", access.warnings.subscription);
+      }
+      if (access.warnings.profile) {
+        console.warn("[RequireSubscription] profiles billing warning:", access.warnings.profile);
+      }
+      if (access.warnings.studioAccess) {
+        console.warn("[RequireSubscription] studio access warning:", access.warnings.studioAccess);
+      }
+
+      setActive(access.hasActiveAccess);
       setLoading(false);
     }
 
@@ -52,15 +54,16 @@ export default function RequireSubscription({ children, mode = "require-subscrib
     };
   }, [user]);
 
+  if (!user && !loading) return <Navigate to={`/login?next=${next}`} replace />;
   if (loading) return <FullScreenLoader label="Checking your plan..." />;
 
-  // require-subscribed: must have ANY active plan (free counts)
+  // require-subscribed: must have paid or studio-backed access
   if (mode === "require-subscribed") {
     if (!active) return <Navigate to={`/pricing?next=${next}`} replace />;
     return children;
   }
 
-  // require-not-subscribed: must have NO active plan
+  // require-not-subscribed: only free users should continue through
   if (mode === "require-not-subscribed") {
     if (active) return <Navigate to="/app" replace />;
     return children;

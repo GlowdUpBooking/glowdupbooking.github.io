@@ -4,7 +4,8 @@ import AppShell from "../components/layout/AppShell";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
-import { normalizePlanKey } from "../lib/format";
+import { fetchEffectiveBillingAccess } from "../lib/billingAccess";
+import { isStudioWebBillingRestricted } from "../lib/siteFlags";
 import { createStudioBillingSession, syncStudioSubscription } from "../lib/studioBilling";
 import {
   DEFAULT_PRICES,
@@ -61,6 +62,10 @@ const PLAN_CARDS = [
 export default function Subscription() {
   const nav = useNavigate();
   const location = useLocation();
+  const studioBillingRestricted = isStudioWebBillingRestricted();
+  const visiblePlanCards = studioBillingRestricted
+    ? PLAN_CARDS.filter((card) => card.key !== "studio")
+    : PLAN_CARDS;
 
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -69,17 +74,14 @@ export default function Subscription() {
   const [reloadNonce, setReloadNonce] = useState(0);
   const handledStudioResultRef = useRef("");
 
-  const [user, setUser] = useState(null);
-  const [subStatus, setSubStatus] = useState(null);
-  const [plan, setPlan] = useState(null);
-  const [interval, setInterval] = useState(null);
-  const [currentPeriodEnd, setCurrentPeriodEnd] = useState(null);
+  const [billingAccess, setBillingAccess] = useState(null);
 
   const [pricesLoading, setPricesLoading] = useState(true);
   const [pricesErr, setPricesErr] = useState("");
   const [prices, setPrices] = useState(DEFAULT_PRICES);
 
-  const isActive = subStatus === "active";
+  const isActive = Boolean(billingAccess?.hasActiveAccess);
+  const currentPeriodEnd = billingAccess?.currentPeriodEnd ?? null;
 
   useEffect(() => {
     let mounted = true;
@@ -92,25 +94,26 @@ export default function Subscription() {
         const { data: userRes, error: userErr } = await supabase.auth.getUser();
         if (userErr) throw userErr;
         const u = userRes?.user ?? null;
-        if (!mounted) return;
-        setUser(u);
 
         if (!u) {
           nav("/login", { replace: true });
           return;
         }
 
-        const { data: subRow, error: subErr } = await supabase
-          .from("pro_subscriptions")
-          .select("status, interval, plan, current_period_end")
-          .eq("user_id", u.id)
-          .maybeSingle();
-        if (subErr) console.error("[Subscription] pro_subscriptions error:", subErr);
         if (!mounted) return;
-        setSubStatus(subRow?.status ?? null);
-        setPlan(subRow?.plan ?? null);
-        setInterval(subRow?.interval ?? null);
-        setCurrentPeriodEnd(subRow?.current_period_end ?? null);
+
+        const access = await fetchEffectiveBillingAccess(u.id);
+        if (access.warnings.subscription) {
+          console.error("[Subscription] pro_subscriptions error:", access.warnings.subscription);
+        }
+        if (access.warnings.profile) {
+          console.error("[Subscription] billing profile error:", access.warnings.profile);
+        }
+        if (access.warnings.studioAccess) {
+          console.warn("[Subscription] studio access warning:", access.warnings.studioAccess);
+        }
+        if (!mounted) return;
+        setBillingAccess(access);
       } catch (e) {
         console.error("[Subscription] load error:", e);
         if (mounted) setErr("Couldn’t load subscription details.");
@@ -194,21 +197,7 @@ export default function Subscription() {
     };
   }, []);
 
-  const currentPlanKey = useMemo(() => {
-    const fromDb = normalizePlanKey(plan);
-    if (fromDb === "studio") return "studio";
-    if (fromDb === "pro" || fromDb === "starter" || fromDb === "founder" || fromDb === "elite") return "pro";
-    if (fromDb === "free") return "free";
-
-    const fromMeta = normalizePlanKey(user?.user_metadata?.selected_plan);
-    if (fromMeta === "studio") return "studio";
-    if (fromMeta === "pro" || fromMeta === "starter" || fromMeta === "founder" || fromMeta === "elite") return "pro";
-    if (fromMeta === "free") return "free";
-
-    if (isActive && interval === "annual") return "pro";
-    if (!isActive) return "free";
-    return "pro";
-  }, [plan, user, isActive, interval]);
+  const currentPlanKey = useMemo(() => billingAccess?.planKey ?? "free", [billingAccess]);
 
   const planLabel = useMemo(() => {
     if (currentPlanKey === "free") return "Free 7-Day";
@@ -216,6 +205,13 @@ export default function Subscription() {
     if (currentPlanKey === "pro") return "Pro";
     return "Free 7-Day";
   }, [currentPlanKey]);
+
+  const manageBillingLabel = useMemo(() => {
+    if (!isActive || currentPlanKey === "free") return "Manage subscription";
+    if (billingAccess?.studioMemberCovered) return "Open Studio workspace";
+    if (!billingAccess?.canManageWebBilling) return "Billing managed elsewhere";
+    return "Manage subscription";
+  }, [billingAccess, currentPlanKey, isActive]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -269,6 +265,16 @@ export default function Subscription() {
       return;
     }
 
+    if (billingAccess?.studioMemberCovered) {
+      nav("/app/studio");
+      return;
+    }
+
+    if (!billingAccess?.canManageWebBilling) {
+      setErr("This plan is already active on your account. Billing is managed outside the web billing portal.");
+      return;
+    }
+
     setBusy(true);
     setMsg("");
     setErr("");
@@ -305,6 +311,16 @@ export default function Subscription() {
         return;
       }
 
+      try {
+        const invokePayload = error?.context ? await error.context.json() : null;
+        if (invokePayload?.error === "no_stripe_customer") {
+          setErr("This plan is already active on your account. Billing is managed outside the web billing portal.");
+          return;
+        }
+      } catch {
+        // Continue to explicit fetch fallback
+      }
+
       const fnUrl = `${sbUrl}/functions/v1/create-billing-portal-session`;
       const res = await fetch(fnUrl, {
         method: "POST",
@@ -327,7 +343,7 @@ export default function Subscription() {
       if (!res.ok) {
         const code = json?.error || json?.code || "";
         if (code === "no_stripe_customer") {
-          nav("/pricing?billing=setup&focus=plans");
+          setErr("This plan is already active on your account. Billing is managed outside the web billing portal.");
           return;
         }
         throw new Error(json?.message || json?.error || `Edge Function failed (${res.status})`);
@@ -415,6 +431,11 @@ export default function Subscription() {
 
   async function startStudioCheckout() {
     if (busy) return;
+    if (studioBillingRestricted) {
+      setErr("Studio checkout is not available from this device. Use the desktop web app.");
+      return;
+    }
+
     setBusy(true);
     setMsg("");
     setErr("");
@@ -437,10 +458,24 @@ export default function Subscription() {
 
   function planActionLabel(card) {
     if (card.key === currentPlanKey) return "Current plan";
-    if (card.key === "free") return "Downgrade in billing";
-    if (card.key === "studio") return currentPlanKey === "pro" ? "Upgrade to Studio" : "Choose plan";
+    if (billingAccess?.studioMemberCovered) return "Owner manages billing";
+    if (card.key === "free") {
+      return billingAccess?.canManageWebBilling ? "Downgrade in billing" : "Managed elsewhere";
+    }
+    if (card.key === "studio") {
+      if (!billingAccess?.canManageWebBilling && isActive) return "Managed elsewhere";
+      return currentPlanKey === "pro" ? "Upgrade to Studio" : "Choose plan";
+    }
     if (!isActive || currentPlanKey === "free") return "Choose plan";
+    if (!billingAccess?.canManageWebBilling) return "Managed elsewhere";
     return "Change plan";
+  }
+
+  function planActionDisabled(card) {
+    if (busy || card.key === currentPlanKey) return true;
+    if (card.key === "pro" && pricesLoading) return true;
+    if (isActive && !billingAccess?.canManageWebBilling) return true;
+    return false;
   }
 
   function handlePlanAction(card) {
@@ -488,6 +523,10 @@ export default function Subscription() {
             <strong>{planLabel}</strong>
             {currentPeriodEnd ? (
               <span className="u-muted">Renews on {new Date(currentPeriodEnd).toLocaleDateString()}</span>
+            ) : billingAccess?.studioMemberCovered ? (
+              <span className="u-muted">Studio owner manages this seat.</span>
+            ) : isActive && !billingAccess?.canManageWebBilling ? (
+              <span className="u-muted">Billing is active on this account outside the web portal.</span>
             ) : (
               <span className="u-muted">Active plan status</span>
             )}
@@ -496,7 +535,7 @@ export default function Subscription() {
 
         <div className="sub-actions">
           <Button variant="outline" onClick={openBillingPortal} disabled={busy}>
-            {busy ? "Opening…" : "Manage subscription"}
+            {busy ? "Opening…" : manageBillingLabel}
           </Button>
           <Button variant="outline" onClick={() => nav("/pricing#plans")}>
             View public pricing
@@ -508,7 +547,7 @@ export default function Subscription() {
         {pricesErr ? <div className="u-muted sub-alert">{pricesErr}</div> : null}
 
         <div className="sub-grid">
-          {PLAN_CARDS.map((card) => {
+          {visiblePlanCards.map((card) => {
             const isCurrent = card.key === currentPlanKey;
             const isFeatured = card.key === "pro";
             const priceObj = card.priceKey ? prices?.[card.priceKey] || null : null;
@@ -557,7 +596,7 @@ export default function Subscription() {
                   <Button
                     variant={isCurrent ? "outline" : "primary"}
                     onClick={() => handlePlanAction(card)}
-                    disabled={busy || isCurrent || (card.key === "pro" && pricesLoading)}
+                    disabled={planActionDisabled(card)}
                   >
                     {planActionLabel(card)}
                   </Button>

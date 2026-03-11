@@ -5,7 +5,9 @@ import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
 import { fetchStripeConnectStatus } from "../lib/stripeConnect";
-import { money, durationLabel, formatNextAppt, normalizePlanKey } from "../lib/format";
+import { money, durationLabel, formatNextAppt } from "../lib/format";
+import { fetchEffectiveBillingAccess } from "../lib/billingAccess";
+import { isClientRole, isProRole, normalizeRole, roleForProfileWrite } from "../lib/roles";
 
 function safeFirstName(fullName, fallback = "there") {
   const v = (fullName || fallback).trim();
@@ -32,13 +34,6 @@ function countEnabledAvailabilityDays(raw) {
   return count;
 }
 
-function normalizeRole(value) {
-  const v = String(value || "").trim().toLowerCase();
-  if (v === "pro" || v === "professional") return "pro";
-  if (v === "client") return "client";
-  return null;
-}
-
 export default function App() {
   const nav = useNavigate();
 
@@ -48,10 +43,7 @@ export default function App() {
 
   // Auth / subscription
   const [user, setUser] = useState(null);
-  const [subStatus, setSubStatus] = useState(null);
-  const [plan, setPlan] = useState(null);
-  const [interval, setInterval] = useState(null);
-  const [currentPeriodEnd, setCurrentPeriodEnd] = useState(null);
+  const [billingAccess, setBillingAccess] = useState(null);
   const [billingLoading, setBillingLoading] = useState(false);
   const [billingMsg, setBillingMsg] = useState("");
 
@@ -77,7 +69,8 @@ export default function App() {
     status: "not_started",
   });
 
-  const isActive = subStatus === "active";
+  const isActive = Boolean(billingAccess?.hasActiveAccess);
+  const currentPeriodEnd = billingAccess?.currentPeriodEnd ?? null;
 
   useEffect(() => {
     let mounted = true;
@@ -103,23 +96,19 @@ export default function App() {
         const connect = await fetchStripeConnectStatus();
         if (mounted) setPayoutStatus(connect);
 
-        // 2) Subscription
-        const { data: subRow, error: subErr } = await supabase
-          .from("pro_subscriptions")
-          .select("status, interval, plan, current_period_end")
-          .eq("user_id", u.id)
-          .maybeSingle();
-
-        if (subErr) {
-          console.error("[App] pro_subscriptions error:", subErr);
+        const access = await fetchEffectiveBillingAccess(u.id);
+        if (access.warnings.subscription) {
+          console.error("[App] pro_subscriptions error:", access.warnings.subscription);
+        }
+        if (access.warnings.profile) {
+          console.error("[App] billing profile error:", access.warnings.profile);
+        }
+        if (access.warnings.studioAccess) {
+          console.warn("[App] studio access warning:", access.warnings.studioAccess);
         }
 
         if (!mounted) return;
-
-        setSubStatus(subRow?.status ?? null);
-        setPlan(subRow?.plan ?? null);
-        setInterval(subRow?.interval ?? null);
-        setCurrentPeriodEnd(subRow?.current_period_end ?? null);
+        setBillingAccess(access);
 
         // Do not stop dashboard data loading for non-active plans.
         // We still fetch profile/services and show upgrade state in UI.
@@ -140,27 +129,30 @@ export default function App() {
 
         // If missing, only create for pro accounts
         if (!prof) {
-          if (metaRole !== "pro") {
+          if (!isProRole(metaRole)) {
             nav("/login?blocked=client", { replace: true });
             return;
           }
 
           await supabase
             .from("profiles")
-            .upsert({ id: u.id, role: "professional", onboarding_step: "basics" }, { onConflict: "id" });
+            .upsert(
+              { id: u.id, role: roleForProfileWrite(metaRole), onboarding_step: "basics" },
+              { onConflict: "id" }
+            );
 
           nav("/app/onboarding", { replace: true });
           return;
         }
 
         const profileRole = normalizeRole(prof?.role);
-        if (profileRole === "client") {
+        if (isClientRole(profileRole)) {
           nav("/login?blocked=client", { replace: true });
           return;
         }
 
         // Gate: pros must finish onboarding
-        if (profileRole === "pro" && prof?.onboarding_step !== "complete") {
+        if (isProRole(profileRole) && prof?.onboarding_step !== "complete") {
           nav("/app/onboarding", { replace: true });
           return;
         }
@@ -334,6 +326,16 @@ export default function App() {
       return;
     }
 
+    if (billingAccess?.studioMemberCovered) {
+      nav("/app/studio");
+      return;
+    }
+
+    if (!billingAccess?.canManageWebBilling) {
+      setBillingMsg("This plan is already active on your account. Billing is managed outside the web billing portal.");
+      return;
+    }
+
     setBillingLoading(true);
     setBillingMsg("");
 
@@ -372,7 +374,7 @@ export default function App() {
       try {
         const invokePayload = error?.context ? await error.context.json() : null;
         if (invokePayload?.error === "no_stripe_customer") {
-          nav("/pricing?billing=setup&focus=plans");
+          setBillingMsg("This plan is already active on your account. Billing is managed outside the web billing portal.");
           return;
         }
       } catch {
@@ -401,7 +403,7 @@ export default function App() {
       if (!res.ok) {
         const code = json?.error || json?.code || "";
         if (code === "no_stripe_customer") {
-          nav("/pricing?billing=setup&focus=plans");
+          setBillingMsg("This plan is already active on your account. Billing is managed outside the web billing portal.");
           return;
         }
         throw new Error(json?.message || json?.error || `Edge Function failed (${res.status})`);
@@ -418,20 +420,8 @@ export default function App() {
   }
 
   const currentPlanKey = useMemo(() => {
-    const fromDb = normalizePlanKey(plan);
-    if (fromDb === "studio") return "studio";
-    if (fromDb === "pro" || fromDb === "starter" || fromDb === "founder" || fromDb === "elite") return "pro";
-    if (fromDb === "free") return "free";
-
-    const fromMeta = normalizePlanKey(user?.user_metadata?.selected_plan);
-    if (fromMeta === "studio") return "studio";
-    if (fromMeta === "pro" || fromMeta === "starter" || fromMeta === "founder" || fromMeta === "elite") return "pro";
-    if (fromMeta === "free") return "free";
-
-    if (isActive && interval === "annual") return "pro";
-    if (!isActive) return "free";
-    return "pro";
-  }, [plan, user, isActive, interval]);
+    return billingAccess?.planKey ?? "free";
+  }, [billingAccess]);
 
   const planLabel = useMemo(() => {
     if (currentPlanKey === "free") return "Free 7-Day";
@@ -447,8 +437,10 @@ export default function App() {
 
   const billingCtaLabel = useMemo(() => {
     if (!isActive || currentPlanKey === "free") return "Upgrade Plan";
+    if (billingAccess?.studioMemberCovered) return "Open Studio Workspace";
+    if (!billingAccess?.canManageWebBilling) return "Current Plan";
     return "Manage Subscription";
-  }, [isActive, currentPlanKey]);
+  }, [billingAccess, currentPlanKey, isActive]);
 
   function formatDate(iso) {
     if (!iso) return null;

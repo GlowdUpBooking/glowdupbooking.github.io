@@ -178,6 +178,80 @@ function statusFromAccount(account: any) {
   };
 }
 
+function getStripeAccountIdFromMetadata(meta: Record<string, unknown> | null | undefined) {
+  if (!meta || typeof meta !== "object") return null;
+
+  const candidates = [
+    meta.stripe_connect_account_id,
+    meta.stripe_account_id,
+    meta.stripeAccountId,
+    meta.stripe_connect_id,
+    meta.stripeConnectAccountId,
+  ];
+
+  for (const value of candidates) {
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  return null;
+}
+
+function normalizeStripeAccountId(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function candidateScore(candidate: {
+  status: ReturnType<typeof statusFromAccount>;
+  source: "profile" | "metadata";
+}) {
+  let score = 0;
+  if (candidate.status.connected) score += 8;
+  if (candidate.status.details_submitted) score += 4;
+  if (candidate.status.payouts_enabled) score += 2;
+  if (candidate.status.charges_enabled) score += 1;
+  if (candidate.source === "profile") score += 0.5;
+  return score;
+}
+
+async function syncStripeState(params: {
+  admin: ReturnType<typeof createClient>;
+  userId: string;
+  existingMeta: Record<string, unknown>;
+  accountId: string | null;
+  status: string;
+}) {
+  const metadataPayload = {
+    ...params.existingMeta,
+    stripe_connect_account_id: params.accountId,
+    stripe_account_id: params.accountId,
+    stripe_connect_status: params.status,
+  };
+
+  const results = await Promise.allSettled([
+    params.admin.auth.admin.updateUserById(params.userId, {
+      user_metadata: metadataPayload,
+    }),
+    params.admin.from("profiles").update({
+      stripe_account_id: params.accountId,
+    }).eq("id", params.userId),
+  ]);
+
+  const [authResult, profileResult] = results;
+  if (authResult.status === "rejected") {
+    console.warn("[stripe-connect] auth_metadata_sync_failed", authResult.reason);
+  } else if (authResult.value.error) {
+    console.warn("[stripe-connect] auth_metadata_sync_failed", authResult.value.error);
+  }
+
+  if (profileResult.status === "rejected") {
+    console.warn("[stripe-connect] profile_sync_failed", profileResult.reason);
+  } else if (profileResult.value.error) {
+    console.warn("[stripe-connect] profile_sync_failed", profileResult.value.error);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return json(req, 200, { ok: true });
   if (req.method !== "POST") return json(req, 405, { error: "method_not_allowed" });
@@ -224,28 +298,34 @@ serve(async (req) => {
 
   const authUser = userRes.data.user;
   const existingMeta = authUser.user_metadata || {};
-  let accountId = typeof existingMeta?.stripe_connect_account_id === "string"
-    ? existingMeta.stripe_connect_account_id
-    : null;
+  const profileRes = await admin
+    .from("profiles")
+    .select("stripe_account_id")
+    .eq("id", userId)
+    .maybeSingle();
 
-  if (action === "status") {
-    if (!accountId) {
-      return json(req, 200, notStartedStatus());
-    }
+  if (profileRes.error) {
+    console.error("[stripe-connect] profile_lookup_failed", profileRes.error);
+    return json(req, 500, { error: "profile_lookup_failed", details: profileRes.error.message });
+  }
 
-    const accountRes = await stripeGet(`accounts/${accountId}`, stripeKey);
+  const metadataAccountId = getStripeAccountIdFromMetadata(existingMeta);
+  const profileAccountId = normalizeStripeAccountId(profileRes.data?.stripe_account_id);
+  const uniqueCandidateIds = Array.from(
+    new Set([profileAccountId, metadataAccountId].filter((value): value is string => Boolean(value)))
+  );
+  const accountCandidates: Array<{
+    accountId: string;
+    source: "profile" | "metadata";
+    account: any;
+    status: ReturnType<typeof statusFromAccount>;
+  }> = [];
+
+  for (const candidateId of uniqueCandidateIds) {
+    const accountRes = await stripeGet(`accounts/${candidateId}`, stripeKey);
     if (!accountRes.ok) {
       const stripeError = accountRes.data?.error;
-      if (isNoSuchAccount(stripeError)) {
-        await admin.auth.admin.updateUserById(userId, {
-          user_metadata: {
-            ...existingMeta,
-            stripe_connect_account_id: null,
-            stripe_connect_status: "not_started",
-          },
-        });
-        return json(req, 200, notStartedStatus());
-      }
+      if (isNoSuchAccount(stripeError)) continue;
 
       console.error("[stripe-connect] stripe_account_fetch_failed", accountRes.data ?? accountRes.text);
       return json(req, 500, {
@@ -255,16 +335,39 @@ serve(async (req) => {
       });
     }
 
-    const statusPayload = statusFromAccount(accountRes.data);
-    await admin.auth.admin.updateUserById(userId, {
-      user_metadata: {
-        ...existingMeta,
-        stripe_connect_account_id: accountId,
-        stripe_connect_status: statusPayload.status,
-      },
+    accountCandidates.push({
+      accountId: candidateId,
+      source: candidateId === profileAccountId ? "profile" : "metadata",
+      account: accountRes.data,
+      status: statusFromAccount(accountRes.data),
+    });
+  }
+
+  accountCandidates.sort((a, b) => candidateScore(b) - candidateScore(a));
+  let accountId = accountCandidates[0]?.accountId ?? null;
+  let accountStatus = accountCandidates[0]?.status ?? notStartedStatus();
+
+  if (action === "status") {
+    if (!accountId) {
+      await syncStripeState({
+        admin,
+        userId,
+        existingMeta,
+        accountId: null,
+        status: "not_started",
+      });
+      return json(req, 200, notStartedStatus());
+    }
+
+    await syncStripeState({
+      admin,
+      userId,
+      existingMeta,
+      accountId,
+      status: accountStatus.status,
     });
 
-    return json(req, 200, { account_id: accountId, ...statusPayload });
+    return json(req, 200, { account_id: accountId, ...accountStatus });
   }
 
   if (action !== "create_link") {
@@ -287,6 +390,11 @@ serve(async (req) => {
     }
 
     accountId = created.accountId;
+    accountStatus = {
+      ...notStartedStatus(),
+      account_id: accountId,
+      status: "pending_onboarding",
+    };
   }
 
   let linkRes = await createAccountLink({
@@ -312,6 +420,11 @@ serve(async (req) => {
     }
 
     accountId = created.accountId;
+    accountStatus = {
+      ...notStartedStatus(),
+      account_id: accountId,
+      status: "pending_onboarding",
+    };
     linkRes = await createAccountLink({
       stripeKey,
       accountId,
@@ -328,17 +441,29 @@ serve(async (req) => {
     });
   }
 
-  await admin.auth.admin.updateUserById(userId, {
-    user_metadata: {
-      ...existingMeta,
-      stripe_connect_account_id: accountId,
-      stripe_connect_status: "pending_onboarding",
-    },
+  const refreshedAccountRes = await stripeGet(`accounts/${accountId}`, stripeKey);
+  if (refreshedAccountRes.ok) {
+    accountStatus = statusFromAccount(refreshedAccountRes.data);
+  } else {
+    accountStatus = {
+      ...notStartedStatus(),
+      account_id: accountId,
+      status: "pending_onboarding",
+    };
+  }
+
+  await syncStripeState({
+    admin,
+    userId,
+    existingMeta,
+    accountId,
+    status: accountStatus.connected ? accountStatus.status : "pending_onboarding",
   });
 
   return json(req, 200, {
     url: linkRes.data?.url ?? null,
     account_id: accountId,
-    status: "pending_onboarding",
+    ...accountStatus,
+    status: accountStatus.connected ? accountStatus.status : "pending_onboarding",
   });
 });

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F6F1EC"/>
+      <stop offset="55%" stop-color="#F3E7DA"/>
+      <stop offset="100%" stop-color="#EDE0D4"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#C07A54"/>
+      <stop offset="100%" stop-color="#E0A56F"/>
+    </linearGradient>
+    <style>
+      .sans { font-family: 'Sora', 'Manrope', 'Arial', sans-serif; fill: #1E1B16; }
+      .serif { font-family: 'Playfair Display', 'Georgia', serif; fill: #1E1B16; }
+      .muted { fill: #6E5E52; }
+      .card { fill: #FFF9F3; stroke: #E1D2C4; stroke-width: 1; }
+      .chip { fill: #1E1B16; }
+      .chipText { fill: #FFF; font-size: 12px; letter-spacing: 1px; }
+      .btn { fill: url(#accent); }
+      .btnText { fill: #1E1B16; font-weight: 600; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1440" height="900" fill="url(#bg)"/>
+
+  <!-- Top nav -->
+  <text x="80" y="70" class="sans" font-size="18" font-weight="700">Glow&apos;d Up Booking</text>
+  <text x="1120" y="70" class="sans muted" font-size="14">Pricing</text>
+  <text x="1200" y="70" class="sans muted" font-size="14">Log in</text>
+  <rect x="1280" y="46" rx="18" ry="18" width="110" height="36" class="btn"/>
+  <text x="1310" y="70" class="sans btnText" font-size="14">Start Free</text>
+
+  <!-- Hero -->
+  <rect x="80" y="110" rx="16" ry="16" width="520" height="36" class="chip"/>
+  <text x="100" y="133" class="sans chipText">BOOKINGS + DEPOSITS + REMINDERS</text>
+
+  <text x="80" y="230" class="serif" font-size="54" font-weight="700">Stop managing</text>
+  <text x="80" y="290" class="serif" font-size="54" font-weight="700">bookings in your DMs.</text>
+  <text x="80" y="340" class="sans muted" font-size="18">A pro-grade booking link, automatic deposits, and client</text>
+  <text x="80" y="368" class="sans muted" font-size="18">management—built for independent beauty pros.</text>
+
+  <rect x="80" y="400" rx="22" ry="22" width="160" height="44" class="btn"/>
+  <text x="110" y="428" class="sans btnText" font-size="16">Start Free</text>
+  <rect x="255" y="400" rx="22" ry="22" width="160" height="44" fill="#1E1B16"/>
+  <text x="287" y="428" class="sans" font-size="16" fill="#FFF">View Plans</text>
+
+  <text x="80" y="470" class="sans muted" font-size="14">Stripe-secured payments · Cancel anytime · Keep your clients</text>
+
+  <!-- Hero panel -->
+  <rect x="700" y="140" rx="22" ry="22" width="640" height="340" fill="#FFF" stroke="#E1D2C4"/>
+  <text x="740" y="190" class="sans" font-size="14" fill="#6E5E52">APPOINTMENTS TODAY</text>
+  <rect x="740" y="210" rx="14" ry="14" width="560" height="60" class="card"/>
+  <rect x="740" y="280" rx="14" ry="14" width="560" height="60" class="card"/>
+  <rect x="740" y="350" rx="14" ry="14" width="560" height="60" class="card"/>
+  <text x="770" y="246" class="sans" font-size="14">Avery P. · 3:30 PM · Lash Fill</text>
+  <text x="770" y="316" class="sans" font-size="14">Jordan S. · 5:00 PM · Barber Cut</text>
+  <text x="770" y="386" class="sans" font-size="14">Nia T. · 6:15 PM · Gel Set</text>
+
+  <!-- Feature cards -->
+  <rect x="80" y="520" rx="18" ry="18" width="400" height="140" class="card"/>
+  <rect x="520" y="520" rx="18" ry="18" width="400" height="140" class="card"/>
+  <rect x="960" y="520" rx="18" ry="18" width="400" height="140" class="card"/>
+  <text x="110" y="565" class="sans" font-size="16" font-weight="700">Deposit-first booking</text>
+  <text x="110" y="592" class="sans muted" font-size="13">Reduce no-shows and protect your time.</text>
+  <text x="550" y="565" class="sans" font-size="16" font-weight="700">Client reminders</text>
+  <text x="550" y="592" class="sans muted" font-size="13">Automated texts &amp; confirmations.</text>
+  <text x="990" y="565" class="sans" font-size="16" font-weight="700">Pro scheduling</text>
+  <text x="990" y="592" class="sans muted" font-size="13">Availability sync across devices.</text>
+
+  <!-- Pricing preview -->
+  <text x="80" y="705" class="serif" font-size="32" font-weight="700">Plans built for growth</text>
+  <text x="80" y="735" class="sans muted" font-size="14">Start free. Upgrade when you’re ready.</text>
+
+  <rect x="80" y="760" rx="18" ry="18" width="280" height="120" class="card"/>
+  <rect x="390" y="760" rx="18" ry="18" width="280" height="120" class="card"/>
+  <rect x="700" y="760" rx="18" ry="18" width="280" height="120" class="card"/>
+  <text x="110" y="795" class="sans" font-size="14" font-weight="700">Starter</text>
+  <text x="110" y="825" class="serif" font-size="22">$19</text>
+  <text x="110" y="848" class="sans muted" font-size="12">Bookings + deposits</text>
+
+  <text x="420" y="795" class="sans" font-size="14" font-weight="700">Pro</text>
+  <text x="420" y="825" class="serif" font-size="22">$39</text>
+  <text x="420" y="848" class="sans muted" font-size="12">Client management</text>
+
+  <text x="730" y="795" class="sans" font-size="14" font-weight="700">Elite</text>
+  <text x="730" y="825" class="serif" font-size="22">$79</text>
+  <text x="730" y="848" class="sans muted" font-size="12">Team + payouts</text>
+
+  <rect x="1010" y="760" rx="18" ry="18" width="350" height="120" fill="#1E1B16"/>
+  <text x="1040" y="795" class="sans" font-size="14" fill="#FFF" font-weight="700">Founder</text>
+  <text x="1040" y="825" class="serif" font-size="22" fill="#FFF">$299 / year</text>
+  <text x="1040" y="848" class="sans" font-size="12" fill="#D9C7B6">Limited spots · Lifetime perks</text>
+
+</svg>

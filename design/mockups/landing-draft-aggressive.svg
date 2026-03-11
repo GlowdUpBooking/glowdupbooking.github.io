@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#050507"/>
+      <stop offset="60%" stop-color="#0B0C10"/>
+      <stop offset="100%" stop-color="#050506"/>
+    </linearGradient>
+    <linearGradient id="hot" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FF2D55"/>
+      <stop offset="50%" stop-color="#FF6A00"/>
+      <stop offset="100%" stop-color="#FFD400"/>
+    </linearGradient>
+    <linearGradient id="ice" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00F0FF"/>
+      <stop offset="100%" stop-color="#6C63FF"/>
+    </linearGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#11131A" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#0B0D13" stop-opacity="0.95"/>
+    </linearGradient>
+    <pattern id="grain" width="120" height="120" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="15" r="1" fill="#FFFFFF" opacity="0.06"/>
+      <circle cx="40" cy="25" r="1" fill="#FFFFFF" opacity="0.05"/>
+      <circle cx="80" cy="50" r="1" fill="#FFFFFF" opacity="0.04"/>
+      <circle cx="30" cy="70" r="1" fill="#FFFFFF" opacity="0.05"/>
+      <circle cx="95" cy="90" r="1" fill="#FFFFFF" opacity="0.06"/>
+      <circle cx="60" cy="105" r="1" fill="#FFFFFF" opacity="0.04"/>
+    </pattern>
+    <style>
+      .sans { font-family: 'Space Grotesk', 'Sora', 'Arial Black', sans-serif; fill: #F7F7F9; }
+      .cond { font-family: 'Oswald', 'Impact', 'Arial Black', sans-serif; fill: #F7F7F9; }
+      .muted { fill: #B8B8C2; }
+      .chip { fill: #0C0E13; stroke: #2A2F3F; stroke-width: 1; }
+      .card { fill: url(#steel); stroke: #2A2F44; stroke-width: 1; }
+      .btn { fill: url(#hot); }
+      .btnText { fill: #0A0A0D; font-weight: 900; }
+      .ghost { fill: #0C0E13; stroke: #2A2F44; stroke-width: 1; }
+      .tiny { font-size: 12px; letter-spacing: 2px; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1440" height="900" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1440" height="900" fill="url(#grain)" opacity="0.3"/>
+
+  <!-- aggressive slashes -->
+  <path d="M 820 -60 L 1500 300 L 1500 -60 Z" fill="url(#hot)" opacity="0.22"/>
+  <path d="M 900 120 L 1500 420 L 1500 120 Z" fill="url(#ice)" opacity="0.12"/>
+  <path d="M -80 620 L 560 1020 L -80 1020 Z" fill="url(#hot)" opacity="0.08"/>
+
+  <!-- top nav -->
+  <text x="80" y="68" class="sans" font-size="18" font-weight="700">Glow’d Up Booking</text>
+  <text x="1120" y="68" class="sans muted" font-size="14">Pricing</text>
+  <text x="1200" y="68" class="sans muted" font-size="14">Log in</text>
+  <rect x="1280" y="44" rx="18" ry="18" width="110" height="36" class="btn"/>
+  <text x="1302" y="68" class="sans btnText" font-size="14">Start Free</text>
+
+  <!-- hero chip -->
+  <rect x="80" y="118" rx="14" ry="14" width="420" height="32" class="chip"/>
+  <text x="98" y="140" class="sans tiny" fill="#FF9F0A">BARBERS · STYLISTS · TATTOO · LASH · NAILS</text>
+
+  <!-- hero headline -->
+  <text x="80" y="220" class="cond" font-size="64" font-weight="900">BOOKING</text>
+  <text x="80" y="286" class="cond" font-size="64" font-weight="900">THAT HITS.</text>
+  <text x="80" y="338" class="sans muted" font-size="18">Instant deposits. Zero no‑shows. A booking link your</text>
+  <text x="80" y="366" class="sans muted" font-size="18">clients actually use.</text>
+
+  <!-- hero buttons -->
+  <rect x="80" y="405" rx="22" ry="22" width="170" height="46" class="btn"/>
+  <text x="112" y="434" class="sans btnText" font-size="16">Start Free</text>
+  <rect x="265" y="405" rx="22" ry="22" width="170" height="46" class="ghost"/>
+  <text x="305" y="434" class="sans" font-size="16">See Plans</text>
+
+  <text x="80" y="476" class="sans muted" font-size="13">Stripe deposits · Auto‑reminders · Pro payouts</text>
+
+  <!-- right hero panel -->
+  <rect x="700" y="140" rx="22" ry="22" width="640" height="360" class="card"/>
+  <rect x="740" y="178" rx="10" ry="10" width="190" height="26" fill="#10121A" stroke="#2A2F44"/>
+  <text x="752" y="196" class="sans" font-size="12" fill="#FFD400">TODAY</text>
+
+  <rect x="740" y="220" rx="14" ry="14" width="560" height="66" fill="#0F121A" stroke="#2A2F44"/>
+  <rect x="740" y="296" rx="14" ry="14" width="560" height="66" fill="#0F121A" stroke="#2A2F44"/>
+  <rect x="740" y="372" rx="14" ry="14" width="560" height="66" fill="#0F121A" stroke="#2A2F44"/>
+
+  <circle cx="775" cy="253" r="18" fill="#141824" stroke="#2A2F44"/>
+  <text x="805" y="258" class="sans" font-size="14">Avery P. · 3:30 PM</text>
+  <text x="805" y="280" class="sans muted" font-size="12">Lash Fill · $95 · Deposit captured</text>
+
+  <circle cx="775" cy="329" r="18" fill="#141824" stroke="#2A2F44"/>
+  <text x="805" y="334" class="sans" font-size="14">Jordan S. · 5:00 PM</text>
+  <text x="805" y="356" class="sans muted" font-size="12">Barber Cut · $45 · Reminder sent</text>
+
+  <circle cx="775" cy="405" r="18" fill="#141824" stroke="#2A2F44"/>
+  <text x="805" y="410" class="sans" font-size="14">Nia T. · 6:15 PM</text>
+  <text x="805" y="432" class="sans muted" font-size="12">Gel Set · $70 · Confirmed</text>
+
+  <!-- feature strip -->
+  <rect x="80" y="520" rx="16" ry="16" width="400" height="130" class="card"/>
+  <rect x="520" y="520" rx="16" ry="16" width="400" height="130" class="card"/>
+  <rect x="960" y="520" rx="16" ry="16" width="400" height="130" class="card"/>
+
+  <text x="110" y="558" class="sans" font-size="16" font-weight="800">Deposits first</text>
+  <text x="110" y="584" class="sans muted" font-size="13">Protect your time. Get paid upfront.</text>
+
+  <text x="550" y="558" class="sans" font-size="16" font-weight="800">Auto‑reminders</text>
+  <text x="550" y="584" class="sans muted" font-size="13">Clients show up or reschedule fast.</text>
+
+  <text x="990" y="558" class="sans" font-size="16" font-weight="800">Payouts + stats</text>
+  <text x="990" y="584" class="sans muted" font-size="13">Know your month before it ends.</text>
+
+  <!-- pricing preview -->
+  <text x="80" y="705" class="cond" font-size="32" font-weight="900">LEVEL UP PLANS</text>
+  <text x="80" y="735" class="sans muted" font-size="14">Start free. Upgrade when the bookings hit.</text>
+
+  <rect x="80" y="760" rx="16" ry="16" width="280" height="120" class="card"/>
+  <rect x="390" y="760" rx="16" ry="16" width="280" height="120" class="card"/>
+  <rect x="700" y="760" rx="16" ry="16" width="280" height="120" class="card"/>
+  <rect x="1010" y="760" rx="16" ry="16" width="350" height="120" fill="#0C0E13" stroke="#2A2F44"/>
+
+  <text x="110" y="795" class="sans" font-size="14" font-weight="800">Starter</text>
+  <text x="110" y="825" class="cond" font-size="24">$19</text>
+  <text x="110" y="848" class="sans muted" font-size="12">Booking link + deposits</text>
+
+  <text x="420" y="795" class="sans" font-size="14" font-weight="800">Pro</text>
+  <text x="420" y="825" class="cond" font-size="24">$39</text>
+  <text x="420" y="848" class="sans muted" font-size="12">Client management</text>
+
+  <text x="730" y="795" class="sans" font-size="14" font-weight="800">Elite</text>
+  <text x="730" y="825" class="cond" font-size="24">$79</text>
+  <text x="730" y="848" class="sans muted" font-size="12">Payouts + analytics</text>
+
+  <text x="1040" y="795" class="sans" font-size="14" font-weight="800">Founder</text>
+  <text x="1040" y="825" class="cond" font-size="24">$299 / year</text>
+  <text x="1040" y="848" class="sans muted" font-size="12">Limited spots · Lifetime perks</text>
+</svg>

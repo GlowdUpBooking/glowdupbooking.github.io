@@ -4,7 +4,7 @@ import AppShell from "../components/layout/AppShell";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
-import { normalizePlanKey } from "../lib/format";
+import { fetchEffectiveBillingAccess } from "../lib/billingAccess";
 
 function fmtMoney(amount) {
   const n = Number(amount ?? 0);
@@ -136,9 +136,7 @@ export default function Analytics() {
   const [err, setErr] = useState("");
 
   const [user, setUser] = useState(null);
-  const [subStatus, setSubStatus] = useState(null);
-  const [plan, setPlan] = useState(null);
-  const [interval, setInterval] = useState(null);
+  const [billingAccess, setBillingAccess] = useState(null);
 
   const [stats, setStats] = useState({
     thisMonthBookings: 0,
@@ -155,22 +153,8 @@ export default function Analytics() {
     depositsSeries: [],
   });
 
-  const isActive = subStatus === "active";
-
-  const currentPlanKey = useMemo(() => {
-    const fromDb = normalizePlanKey(plan);
-    if (fromDb) return fromDb;
-    if (isActive && interval === "annual") return "founder";
-    if (!isActive) return "free";
-    return "paid";
-  }, [plan, isActive, interval]);
-
-  const isPro =
-    currentPlanKey === "pro" ||
-    currentPlanKey === "studio" ||
-    currentPlanKey === "founder" ||
-    currentPlanKey === "elite" ||
-    (isActive && currentPlanKey === "paid");
+  const currentPlanKey = useMemo(() => billingAccess?.planKey ?? "free", [billingAccess]);
+  const isPro = currentPlanKey !== "free";
 
   const thisMonthStart = useMemo(() => monthStart(new Date()), []);
   const lastMonthStart = useMemo(() => monthStart(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1)), []);
@@ -206,20 +190,20 @@ export default function Analytics() {
           return;
         }
 
-        const { data: subRow, error: subErr } = await supabase
-          .from("pro_subscriptions")
-          .select("status, interval, plan")
-          .eq("user_id", u.id)
-          .maybeSingle();
+        const access = await fetchEffectiveBillingAccess(u.id);
 
-        if (subErr) {
-          console.error("[Analytics] pro_subscriptions error:", subErr);
+        if (access.warnings.subscription) {
+          console.error("[Analytics] pro_subscriptions error:", access.warnings.subscription);
+        }
+        if (access.warnings.profile) {
+          console.error("[Analytics] billing profile error:", access.warnings.profile);
+        }
+        if (access.warnings.studioAccess) {
+          console.warn("[Analytics] studio access warning:", access.warnings.studioAccess);
         }
 
         if (!mounted) return;
-        setSubStatus(subRow?.status ?? null);
-        setPlan(subRow?.plan ?? null);
-        setInterval(subRow?.interval ?? null);
+        setBillingAccess(access);
       } catch (e) {
         console.error("[Analytics] load error:", e);
         if (mounted) setErr("Couldn’t load analytics.");
