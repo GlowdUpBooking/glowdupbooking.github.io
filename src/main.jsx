@@ -12,6 +12,7 @@ import "./styles/landing.css";
 import "./styles/onboarding.css";
 import "./styles/onboarding-dashboard.css";
 import "./styles/app-dashboard.css";
+import "./styles/app-dashboard-refresh.css";
 
 initAnalytics();
 

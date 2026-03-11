@@ -103,11 +103,11 @@ function LineChart({ series, color }) {
 
 function StatCard({ label, value, trend, trendColor: tColor }) {
   return (
-    <Card style={{ padding: 16, flex: 1, minWidth: 220 }}>
-      <div style={{ fontSize: 26, fontWeight: 800 }}>{value}</div>
-      <div className="u-muted" style={{ marginTop: 6, fontWeight: 700 }}>{label}</div>
+    <Card className="an-statCard">
+      <div className="an-statValue">{value}</div>
+      <div className="an-statLabel">{label}</div>
       {trend ? (
-        <div style={{ marginTop: 6, fontSize: 12, fontWeight: 700, color: tColor }}>
+        <div className="an-statTrend" style={{ color: tColor }}>
           {trend}
         </div>
       ) : null}
@@ -118,11 +118,11 @@ function StatCard({ label, value, trend, trendColor: tColor }) {
 function FunnelRow({ label, value, total }) {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <div style={{ fontWeight: 700 }}>{label}</div>
-      <div>
+    <div className="an-funnelRow">
+      <div className="an-funnelLabel">{label}</div>
+      <div className="an-funnelValue">
         <strong>{value}</strong>
-        {total > 0 ? <span className="u-muted" style={{ marginLeft: 8 }}>{pct}%</span> : null}
+        {total > 0 ? <span className="u-muted">{pct}%</span> : null}
       </div>
     </div>
   );
@@ -155,6 +155,7 @@ export default function Analytics() {
 
   const currentPlanKey = useMemo(() => billingAccess?.planKey ?? "free", [billingAccess]);
   const isPro = currentPlanKey !== "free";
+  const planLabel = currentPlanKey === "studio" ? "Studio" : "Pro";
 
   const thisMonthStart = useMemo(() => monthStart(new Date()), []);
   const lastMonthStart = useMemo(() => monthStart(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1)), []);
@@ -363,28 +364,29 @@ export default function Analytics() {
   if (!isPro) {
     return (
       <AppShell title="Analytics" onSignOut={signOut}>
-        <div className="g-page">
-          <Card style={{ padding: 18 }}>
-            <div style={{ fontSize: 28, fontWeight: 900 }}>Analytics</div>
-            <div className="u-muted" style={{ marginTop: 6 }}>
+        <div className="an-page g-page">
+          <Card className="an-upgradeCard">
+            <div className="an-upgradeEyebrow">Pro insights</div>
+            <div className="an-upgradeTitle">Analytics</div>
+            <div className="u-muted">
               Track booking trends and deposit revenue. Analytics is included in the Pro plan.
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginTop: 16 }}>
+            <div className="an-metricGrid">
               {[
                 "Bookings this month",
                 "Revenue this month",
                 "All-time bookings",
                 "All-time revenue",
               ].map((label) => (
-                <Card key={label} style={{ padding: 14, opacity: 0.55 }}>
-                  <div style={{ fontSize: 24, fontWeight: 800 }}>—</div>
-                  <div className="u-muted" style={{ marginTop: 6 }}>{label}</div>
+                <Card key={label} className="an-statCard an-statCardMuted">
+                  <div className="an-statValue">—</div>
+                  <div className="an-statLabel">{label}</div>
                 </Card>
               ))}
             </div>
 
-            <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <div className="an-actionRow">
               <Button variant="primary" onClick={() => nav("/app/subscription")}>Upgrade to Pro</Button>
               <Button variant="outline" onClick={() => nav("/app")}>Back to dashboard</Button>
             </div>
@@ -396,20 +398,39 @@ export default function Analytics() {
 
   return (
     <AppShell title="Analytics" onSignOut={signOut}>
-      <div className="g-page">
-        <h1 className="g-h1">Analytics</h1>
-        <div className="u-muted" style={{ marginTop: 4 }}>
-          {new Date().toLocaleString(undefined, { month: "long", year: "numeric" })}
-        </div>
+      <div className="an-page g-page">
+        <Card className="an-hero">
+          <div className="an-heroCopy">
+            <div className="an-heroEyebrow">Live performance</div>
+            <h1 className="g-h1">Analytics</h1>
+            <div className="u-muted an-heroSub">
+              {new Date().toLocaleString(undefined, { month: "long", year: "numeric" })} · Track bookings, deposits, and conversion momentum.
+            </div>
+          </div>
+          <div className="an-heroSide">
+            <div className="an-heroPill">
+              <span className="an-heroPillLabel">Plan</span>
+              <strong>{planLabel}</strong>
+            </div>
+            <Button variant="outline" onClick={loadStats} disabled={statsLoading}>
+              {statsLoading ? "Refreshing…" : "Refresh"}
+            </Button>
+          </div>
+        </Card>
 
-        {err ? <div className="u-muted" style={{ marginTop: 10 }}>{err}</div> : null}
+        {err ? <div className="u-muted">{err}</div> : null}
 
-        <div style={{ marginTop: 18 }}>
-          <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 8 }}>Bookings</div>
+        <section className="an-section">
+          <div className="an-sectionHeader">
+            <div>
+              <div className="an-sectionTitle">Booking flow</div>
+              <div className="u-muted an-sectionSub">This month, last month, and all-time totals.</div>
+            </div>
+          </div>
           {statsLoading ? (
-            <Card style={{ padding: 16 }}>Loading metrics…</Card>
+            <Card>Loading metrics…</Card>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+            <div className="an-metricGrid">
               <StatCard
                 label="This month"
                 value={String(stats.thisMonthBookings)}
@@ -420,23 +441,25 @@ export default function Analytics() {
                 label="Last month"
                 value={String(stats.lastMonthBookings)}
               />
-              <Card style={{ padding: 16, gridColumn: "1 / -1" }}>
-                <div style={{ fontSize: 32, fontWeight: 900 }}>{stats.allTimeBookings}</div>
-                <div className="u-muted" style={{ marginTop: 6 }}>Total bookings</div>
+              <Card className="an-spotlightCard">
+                <div className="an-spotlightValue">{stats.allTimeBookings}</div>
+                <div className="an-spotlightLabel">Total bookings</div>
               </Card>
             </div>
           )}
-        </div>
+        </section>
 
-        <div style={{ marginTop: 20 }}>
-          <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 4 }}>Deposit Revenue</div>
-          <div className="u-muted" style={{ marginBottom: 8 }}>
-            Total deposits collected from paid bookings
+        <section className="an-section">
+          <div className="an-sectionHeader">
+            <div>
+              <div className="an-sectionTitle">Deposit revenue</div>
+              <div className="u-muted an-sectionSub">Total deposits collected from paid bookings.</div>
+            </div>
           </div>
           {statsLoading ? (
-            <Card style={{ padding: 16 }}>Loading metrics…</Card>
+            <Card>Loading metrics…</Card>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+            <div className="an-metricGrid">
               <StatCard
                 label="This month"
                 value={fmtMoney(stats.thisMonthRevenue)}
@@ -447,33 +470,38 @@ export default function Analytics() {
                 label="Last month"
                 value={fmtMoney(stats.lastMonthRevenue)}
               />
-              <Card style={{ padding: 16, gridColumn: "1 / -1" }}>
-                <div style={{ fontSize: 32, fontWeight: 900 }}>{fmtMoney(stats.allTimeRevenue)}</div>
-                <div className="u-muted" style={{ marginTop: 6 }}>All-time deposits collected</div>
+              <Card className="an-spotlightCard">
+                <div className="an-spotlightValue">{fmtMoney(stats.allTimeRevenue)}</div>
+                <div className="an-spotlightLabel">All-time deposits collected</div>
               </Card>
             </div>
           )}
-        </div>
+        </section>
 
-        <div style={{ marginTop: 20 }}>
-          <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 8 }}>6‑Month Trends</div>
+        <section className="an-section">
+          <div className="an-sectionHeader">
+            <div>
+              <div className="an-sectionTitle">6-month trends</div>
+              <div className="u-muted an-sectionSub">Volume and deposit movement across recent months.</div>
+            </div>
+          </div>
           {statsLoading ? (
-            <Card style={{ padding: 16 }}>Loading metrics…</Card>
+            <Card>Loading metrics…</Card>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
-              <Card style={{ padding: 16 }}>
-                <div style={{ fontWeight: 700, marginBottom: 8 }}>Bookings</div>
+            <div className="an-chartGrid">
+              <Card className="an-chartCard">
+                <div className="an-chartTitle">Bookings</div>
                 <LineChart series={stats.bookingsSeries || []} color="#6cffb3" />
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, opacity: 0.7, marginTop: 6 }}>
+                <div className="an-chartLegend">
                   {(stats.bookingsSeries || []).map((s) => (
                     <span key={s.label}>{s.label}</span>
                   ))}
                 </div>
               </Card>
-              <Card style={{ padding: 16 }}>
-                <div style={{ fontWeight: 700, marginBottom: 8 }}>Deposit Revenue</div>
+              <Card className="an-chartCard">
+                <div className="an-chartTitle">Deposit revenue</div>
                 <LineChart series={stats.depositsSeries || []} color="#ffd678" />
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, opacity: 0.7, marginTop: 6 }}>
+                <div className="an-chartLegend">
                   {(stats.depositsSeries || []).map((s) => (
                     <span key={s.label}>{s.label}</span>
                   ))}
@@ -481,50 +509,63 @@ export default function Analytics() {
               </Card>
             </div>
           )}
-        </div>
+        </section>
 
-        <div style={{ marginTop: 20 }}>
-          <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 8 }}>Last 30 Days Breakdown</div>
+        <div className="an-detailGrid">
+          <section className="an-section">
+            <div className="an-sectionHeader">
+              <div>
+                <div className="an-sectionTitle">Last 30 days breakdown</div>
+                <div className="u-muted an-sectionSub">Status mix across recent requests.</div>
+              </div>
+            </div>
           {statsLoading ? (
-            <Card style={{ padding: 16 }}>Loading metrics…</Card>
+            <Card>Loading metrics…</Card>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+            <div className="an-metricGrid an-metricGridCompact">
               <StatCard label="Pending" value={String(stats.status30.pending)} />
               <StatCard label="Confirmed" value={String(stats.status30.confirmed)} />
               <StatCard label="Completed" value={String(stats.status30.completed)} />
               <StatCard label="Canceled" value={String(stats.status30.canceled)} />
             </div>
           )}
-        </div>
+          </section>
 
-        <div style={{ marginTop: 20 }}>
-          <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 8 }}>Conversion Funnel (Last 30 Days)</div>
+          <section className="an-section">
+            <div className="an-sectionHeader">
+              <div>
+                <div className="an-sectionTitle">Conversion funnel</div>
+                <div className="u-muted an-sectionSub">Requests converted into confirmed and completed bookings.</div>
+              </div>
+            </div>
           {statsLoading ? (
-            <Card style={{ padding: 16 }}>Loading metrics…</Card>
+            <Card>Loading metrics…</Card>
           ) : (
-            <Card style={{ padding: 16, display: "grid", gap: 10 }}>
+            <Card className="an-funnelCard">
               <FunnelRow label="Requests" value={stats.funnel30.requests} total={stats.funnel30.requests} />
               <FunnelRow label="Confirmed" value={stats.funnel30.confirmed} total={stats.funnel30.requests} />
               <FunnelRow label="Completed" value={stats.funnel30.completed} total={stats.funnel30.requests} />
             </Card>
           )}
+          </section>
         </div>
 
-        <div style={{ marginTop: 20 }}>
-          <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 8 }}>Deposit Summary</div>
+        <section className="an-section">
+          <div className="an-sectionHeader">
+            <div>
+              <div className="an-sectionTitle">Deposit summary</div>
+              <div className="u-muted an-sectionSub">Average deposit size across current and historical activity.</div>
+            </div>
+          </div>
           {statsLoading ? (
-            <Card style={{ padding: 16 }}>Loading metrics…</Card>
+            <Card>Loading metrics…</Card>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+            <div className="an-metricGrid">
               <StatCard label="Avg deposit (this month)" value={fmtMoney(stats.avgDepositThisMonth)} />
               <StatCard label="Avg deposit (all-time)" value={fmtMoney(stats.avgDepositAllTime)} />
             </div>
           )}
-        </div>
-
-        <div style={{ marginTop: 18 }}>
-          <Button variant="outline" onClick={loadStats} disabled={statsLoading}>Refresh</Button>
-        </div>
+        </section>
       </div>
     </AppShell>
   );

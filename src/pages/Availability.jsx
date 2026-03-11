@@ -16,13 +16,14 @@ import {
 
 const fieldStyle = {
   width: "100%",
-  minHeight: 44,
-  borderRadius: 12,
-  border: "1px solid rgba(255,255,255,0.15)",
-  background: "rgba(0,0,0,0.35)",
-  color: "#f3f3f3",
-  padding: "10px 14px",
+  minHeight: 50,
+  borderRadius: 18,
+  border: "1px solid var(--shell-input-border)",
+  background: "var(--shell-input-bg)",
+  color: "var(--shell-text)",
+  padding: "0 16px",
   fontSize: 15,
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
 };
 
 export default function Availability() {
