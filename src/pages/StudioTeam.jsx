@@ -28,6 +28,7 @@ import {
   getStudioRentScheduleSummary,
   getStudioSeatSummary,
   inviteStudioMemberByEmail,
+  isStudioLeadershipRole,
   isStudioTeamFeatureUnavailableError,
   recordStudioRentPayment,
   setStudioMemberActive,
@@ -132,7 +133,7 @@ function describeStudioRentPaymentMethod(payment) {
   const method = String(payment?.payment_method ?? "").trim().toLowerCase();
   if (!method) return null;
   if (method === "card_via_stripe_checkout") return "Paid by card";
-  if (method === "recorded_in_app") return "Recorded by studio owner";
+  if (method === "recorded_in_app") return "Recorded in app";
   return method.replace(/_/g, " ");
 }
 
@@ -285,7 +286,7 @@ export default function StudioTeam() {
   const activeMembers = useMemo(() => members.filter((member) => member.is_active), [members]);
   const inactiveMembers = useMemo(() => members.filter((member) => !member.is_active), [members]);
   const seatSummary = useMemo(() => getStudioSeatSummary(activeMembers.length), [activeMembers.length]);
-  const canManageStudio = Boolean(activeMembership?.member_role === "owner");
+  const canManageStudio = isStudioLeadershipRole(activeMembership?.member_role);
   const canAssignAppointments = Boolean(activeMembership?.is_active);
   const visibleRentSchedules = useMemo(() => {
     if (canManageStudio) return rentSchedules;
@@ -1012,7 +1013,7 @@ export default function StudioTeam() {
               <h1 className="tm-title">{activeStudio?.name ?? "Studio Team"}</h1>
               <p className="tm-sub">
                 {studioMemberCovered
-                  ? "Your Studio owner covers this seat while you stay active in the workspace."
+                  ? "Your Studio workspace covers this seat while you stay active in the workspace."
                   : isStudioTier
                     ? "Manage teammates, shared resources, rent tracking, and recent assignment controls from the web dashboard."
                     : "Studio is billed on the web and unlocks shared team workspaces, resources, and payout reporting across the app."}
@@ -1042,7 +1043,7 @@ export default function StudioTeam() {
               The first {STUDIO_INCLUDED_ACCOUNTS} active accounts are included. Accounts {STUDIO_INCLUDED_ACCOUNTS + 1}-{STUDIO_MAX_ACCOUNTS} add {money(STUDIO_EXTRA_ACCOUNT_MONTHLY_PRICE)}/month each.
             </div>
             <div className="tm-step">
-              Owners manage seats, resources, and rent tracking. Active teammates can still save appointment assignments.
+              Studio leads manage seats, resources, and rent tracking. Active teammates can still save appointment assignments.
             </div>
           </div>
         </Card>
@@ -1118,7 +1119,9 @@ export default function StudioTeam() {
             <div className="tm-stats">
               <Card className="tm-statCard">
                 <div className="tm-statLabel">Access</div>
-                <div className="tm-statValue">{studioMemberCovered ? "Covered seat" : isStudioTier ? "Studio owner" : "Member"}</div>
+                <div className="tm-statValue">
+                  {activeMembership ? formatStudioRoleLabel(activeMembership.member_role) : studioMemberCovered ? "Covered seat" : isStudioTier ? "Owner" : "Member"}
+                </div>
               </Card>
               <Card className="tm-statCard">
                 <div className="tm-statLabel">Active seats</div>
@@ -1141,7 +1144,7 @@ export default function StudioTeam() {
                     <div>
                       <div className="tm-panelTitle">Team members</div>
                       <div className="tm-panelHint">
-                        Active accounts count toward Studio seats. Owners manage seats and roles.
+                        Active accounts count toward Studio seats. Studio leads manage seats and roles.
                       </div>
                     </div>
                     <div className="tm-panelMeta">
@@ -1449,7 +1452,7 @@ export default function StudioTeam() {
                     <div>
                       <div className="tm-panelTitle">{canManageStudio ? "Rent tracking" : "Your tracked rent"}</div>
                       <div className="tm-panelHint">
-                        Owners can track chair or room rent. Covered members can pay the current due cycle by card.
+                        Studio leads can track chair or room rent. Covered members can pay the current due cycle by card.
                       </div>
                     </div>
                   </div>
