@@ -624,6 +624,29 @@
   margin: 0;
 }
 
+.sub-seatNote {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sub-seatNoteTitle {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.sub-seatNoteCopy {
+  font-size: 13px;
+  line-height: 1.55;
+  opacity: 0.82;
+}
+
 .sub-ctaRow {
   display: flex;
   gap: 8px;

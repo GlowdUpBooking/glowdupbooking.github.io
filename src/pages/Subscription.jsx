@@ -14,6 +14,10 @@ import {
   mergeLivePrices,
 } from "../lib/pricing";
 
+const STUDIO_INCLUDED_ACCOUNTS = 3;
+const STUDIO_MAX_ACCOUNTS = 10;
+const STUDIO_EXTRA_ACCOUNT_MONTHLY_PRICE = "$9.99";
+
 const PLAN_CARDS = [
   {
     key: "free",
@@ -52,7 +56,7 @@ const PLAN_CARDS = [
     description: "Shared team workspace and owner-managed billing for multi-account studios.",
     bullets: [
       "Everything in Pro",
-      "3 included accounts",
+      `${STUDIO_INCLUDED_ACCOUNTS} included accounts`,
       "Shared chairs, rooms, and resources",
       "Owner-managed seat billing and payout reporting",
     ],
@@ -592,6 +596,20 @@ export default function Subscription() {
                   ))}
                 </ul>
 
+                {card.key === "studio" ? (
+                  <div className="sub-seatNote">
+                    <div className="sub-seatNoteTitle">How extra accounts work</div>
+                    <div className="sub-seatNoteCopy">
+                      Add teammates from Studio Team after upgrading. The first {STUDIO_INCLUDED_ACCOUNTS} active
+                      accounts are included, and accounts {STUDIO_INCLUDED_ACCOUNTS + 1}-{STUDIO_MAX_ACCOUNTS} add{" "}
+                      {STUDIO_EXTRA_ACCOUNT_MONTHLY_PRICE}/month each.
+                    </div>
+                    <Button variant="outline" onClick={() => nav("/app/studio")}>
+                      Open Studio Team
+                    </Button>
+                  </div>
+                ) : null}
+
                 <div className="sub-ctaRow">
                   <Button
                     variant={isCurrent ? "outline" : "primary"}
@@ -617,8 +635,16 @@ export default function Subscription() {
             <div className="sub-faqA">Your account starts on Free 7-Day, then you can move to Pro at $19.99/month when ready.</div>
           </div>
           <div className="sub-faqItem">
+            <div className="sub-faqQ">How do I add extra Studio accounts?</div>
+            <div className="sub-faqA">
+              Add teammates from Studio Team. The first {STUDIO_INCLUDED_ACCOUNTS} active accounts are included, and
+              accounts {STUDIO_INCLUDED_ACCOUNTS + 1}-{STUDIO_MAX_ACCOUNTS} add {STUDIO_EXTRA_ACCOUNT_MONTHLY_PRICE}
+              /month each.
+            </div>
+          </div>
+          <div className="sub-faqItem">
             <div className="sub-faqQ">What happens if I cancel?</div>
-            <div className="sub-faqA">You keep access until the end of your billing period. You can always re‑subscribe later.</div>
+            <div className="sub-faqA">You keep access until the end of your billing period. You can always re-subscribe later.</div>
           </div>
         </Card>
       </div>
