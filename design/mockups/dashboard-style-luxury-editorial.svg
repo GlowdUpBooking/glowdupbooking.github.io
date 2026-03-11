@@ -1,0 +1,100 @@
+<svg width="1600" height="980" viewBox="0 0 1600 980" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg1" x1="120" y1="70" x2="1460" y2="910" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#16120E"/>
+      <stop offset="0.55" stop-color="#0D0B09"/>
+      <stop offset="1" stop-color="#070707"/>
+    </linearGradient>
+    <linearGradient id="panel1" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#231C16"/>
+      <stop offset="1" stop-color="#12100D"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F4C986"/>
+      <stop offset="1" stop-color="#C68C43"/>
+    </linearGradient>
+    <filter id="blurGlow" x="-120" y="-120" width="1840" height="1220" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="56"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="980" rx="36" fill="url(#bg1)"/>
+  <g filter="url(#blurGlow)" opacity="0.28">
+    <circle cx="280" cy="120" r="120" fill="#C68C43"/>
+    <circle cx="1340" cy="860" r="140" fill="#5A3D1C"/>
+  </g>
+
+  <rect x="24" y="24" width="280" height="932" rx="28" fill="#110E0B" stroke="#2F241A"/>
+  <rect x="52" y="52" width="56" height="56" rx="18" fill="url(#gold)"/>
+  <text x="128" y="76" fill="#F7F0E8" font-family="Georgia, serif" font-size="30" font-weight="700">Glow'd Up</text>
+  <text x="128" y="104" fill="#AE9C87" font-family="Arial, sans-serif" font-size="18">Luxury editorial dashboard</text>
+
+  <rect x="44" y="150" width="240" height="132" rx="24" fill="#18130E" stroke="#3D3023"/>
+  <text x="68" y="188" fill="#A59077" font-family="Arial, sans-serif" font-size="14" letter-spacing="2">LIVE WORKSPACE</text>
+  <text x="68" y="234" fill="#F7F0E8" font-family="Georgia, serif" font-size="38" font-weight="700">Overview</text>
+  <text x="68" y="264" fill="#C8B69F" font-family="Arial, sans-serif" font-size="16">Mon, Mar 11</text>
+  <rect x="68" y="306" width="92" height="58" rx="18" fill="#1E1812" stroke="#443426"/>
+  <text x="86" y="330" fill="#947D64" font-family="Arial, sans-serif" font-size="12">STATUS</text>
+  <text x="86" y="352" fill="#F7F0E8" font-family="Arial, sans-serif" font-size="20" font-weight="700">Active</text>
+  <rect x="174" y="306" width="92" height="58" rx="18" fill="#1E1812" stroke="#443426"/>
+  <text x="192" y="330" fill="#947D64" font-family="Arial, sans-serif" font-size="12">PENDING</text>
+  <text x="192" y="352" fill="#F7F0E8" font-family="Arial, sans-serif" font-size="20" font-weight="700">6</text>
+
+  <g fill="#E9DDCF" font-family="Arial, sans-serif" font-size="18">
+    <text x="72" y="342"/>
+    <text x="74" y="438">Dashboard</text>
+    <text x="74" y="496" fill="#B49A7F">Appointments</text>
+    <text x="74" y="554" fill="#B49A7F">Services</text>
+    <text x="74" y="612" fill="#B49A7F">Availability</text>
+    <text x="74" y="670" fill="#B49A7F">Payouts</text>
+    <text x="74" y="728" fill="#B49A7F">Subscription</text>
+    <text x="74" y="786" fill="#B49A7F">Studio Team</text>
+    <text x="74" y="844" fill="#B49A7F">Analytics</text>
+  </g>
+  <rect x="48" y="406" width="212" height="48" rx="16" fill="#231A12" stroke="#4C3928"/>
+
+  <text x="350" y="74" fill="#A89177" font-family="Arial, sans-serif" font-size="12" letter-spacing="2">PRO CONTROL</text>
+  <text x="350" y="122" fill="#F7F0E8" font-family="Georgia, serif" font-size="54" font-weight="700">Dashboard</text>
+  <rect x="1368" y="54" width="168" height="52" rx="18" fill="#16120F" stroke="#3A2E23"/>
+  <text x="1420" y="87" fill="#F7F0E8" font-family="Arial, sans-serif" font-size="18" font-weight="700">Sign out</text>
+
+  <rect x="350" y="160" width="1186" height="170" rx="32" fill="url(#panel1)" stroke="#32271E"/>
+  <text x="390" y="198" fill="#B59A7F" font-family="Arial, sans-serif" font-size="13" letter-spacing="2">MARCH SNAPSHOT</text>
+  <text x="390" y="258" fill="#F7F0E8" font-family="Georgia, serif" font-size="72" font-weight="700">A sharper, calmer pro workspace.</text>
+  <text x="392" y="297" fill="#D8CBBE" font-family="Arial, sans-serif" font-size="22">Warm neutrals, premium contrast, editorial typography, and elevated service-led merchandising.</text>
+  <rect x="1308" y="190" width="182" height="54" rx="18" fill="url(#gold)"/>
+  <text x="1351" y="225" fill="#12100D" font-family="Arial, sans-serif" font-size="18" font-weight="700">Luxury signal</text>
+
+  <rect x="350" y="356" width="742" height="250" rx="30" fill="#120F0C" stroke="#2F241B"/>
+  <text x="384" y="400" fill="#F7F0E8" font-family="Georgia, serif" font-size="40" font-weight="700">Client momentum</text>
+  <text x="384" y="432" fill="#BCA994" font-family="Arial, sans-serif" font-size="18">A composed metrics rail with room for strong photography and business cues.</text>
+  <rect x="384" y="470" width="204" height="98" rx="22" fill="#1A1511" stroke="#3A2E24"/>
+  <text x="408" y="504" fill="#A48D74" font-family="Arial, sans-serif" font-size="12">THIS MONTH</text>
+  <text x="408" y="548" fill="#F7F0E8" font-family="Georgia, serif" font-size="46" font-weight="700">32</text>
+  <rect x="606" y="470" width="204" height="98" rx="22" fill="#1A1511" stroke="#3A2E24"/>
+  <text x="630" y="504" fill="#A48D74" font-family="Arial, sans-serif" font-size="12">DEPOSITS</text>
+  <text x="630" y="548" fill="#F2C37C" font-family="Georgia, serif" font-size="46" font-weight="700">$940</text>
+  <rect x="828" y="470" width="230" height="98" rx="22" fill="#1A1511" stroke="#3A2E24"/>
+  <text x="852" y="504" fill="#A48D74" font-family="Arial, sans-serif" font-size="12">NEXT APPOINTMENT</text>
+  <text x="852" y="548" fill="#F7F0E8" font-family="Arial, sans-serif" font-size="28" font-weight="700">Mar 26 · 9:15 AM</text>
+
+  <rect x="350" y="634" width="742" height="290" rx="30" fill="#120F0C" stroke="#2F241B"/>
+  <text x="384" y="678" fill="#F7F0E8" font-family="Georgia, serif" font-size="40" font-weight="700">Service presentation</text>
+  <rect x="384" y="718" width="674" height="72" rx="22" fill="#18130F" stroke="#35291E"/>
+  <rect x="404" y="736" width="86" height="36" rx="12" fill="#2A1F17"/>
+  <text x="510" y="752" fill="#F7F0E8" font-family="Arial, sans-serif" font-size="22" font-weight="700">Dark Caesar</text>
+  <text x="510" y="778" fill="#BDA894" font-family="Arial, sans-serif" font-size="16">Luxury copy, clearer value framing, and richer pricing hierarchy.</text>
+  <text x="960" y="764" fill="#F2C37C" font-family="Georgia, serif" font-size="38" font-weight="700">$50</text>
+
+  <rect x="1120" y="356" width="416" height="568" rx="30" fill="#120F0C" stroke="#2F241B"/>
+  <text x="1156" y="400" fill="#F7F0E8" font-family="Georgia, serif" font-size="40" font-weight="700">Why this direction</text>
+  <text x="1156" y="454" fill="#D9CBBE" font-family="Arial, sans-serif" font-size="22">Feels premium and trust-building for high-ticket beauty pros.</text>
+  <text x="1156" y="520" fill="#B89E83" font-family="Arial, sans-serif" font-size="18">• Editorial serif headlines with softer body UI</text>
+  <text x="1156" y="558" fill="#B89E83" font-family="Arial, sans-serif" font-size="18">• Bronze / champagne accent instead of harsh pure white</text>
+  <text x="1156" y="596" fill="#B89E83" font-family="Arial, sans-serif" font-size="18">• Stronger card depth and “boutique studio” mood</text>
+  <text x="1156" y="634" fill="#B89E83" font-family="Arial, sans-serif" font-size="18">• Best if you want the app to feel premium, intimate, and upscale</text>
+  <rect x="1156" y="700" width="272" height="140" rx="24" fill="#19140F" stroke="#3A2D22"/>
+  <text x="1186" y="744" fill="#A28C73" font-family="Arial, sans-serif" font-size="12">STYLE SIGNAL</text>
+  <text x="1186" y="794" fill="#F7F0E8" font-family="Georgia, serif" font-size="38" font-weight="700">Luxury Editorial</text>
+  <text x="1186" y="824" fill="#CDBAA7" font-family="Arial, sans-serif" font-size="17">Warm, polished, premium.</text>
+</svg>

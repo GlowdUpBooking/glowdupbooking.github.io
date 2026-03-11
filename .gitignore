@@ -14,6 +14,9 @@ supabase/.temp/
 
 # build output
 dist/
+playwright-report/
+test-results/
+blob-report/
 
 # macOS Finder metadata
 .DS_Store

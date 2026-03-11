@@ -1,0 +1,98 @@
+<svg width="1600" height="980" viewBox="0 0 1600 980" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="1600" y2="980" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111111"/>
+      <stop offset="0.45" stop-color="#17120D"/>
+      <stop offset="1" stop-color="#0B0B0B"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FF8A3C"/>
+      <stop offset="1" stop-color="#FF5C39"/>
+    </linearGradient>
+    <linearGradient id="cream" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FFF1D2"/>
+      <stop offset="1" stop-color="#F6D8B2"/>
+    </linearGradient>
+    <filter id="glow3" x="-160" y="-140" width="1920" height="1260" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="68"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="980" rx="36" fill="url(#bg3)"/>
+  <g filter="url(#glow3)" opacity="0.26">
+    <circle cx="260" cy="170" r="130" fill="#FF6D3E"/>
+    <circle cx="1430" cy="760" r="160" fill="#FFC65C"/>
+    <circle cx="980" cy="130" r="120" fill="#FF8A3C"/>
+  </g>
+
+  <rect x="24" y="24" width="284" height="932" rx="30" fill="#0E0E0E" stroke="#3A2717"/>
+  <rect x="50" y="52" width="64" height="64" rx="22" fill="url(#orange)"/>
+  <rect x="66" y="68" width="32" height="32" rx="12" fill="#FFEFD6"/>
+  <text x="132" y="80" fill="#FFF4E1" font-family="Arial Black, Inter, sans-serif" font-size="30">Glow'd Up</text>
+  <text x="132" y="106" fill="#D9A678" font-family="Arial, sans-serif" font-size="18">Bold studio control room</text>
+
+  <rect x="44" y="150" width="244" height="144" rx="28" fill="#17110C" stroke="#553722"/>
+  <text x="70" y="190" fill="#C88B5A" font-family="Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="2">CREATIVE MODE</text>
+  <text x="70" y="238" fill="#FFF4E1" font-family="Arial Black, Inter, sans-serif" font-size="44">Studio</text>
+  <text x="70" y="270" fill="#E4B58C" font-family="Arial, sans-serif" font-size="18">High-energy, creator-forward UI</text>
+  <rect x="70" y="308" width="194" height="48" rx="18" fill="url(#orange)"/>
+  <text x="108" y="339" fill="#130D09" font-family="Arial, sans-serif" font-size="17" font-weight="700">Brand-forward system</text>
+
+  <rect x="48" y="406" width="214" height="54" rx="18" fill="#24170E" stroke="#704424"/>
+  <g fill="#FFF3DF" font-family="Arial, sans-serif" font-size="19" font-weight="700">
+    <text x="74" y="438">Dashboard</text>
+    <text x="74" y="496">Appointments</text>
+    <text x="74" y="554" fill="#D9A678">Services</text>
+    <text x="74" y="612" fill="#D9A678">Availability</text>
+    <text x="74" y="670" fill="#D9A678">Payouts</text>
+    <text x="74" y="728" fill="#D9A678">Subscription</text>
+    <text x="74" y="786" fill="#D9A678">Studio Team</text>
+    <text x="74" y="844" fill="#D9A678">Analytics</text>
+  </g>
+
+  <text x="350" y="76" fill="#D3905E" font-family="Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="2">CREATOR OPERATIONS</text>
+  <text x="350" y="126" fill="#FFF4E1" font-family="Arial Black, Inter, sans-serif" font-size="56">Dashboard</text>
+  <rect x="1380" y="54" width="156" height="52" rx="20" fill="#15100D" stroke="#593923"/>
+  <text x="1428" y="87" fill="#FFF4E1" font-family="Arial, sans-serif" font-size="18" font-weight="700">Sign out</text>
+
+  <rect x="350" y="160" width="1186" height="178" rx="34" fill="#120E0A" stroke="#4B2F1E"/>
+  <text x="390" y="200" fill="#D08E5D" font-family="Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2">HIGH-CONTRAST SYSTEM</text>
+  <text x="390" y="260" fill="#FFF4E1" font-family="Arial Black, Inter, sans-serif" font-size="72">A louder, more branded 2026 product feel.</text>
+  <text x="392" y="302" fill="#E6BA94" font-family="Arial, sans-serif" font-size="22">Bolder color blocking, bigger type, fewer timid outlines, and more “creator software” attitude.</text>
+  <rect x="1298" y="194" width="206" height="58" rx="20" fill="url(#cream)"/>
+  <text x="1340" y="230" fill="#1B120C" font-family="Arial, sans-serif" font-size="18" font-weight="700">Bold studio vibe</text>
+
+  <rect x="350" y="364" width="566" height="266" rx="30" fill="#140F0B" stroke="#4E311F"/>
+  <text x="384" y="406" fill="#FFF4E1" font-family="Arial Black, Inter, sans-serif" font-size="38">Command metrics</text>
+  <rect x="384" y="444" width="238" height="150" rx="24" fill="url(#orange)"/>
+  <text x="410" y="486" fill="#2A1509" font-family="Arial, sans-serif" font-size="12" font-weight="700">BOOKINGS THIS MONTH</text>
+  <text x="410" y="564" fill="#FFF4E1" font-family="Arial Black, Inter, sans-serif" font-size="70">32</text>
+  <rect x="644" y="444" width="238" height="150" rx="24" fill="#1A130E" stroke="#5D3A23"/>
+  <text x="670" y="486" fill="#CB8F60" font-family="Arial, sans-serif" font-size="12" font-weight="700">REVENUE</text>
+  <text x="670" y="558" fill="#FFF4E1" font-family="Arial Black, Inter, sans-serif" font-size="58">$940</text>
+
+  <rect x="938" y="364" width="598" height="266" rx="30" fill="#140F0B" stroke="#4E311F"/>
+  <text x="972" y="406" fill="#FFF4E1" font-family="Arial Black, Inter, sans-serif" font-size="38">Split-screen bookings</text>
+  <rect x="972" y="446" width="250" height="144" rx="24" fill="#1A130E" stroke="#5D3A23"/>
+  <rect x="1242" y="446" width="260" height="144" rx="24" fill="#1A130E" stroke="#5D3A23"/>
+  <text x="1000" y="490" fill="#D99964" font-family="Arial, sans-serif" font-size="12" font-weight="700">LIST</text>
+  <text x="1270" y="490" fill="#D99964" font-family="Arial, sans-serif" font-size="12" font-weight="700">DETAIL</text>
+  <text x="1000" y="548" fill="#FFF4E1" font-family="Arial, sans-serif" font-size="26" font-weight="700">Cards with stronger color cues</text>
+  <text x="1270" y="548" fill="#FFF4E1" font-family="Arial, sans-serif" font-size="26" font-weight="700">Action panel with attitude</text>
+
+  <rect x="350" y="654" width="760" height="270" rx="30" fill="#140F0B" stroke="#4E311F"/>
+  <text x="384" y="696" fill="#FFF4E1" font-family="Arial Black, Inter, sans-serif" font-size="38">Merch-ready services</text>
+  <text x="384" y="728" fill="#E9BC95" font-family="Arial, sans-serif" font-size="18">Sharper merchandising, larger thumbnails, and more brand expression.</text>
+  <rect x="384" y="764" width="210" height="120" rx="24" fill="#21150D" stroke="#653D24"/>
+  <rect x="612" y="764" width="210" height="120" rx="24" fill="#21150D" stroke="#653D24"/>
+  <rect x="840" y="764" width="236" height="120" rx="24" fill="url(#cream)"/>
+  <text x="868" y="812" fill="#21140C" font-family="Arial, sans-serif" font-size="14" font-weight="700">ADD SERVICE</text>
+  <text x="868" y="858" fill="#1C120B" font-family="Arial Black, Inter, sans-serif" font-size="40">+</text>
+
+  <rect x="1134" y="654" width="402" height="270" rx="30" fill="#140F0B" stroke="#4E311F"/>
+  <text x="1168" y="696" fill="#FFF4E1" font-family="Arial Black, Inter, sans-serif" font-size="38">Why this direction</text>
+  <text x="1168" y="746" fill="#E7B98F" font-family="Arial, sans-serif" font-size="20">Feels like a creator brand, not just back-office software.</text>
+  <text x="1168" y="794" fill="#D79E6F" font-family="Arial, sans-serif" font-size="18">• Warm orange / cream identity</text>
+  <text x="1168" y="830" fill="#D79E6F" font-family="Arial, sans-serif" font-size="18">• Bigger type and stronger blocks</text>
+  <text x="1168" y="866" fill="#D79E6F" font-family="Arial, sans-serif" font-size="18">• Best if you want memorable, social-friendly, bold energy</text>
+</svg>

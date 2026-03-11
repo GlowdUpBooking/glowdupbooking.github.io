@@ -442,6 +442,34 @@ export default function App() {
     return "Manage Subscription";
   }, [billingAccess, currentPlanKey, isActive]);
 
+  const billingCtaIsExternal = useMemo(() => {
+    return Boolean(
+      isActive &&
+      currentPlanKey !== "free" &&
+      !billingAccess?.studioMemberCovered &&
+      billingAccess?.canManageWebBilling
+    );
+  }, [billingAccess, currentPlanKey, isActive]);
+
+  function handleBillingCta() {
+    if (!isActive || currentPlanKey === "free") {
+      nav("/app/subscription");
+      return;
+    }
+
+    if (billingAccess?.studioMemberCovered) {
+      nav("/app/studio");
+      return;
+    }
+
+    if (!billingAccess?.canManageWebBilling) {
+      nav("/app/subscription");
+      return;
+    }
+
+    void openBillingPortal();
+  }
+
   function formatDate(iso) {
     if (!iso) return null;
     const d = new Date(iso);
@@ -529,20 +557,20 @@ export default function App() {
 
               <div className="g-planBottom">
                 <div className="g-planMeta">
-                  <span className="g-dotIcon">👤</span>
+                  <span className="g-dotIcon" aria-hidden="true">👤</span>
                   <span className="u-muted">
                     {currentPeriodEnd ? `Renews on ${formatDate(currentPeriodEnd)}` : subscriptionLine}
                   </span>
                 </div>
 
-                <button className="g-linkBtn" type="button" onClick={() => nav("/app/subscription")}>
+                <button className="g-linkBtn" type="button" onClick={handleBillingCta}>
                   {billingLoading ? "Opening..." : billingCtaLabel}
-                  {!billingLoading ? <span className="g-ext">↗</span> : null}
+                  {!billingLoading && billingCtaIsExternal ? <span className="g-ext" aria-hidden="true">↗</span> : null}
                 </button>
               </div>
               </Card>
 
-            {billingMsg ? <div className="u-muted">{billingMsg}</div> : null}
+            {billingMsg ? <div className="u-muted" role="status" aria-live="polite">{billingMsg}</div> : null}
 
             {/* Profile Card */}
             <Card className="g-profileCard">
@@ -567,15 +595,15 @@ export default function App() {
 
                   <div className="g-profileMeta">
                     <div className="g-metaItem">
-                      <span className="g-metaIcon">📍</span>
+                      <span className="g-metaIcon" aria-hidden="true">📍</span>
                       <span>{displayLocation}</span>
                     </div>
                     <div className="g-metaItem">
-                      <span className="g-metaIcon">🚗</span>
+                      <span className="g-metaIcon" aria-hidden="true">🚗</span>
                       <span>Mobile: {mobileLabel}</span>
                     </div>
                     <div className="g-metaItem">
-                      <span className="g-metaIcon">〽</span>
+                      <span className="g-metaIcon" aria-hidden="true">〽</span>
                       <span>Radius: {radiusLabel}</span>
                     </div>
                   </div>
@@ -583,14 +611,14 @@ export default function App() {
                   <div className="g-profileLinks">
                     {profile?.instagram_handle ? (
                       <div className="g-metaItem">
-                        <span className="g-metaIcon">◎</span>
+                        <span className="g-metaIcon" aria-hidden="true">◎</span>
                         <span>{profile.instagram_handle.startsWith("@") ? profile.instagram_handle : `@${profile.instagram_handle}`}</span>
                       </div>
                     ) : null}
 
                     {profile?.website_url ? (
                       <div className="g-metaItem">
-                        <span className="g-metaIcon">⌂</span>
+                        <span className="g-metaIcon" aria-hidden="true">⌂</span>
                         <span>{profile.website_url}</span>
                       </div>
                     ) : null}
@@ -675,7 +703,7 @@ export default function App() {
               <div className="g-statList">
                 <div className="g-statRow">
                   <div className="g-statLeft">
-                    <span className="g-statIcon">▦</span>Bookings
+                    <span className="g-statIcon" aria-hidden="true">▦</span>Bookings
                   </div>
                   <div className="g-statVal">{stats.bookings}</div>
                 </div>
@@ -683,7 +711,7 @@ export default function App() {
 
                 <div className="g-statRow">
                   <div className="g-statLeft">
-                    <span className="g-statIcon">🕒</span>Next Appointment
+                    <span className="g-statIcon" aria-hidden="true">🕒</span>Next Appointment
                   </div>
                   <div className="g-statVal">{stats.nextAppointment}</div>
                 </div>
@@ -691,7 +719,7 @@ export default function App() {
 
                 <div className="g-statRow">
                   <div className="g-statLeft">
-                    <span className="g-statIcon">🏷</span>Services
+                    <span className="g-statIcon" aria-hidden="true">🏷</span>Services
                   </div>
                   <div className="g-statVal">{stats.services}</div>
                 </div>
@@ -699,7 +727,7 @@ export default function App() {
 
                 <div className="g-statRow">
                   <div className="g-statLeft">
-                    <span className="g-statIcon">⏳</span>Pending
+                    <span className="g-statIcon" aria-hidden="true">⏳</span>Pending
                   </div>
                   <div className="g-statVal">{stats.inquiries}</div>
                 </div>
@@ -707,7 +735,7 @@ export default function App() {
 
                 <div className="g-statRow">
                   <div className="g-statLeft">
-                    <span className="g-statIcon">💰</span>Revenue (mo.)
+                    <span className="g-statIcon" aria-hidden="true">💰</span>Revenue (mo.)
                   </div>
                   <div className="g-statVal" style={{ color: "#6CFFB3" }}>{money(stats.monthRevenue)}</div>
                 </div>
@@ -730,6 +758,7 @@ export default function App() {
                   {err}
                   <button
                     className="g-pillBtn"
+                    type="button"
                     style={{ marginLeft: 8 }}
                     onClick={() => setRetryKey((k) => k + 1)}
                   >
@@ -754,8 +783,8 @@ export default function App() {
                       <span>Business name and business type</span>
                     </div>
                     {!hasProfileStep ? (
-                      <button className="g-pillBtn" onClick={() => nav("/app/profile")}>Fix</button>
-                    ) : <span>✓</span>}
+                      <button className="g-pillBtn" type="button" onClick={() => nav("/app/profile")}>Fix</button>
+                    ) : <span aria-hidden="true">✓</span>}
                   </div>
 
                   <div className={`g-checkItem ${hasServicesStep ? "g-checkItemDone" : ""}`}>
@@ -764,8 +793,8 @@ export default function App() {
                       <span>Clients need bookable options</span>
                     </div>
                     {!hasServicesStep ? (
-                      <button className="g-pillBtn" onClick={() => nav("/app/services")}>Add</button>
-                    ) : <span>✓</span>}
+                      <button className="g-pillBtn" type="button" onClick={() => nav("/app/services")}>Add</button>
+                    ) : <span aria-hidden="true">✓</span>}
                   </div>
 
                   <div className={`g-checkItem ${hasPhotosStep ? "g-checkItemDone" : ""}`}>
@@ -774,8 +803,8 @@ export default function App() {
                       <span>Portfolio photos improve trust and conversion</span>
                     </div>
                     {!hasPhotosStep ? (
-                      <button className="g-pillBtn" onClick={() => nav("/app/services")}>Upload</button>
-                    ) : <span>✓</span>}
+                      <button className="g-pillBtn" type="button" onClick={() => nav("/app/services")}>Upload</button>
+                    ) : <span aria-hidden="true">✓</span>}
                   </div>
 
                   <div className={`g-checkItem ${hasDepositStep ? "g-checkItemDone" : ""}`}>
@@ -784,8 +813,8 @@ export default function App() {
                       <span>Deposits reduce no-shows and lock intent</span>
                     </div>
                     {!hasDepositStep ? (
-                      <button className="g-pillBtn" onClick={() => nav("/app/services")}>Enable</button>
-                    ) : <span>✓</span>}
+                      <button className="g-pillBtn" type="button" onClick={() => nav("/app/services")}>Enable</button>
+                    ) : <span aria-hidden="true">✓</span>}
                   </div>
 
                   <div className={`g-checkItem ${hasAvailabilityStep ? "g-checkItemDone" : ""}`}>
@@ -794,8 +823,8 @@ export default function App() {
                       <span>Define where/when clients can book</span>
                     </div>
                     {!hasAvailabilityStep ? (
-                      <button className="g-pillBtn" onClick={() => nav("/app/settings")}>Set</button>
-                    ) : <span>✓</span>}
+                      <button className="g-pillBtn" type="button" onClick={() => nav("/app/settings")}>Set</button>
+                    ) : <span aria-hidden="true">✓</span>}
                   </div>
 
                   <div className={`g-checkItem ${hasPayoutStep ? "g-checkItemDone" : ""}`}>
@@ -808,8 +837,8 @@ export default function App() {
                       </span>
                     </div>
                     {!hasPayoutStep ? (
-                      <button className="g-pillBtn" onClick={() => nav("/app/onboarding/payouts")}>Connect</button>
-                    ) : <span>✓</span>}
+                      <button className="g-pillBtn" type="button" onClick={() => nav("/app/onboarding/payouts")}>Connect</button>
+                    ) : <span aria-hidden="true">✓</span>}
                   </div>
                 </div>
               </Card>
@@ -823,14 +852,14 @@ export default function App() {
                     <strong>{totalAvailabilityDays} active day{totalAvailabilityDays === 1 ? "" : "s"}</strong>
                     <span>Set in {availabilityStorage === "cloud" ? "cloud" : "local"} schedule</span>
                   </div>
-                  <button className="g-pillBtn" onClick={() => nav("/app/availability")}>Edit</button>
+                  <button className="g-pillBtn" type="button" onClick={() => nav("/app/availability")}>Edit</button>
                 </div>
                 <div className="g-availabilityRow">
                   <div>
                     <strong>{profile?.has_location ? "In‑shop" : "No shop"}</strong>
                     <span>{profile?.travels_to_clients ? "Mobile enabled" : "Mobile off"}</span>
                   </div>
-                  <button className="g-pillBtn" onClick={() => nav("/app/settings")}>Settings</button>
+                  <button className="g-pillBtn" type="button" onClick={() => nav("/app/settings")}>Settings</button>
                 </div>
               </div>
             </Card>
@@ -843,7 +872,7 @@ export default function App() {
                     <strong>Copy booking link</strong>
                     <span>{bookingLink || "Link unavailable"}</span>
                   </div>
-                  <button className="g-pillBtn" onClick={() => copyText(bookingLink, "Booking link copied.")}>
+                  <button className="g-pillBtn" type="button" onClick={() => copyText(bookingLink, "Booking link copied.")} disabled={!bookingLink}>
                     Copy
                   </button>
                 </div>
@@ -852,7 +881,7 @@ export default function App() {
                     <strong>Share SMS template</strong>
                     <span>Quick client text with your booking link</span>
                   </div>
-                  <button className="g-pillBtn" onClick={() => copyText(activationText, "SMS template copied.")}>
+                  <button className="g-pillBtn" type="button" onClick={() => copyText(activationText, "SMS template copied.")} disabled={!bookingLink}>
                     Copy
                   </button>
                 </div>
@@ -861,7 +890,7 @@ export default function App() {
                     <strong>Deposit toggle</strong>
                     <span>Set a deposit on your top services</span>
                   </div>
-                  <button className="g-pillBtn" onClick={() => nav("/app/services")}>
+                  <button className="g-pillBtn" type="button" onClick={() => nav("/app/services")}>
                     Open
                   </button>
                 </div>
@@ -872,12 +901,12 @@ export default function App() {
                       {hasPayoutStep ? "Connected to Stripe. Payout tools unlocked." : "Connect Stripe to unlock payout actions."}
                     </span>
                   </div>
-                  <button className="g-pillBtn" onClick={() => (hasPayoutStep ? openBillingPortal() : nav("/app/onboarding/payouts"))}>
-                    {hasPayoutStep ? "Manage" : "Connect"}
+                  <button className="g-pillBtn" type="button" onClick={() => (hasPayoutStep ? nav("/app/payouts") : nav("/app/onboarding/payouts"))}>
+                    {hasPayoutStep ? "Open payouts" : "Connect"}
                   </button>
                 </div>
               </div>
-              {nudgeMsg ? <div className="g-smallMsg">{nudgeMsg}</div> : null}
+              {nudgeMsg ? <div className="g-smallMsg" role="status" aria-live="polite">{nudgeMsg}</div> : null}
             </Card>
           </div>
         </div>

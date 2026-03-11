@@ -26,6 +26,7 @@ export default function OnboardingProgress({ active = "profile", autosaveStatus 
       <div
         className="obProgressBar"
         role="progressbar"
+        aria-label={`Onboarding progress ${Math.max(1, activeIndex + 1)} of ${STEPS.length}`}
         aria-valuemin={0}
         aria-valuemax={STEPS.length}
         aria-valuenow={Math.max(1, activeIndex + 1)}

@@ -1,0 +1,102 @@
+<svg width="1600" height="980" viewBox="0 0 1600 980" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg2" x1="102" y1="84" x2="1496" y2="908" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#08111C"/>
+      <stop offset="0.5" stop-color="#090B12"/>
+      <stop offset="1" stop-color="#05070B"/>
+    </linearGradient>
+    <linearGradient id="panel2" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#111C2B" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#0C1018" stop-opacity="0.94"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#94D7FF"/>
+      <stop offset="1" stop-color="#4A8DFF"/>
+    </linearGradient>
+    <filter id="glow2" x="-120" y="-120" width="1840" height="1220" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="60"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="980" rx="36" fill="url(#bg2)"/>
+  <g filter="url(#glow2)" opacity="0.34">
+    <circle cx="220" cy="160" r="130" fill="#2A7BFF"/>
+    <circle cx="1280" cy="160" r="120" fill="#66D8FF"/>
+    <circle cx="1120" cy="860" r="180" fill="#2ED9C3"/>
+  </g>
+
+  <rect x="24" y="24" width="286" height="932" rx="28" fill="#0A1119" fill-opacity="0.92" stroke="#1D2E45"/>
+  <rect x="52" y="52" width="60" height="60" rx="20" fill="url(#blue)" fill-opacity="0.18" stroke="#60BFFF"/>
+  <circle cx="82" cy="82" r="14" fill="#7BD8FF"/>
+  <text x="132" y="78" fill="#F3F8FF" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="800">Glow'd Up</text>
+  <text x="132" y="104" fill="#9FB7D6" font-family="Inter, Arial, sans-serif" font-size="18">Precision glass workspace</text>
+
+  <rect x="44" y="148" width="246" height="142" rx="26" fill="#0F1723" fill-opacity="0.78" stroke="#24415E"/>
+  <text x="68" y="186" fill="#87A8C7" font-family="Inter, Arial, sans-serif" font-size="13" letter-spacing="2">WORKSPACE STATUS</text>
+  <text x="68" y="234" fill="#F3F8FF" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">Bookings</text>
+  <text x="68" y="266" fill="#A6C0DD" font-family="Inter, Arial, sans-serif" font-size="17">Tue, Mar 11 · 6 pending</text>
+  <rect x="68" y="306" width="198" height="44" rx="16" fill="#101D2C" stroke="#2E4F72"/>
+  <text x="96" y="334" fill="#D5E8FF" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">Active sync • Live</text>
+
+  <rect x="48" y="404" width="214" height="54" rx="18" fill="#112033" stroke="#2E4D71"/>
+  <g fill="#E8F2FF" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">
+    <text x="74" y="438">Dashboard</text>
+    <text x="74" y="496">Appointments</text>
+    <text x="74" y="554" fill="#A9C0DB">Services</text>
+    <text x="74" y="612" fill="#A9C0DB">Availability</text>
+    <text x="74" y="670" fill="#A9C0DB">Payouts</text>
+    <text x="74" y="728" fill="#A9C0DB">Subscription</text>
+    <text x="74" y="786" fill="#A9C0DB">Studio Team</text>
+    <text x="74" y="844" fill="#A9C0DB">Analytics</text>
+  </g>
+
+  <text x="350" y="76" fill="#86A9C8" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="2">PRO CONTROL</text>
+  <text x="350" y="124" fill="#F3F8FF" font-family="Inter, Arial, sans-serif" font-size="54" font-weight="800">Dashboard</text>
+  <rect x="1290" y="54" width="120" height="40" rx="14" fill="#0F1724" stroke="#2A4360"/>
+  <text x="1326" y="80" fill="#B7D4F7" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">Tue, Mar 11</text>
+  <rect x="1428" y="50" width="108" height="50" rx="18" fill="#0E1622" stroke="#2C455F"/>
+  <text x="1455" y="82" fill="#F3F8FF" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">Sign out</text>
+
+  <rect x="350" y="160" width="1186" height="156" rx="30" fill="url(#panel2)" stroke="#22415F"/>
+  <text x="388" y="198" fill="#80A6CA" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="2">TODAY'S PERFORMANCE</text>
+  <text x="388" y="248" fill="#F3F8FF" font-family="Inter, Arial, sans-serif" font-size="64" font-weight="800">A cleaner, sharper pro dashboard.</text>
+  <text x="390" y="286" fill="#BCD2EC" font-family="Inter, Arial, sans-serif" font-size="22">Glass surfaces, tighter rhythm, and product-grade data density with a Stripe / Linear feel.</text>
+
+  <rect x="350" y="346" width="1186" height="124" rx="28" fill="#0E1622" fill-opacity="0.88" stroke="#20354E"/>
+  <rect x="378" y="374" width="244" height="68" rx="20" fill="#121D2B" stroke="#2B4562"/>
+  <text x="404" y="400" fill="#86A4C2" font-family="Inter, Arial, sans-serif" font-size="12">BOOKINGS</text>
+  <text x="404" y="431" fill="#F3F8FF" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="800">32</text>
+  <rect x="640" y="374" width="244" height="68" rx="20" fill="#121D2B" stroke="#2B4562"/>
+  <text x="666" y="400" fill="#86A4C2" font-family="Inter, Arial, sans-serif" font-size="12">NEEDS ACTION</text>
+  <text x="666" y="431" fill="#7BD8FF" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="800">6</text>
+  <rect x="902" y="374" width="280" height="68" rx="20" fill="#121D2B" stroke="#2B4562"/>
+  <text x="928" y="400" fill="#86A4C2" font-family="Inter, Arial, sans-serif" font-size="12">REVENUE</text>
+  <text x="928" y="431" fill="#79E7C1" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="800">$940</text>
+  <rect x="1200" y="374" width="308" height="68" rx="20" fill="#121D2B" stroke="#2B4562"/>
+  <text x="1226" y="400" fill="#86A4C2" font-family="Inter, Arial, sans-serif" font-size="12">NEXT APPOINTMENT</text>
+  <text x="1226" y="431" fill="#F3F8FF" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="800">Mar 26 · 9:15</text>
+
+  <rect x="350" y="496" width="760" height="428" rx="30" fill="#0D141E" fill-opacity="0.92" stroke="#1D314A"/>
+  <text x="386" y="538" fill="#F3F8FF" font-family="Inter, Arial, sans-serif" font-size="36" font-weight="800">Master-detail bookings</text>
+  <text x="386" y="568" fill="#ABC1DA" font-family="Inter, Arial, sans-serif" font-size="18">Designed to feel faster, more operational, and more trustworthy.</text>
+  <rect x="386" y="598" width="692" height="62" rx="20" fill="#111B28" stroke="#2A435F"/>
+  <text x="416" y="636" fill="#DCEBFC" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">Search client, service, phone</text>
+  <rect x="386" y="684" width="306" height="206" rx="24" fill="#111A27" stroke="#243C56"/>
+  <rect x="406" y="706" width="266" height="54" rx="18" fill="#132234" stroke="#315273"/>
+  <text x="430" y="738" fill="#F3F8FF" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">Erica James</text>
+  <text x="430" y="820" fill="#AFC4DD" font-family="Inter, Arial, sans-serif" font-size="17">Faster scanning. Better hierarchy.</text>
+  <rect x="714" y="684" width="364" height="206" rx="24" fill="#111A27" stroke="#243C56"/>
+  <text x="742" y="724" fill="#82A7CB" font-family="Inter, Arial, sans-serif" font-size="12" letter-spacing="2">APPOINTMENT DETAIL</text>
+  <text x="742" y="772" fill="#F3F8FF" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800">Action panel</text>
+  <text x="742" y="810" fill="#B2C6DE" font-family="Inter, Arial, sans-serif" font-size="18">Clear status, simple actions, no visual noise.</text>
+
+  <rect x="1136" y="496" width="400" height="428" rx="30" fill="#0D141E" fill-opacity="0.92" stroke="#1D314A"/>
+  <text x="1172" y="540" fill="#F3F8FF" font-family="Inter, Arial, sans-serif" font-size="36" font-weight="800">Why this direction</text>
+  <text x="1172" y="596" fill="#BAD0E8" font-family="Inter, Arial, sans-serif" font-size="20">Feels like a modern SaaS control room.</text>
+  <text x="1172" y="652" fill="#95B0CC" font-family="Inter, Arial, sans-serif" font-size="18">• Cool graphite + blue accents</text>
+  <text x="1172" y="690" fill="#95B0CC" font-family="Inter, Arial, sans-serif" font-size="18">• Tight enterprise spacing and stronger clarity</text>
+  <text x="1172" y="728" fill="#95B0CC" font-family="Inter, Arial, sans-serif" font-size="18">• Best if you want “clean, credible, fast” over “luxury”</text>
+  <rect x="1172" y="786" width="278" height="116" rx="22" fill="#101B29" stroke="#2A4666"/>
+  <text x="1200" y="828" fill="#84AACF" font-family="Inter, Arial, sans-serif" font-size="12">STYLE SIGNAL</text>
+  <text x="1200" y="866" fill="#F3F8FF" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="800">Precision Glass</text>
+</svg>
