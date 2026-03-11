@@ -1856,13 +1856,36 @@
 
 .tm-formGrid,
 .tm-formGridCompact {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
   gap: 12px;
+}
+
+.tm-formGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.tm-formGridCompact {
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.05fr) minmax(120px, 0.75fr) minmax(180px, 0.95fr);
+}
+
+.tm-formGrid > *,
+.tm-formGridCompact > * {
+  min-width: 0;
 }
 
 .tm-formGrid > .btn,
 .tm-formGridCompact > .btn {
   align-self: end;
+  width: 100%;
+  min-width: 0;
+}
+
+.tm-sideCol .tm-formGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tm-sideCol .tm-formGrid > .btn {
+  grid-column: 1 / -1;
 }
 
 .tm-panel .btnPrimary {
