@@ -10,8 +10,15 @@ import {
   isSiteLocked,
   SITE_LOCKED_MESSAGE,
 } from "../lib/siteFlags";
+import { isPlatformAdminUser } from "../lib/platformAdmin";
 import { isClientRole, normalizeRole } from "../lib/roles";
 import "../styles/signup.css";
+
+function resolveNextPath(user, requestedNextPath) {
+  const next = String(requestedNextPath || "/app").trim() || "/app";
+  if (!isPlatformAdminUser(user)) return next;
+  return next === "/app" ? "/admin" : next;
+}
 
 export default function Login() {
   const nav = useNavigate();
@@ -65,7 +72,7 @@ export default function Login() {
         return;
       }
       setRoleCheckBusy(false);
-      nav(nextPath, { replace: true });
+      nav(resolveNextPath(session.user, nextPath), { replace: true });
     }
     verifySessionRole();
     return () => { active = false; };
@@ -118,7 +125,7 @@ export default function Login() {
       }
     }
 
-    nav(nextPath, { replace: true });
+    nav(resolveNextPath(authedUser, nextPath), { replace: true });
   }
 
   return (

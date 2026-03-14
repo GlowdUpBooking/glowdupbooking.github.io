@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 // ✅ Route guards
+import RequirePlatformAdmin from "./components/auth/RequirePlatformAdmin";
 import RequirePro from "./components/auth/RequirePro";
 import RequireSubscription from "./components/billing/RequireSubscription";
 import RequireOnboarding from "./components/onboarding/RequireOnboarding";
@@ -12,6 +13,7 @@ const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const App = lazy(() => import("./pages/App"));
 const Booking = lazy(() => import("./pages/Booking"));
 const Calendar = lazy(() => import("./pages/Calendar"));
@@ -57,6 +59,15 @@ export default function AppRouter() {
             element={signupPaused ? <Navigate to={getSignupPath()} replace /> : <Signup />}
           />
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route
+            path="/admin"
+            element={
+              <RequirePlatformAdmin>
+                <AdminDashboard />
+              </RequirePlatformAdmin>
+            }
+          />
+          <Route path="/app/admin" element={<Navigate to="/admin" replace />} />
           <Route path="/book/:code" element={<Booking />} />
           <Route path="/professional/:id" element={<Booking />} />
           <Route path="/support" element={<Support />} />

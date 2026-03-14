@@ -3,6 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "./useAuth";
 import FullScreenLoader from "../ui/FullScreenLoader";
+import { isPlatformAdminUser } from "../../lib/platformAdmin";
 import { isClientRole, isProRole, normalizeRole, roleForProfileWrite } from "../../lib/roles";
 
 export default function RequirePro({ children }) {
@@ -100,6 +101,7 @@ export default function RequirePro({ children }) {
   }, [user]);
 
   if (!user) return <Navigate to={`/login?next=${next}`} replace />;
+  if (isPlatformAdminUser(user)) return <Navigate to="/admin" replace />;
   if (loading) return <FullScreenLoader label="Checking account access..." />;
 
   if (!allowed) {

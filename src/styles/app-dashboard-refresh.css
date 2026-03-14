@@ -2429,3 +2429,308 @@
     display: none;
   }
 }
+
+.adm-page {
+  min-height: 100dvh;
+  padding: 28px;
+  background:
+    radial-gradient(circle at top left, rgba(250, 190, 120, 0.16), transparent 30%),
+    radial-gradient(circle at top right, rgba(91, 197, 255, 0.16), transparent 28%),
+    linear-gradient(180deg, #090b11 0%, #111520 100%);
+}
+
+.adm-shell {
+  width: min(1320px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 20px;
+}
+
+.adm-topbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: end;
+}
+
+.adm-brand {
+  display: inline-flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: none;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.adm-kicker {
+  margin-top: 14px;
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 215, 142, 0.84);
+}
+
+.adm-title {
+  margin: 10px 0 8px;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+}
+
+.adm-subtitle {
+  margin: 0;
+  max-width: 620px;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 1rem;
+}
+
+.adm-topbarActions {
+  display: grid;
+  gap: 12px;
+  justify-items: end;
+}
+
+.adm-identityCard {
+  min-width: 260px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.28);
+  display: grid;
+  gap: 4px;
+}
+
+.adm-identityLabel {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.56);
+}
+
+.adm-identityMeta {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 13px;
+}
+
+.adm-actionRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.adm-alertCard,
+.adm-loadingCard {
+  padding: 18px 20px;
+}
+
+.adm-alertCard {
+  border-color: rgba(255, 126, 126, 0.38);
+  color: #ffd0d0;
+}
+
+.adm-metricGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.adm-metricCard {
+  padding: 20px;
+  display: grid;
+  gap: 10px;
+  min-height: 152px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.025)),
+    rgba(12, 16, 28, 0.92);
+}
+
+.adm-tone-primary {
+  background:
+    linear-gradient(180deg, rgba(255, 214, 120, 0.18), rgba(255, 255, 255, 0.03)),
+    rgba(18, 16, 11, 0.96);
+}
+
+.adm-tone-success {
+  background:
+    linear-gradient(180deg, rgba(108, 255, 179, 0.16), rgba(255, 255, 255, 0.03)),
+    rgba(9, 18, 17, 0.96);
+}
+
+.adm-tone-muted {
+  background:
+    linear-gradient(180deg, rgba(149, 166, 255, 0.14), rgba(255, 255, 255, 0.03)),
+    rgba(14, 16, 27, 0.96);
+}
+
+.adm-metricLabel {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.adm-metricValue {
+  font-size: clamp(1.7rem, 3vw, 2.6rem);
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+}
+
+.adm-metricDetail {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 14px;
+}
+
+.adm-detailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.adm-panelCard,
+.adm-tableCard {
+  padding: 22px;
+}
+
+.adm-panelHeader {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.adm-panelEyebrow {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.56);
+}
+
+.adm-panelTitle {
+  margin: 8px 0 0;
+  font-size: 1.35rem;
+  letter-spacing: -0.03em;
+}
+
+.adm-detailList {
+  display: grid;
+  gap: 14px;
+}
+
+.adm-detailRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.adm-detailRow:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.adm-detailRow strong {
+  color: #fff;
+}
+
+.adm-tableWrap {
+  overflow-x: auto;
+}
+
+.adm-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.adm-table th,
+.adm-table td {
+  padding: 14px 12px;
+  text-align: left;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  vertical-align: top;
+}
+
+.adm-table th {
+  border-top: 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.adm-userCell {
+  display: grid;
+  gap: 4px;
+}
+
+.adm-userCell span {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 13px;
+}
+
+.adm-statusPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 180, 108, 0.14);
+  color: #ffd39b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.adm-statusPill.is-confirmed {
+  background: rgba(108, 255, 179, 0.14);
+  color: #9bffc5;
+}
+
+.adm-emptyState {
+  color: rgba(255, 255, 255, 0.62);
+  padding: 8px 0 2px;
+}
+
+@media (max-width: 1100px) {
+  .adm-topbar,
+  .adm-detailGrid,
+  .adm-metricGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adm-topbarActions {
+    justify-items: stretch;
+  }
+}
+
+@media (max-width: 700px) {
+  .adm-page {
+    padding: 20px;
+  }
+
+  .adm-topbar,
+  .adm-metricGrid,
+  .adm-detailGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .adm-title {
+    font-size: 2.35rem;
+  }
+
+  .adm-identityCard {
+    min-width: 0;
+  }
+
+  .adm-actionRow {
+    width: 100%;
+  }
+
+  .adm-actionRow .btn {
+    flex: 1 1 0;
+  }
+}
